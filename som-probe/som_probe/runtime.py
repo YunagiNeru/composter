@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -473,7 +474,31 @@ def _comparison(reference: list[dict[str, Any]], candidate: list[dict[str, Any]]
             "mean_probability_abs_difference": float(np.mean(diffs)) if diffs else 0.0,
             "max_action_probability_abs_difference": float(max(action_diffs, default=0.0)),
             "decision_match_ratio": matches / max(1, len(reference)),
-            "important_new_errors": len(changed), "decision_changes": changed}
+            "important_new_errors": len(changed), "decision_changes": changed,
+            "important_new_errors_definition":
+                "Count of decision_slot changes versus the named reference output for identical inputs; not human-label correctness."}
+
+
+def _execution_device_names(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [part.strip() for part in value.replace(";", ",").split(",") if part.strip()]
+    if isinstance(value, (list, tuple)):
+        return [str(part).strip() for part in value if str(part).strip()]
+    return []
+
+
+def _exception_details(error: BaseException) -> dict[str, Any]:
+    chain: list[dict[str, str]] = []
+    current: BaseException | None = error
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        chain.append({"type": type(current).__name__, "repr": repr(current), "message": str(current)})
+        current = current.__cause__ if current.__cause__ is not None else current.__context__
+    return {"type": type(error).__name__, "repr": repr(error), "message": str(error),
+            "chain": chain,
+            "traceback_chain": "".join(traceback.format_exception(
+                type(error), error, error.__traceback__, chain=True))}
 
 
 def run_cpu_check(root: Path, run: Run) -> dict[str, Any]:
@@ -524,6 +549,8 @@ def _load_run_conversion(root: Path, run: Run) -> dict[str, Any]:
 
 def _npu_error_code(phase: str, message: str) -> str:
     normalized = message.lower()
+    if phase == "cache_setup":
+        return "NPU_CACHE_SETUP_FAILED"
     if phase == "compile" and ("unrecognized operator" in normalized or "custom operator" in normalized):
         return "NPU_COMPILER_OPERATOR_FORMAT_OR_RECOGNITION_ERROR"
     if phase == "compile":
@@ -536,6 +563,7 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720") -> dict[str, Any]
     execution_devices: list[str] = []
     settings: dict[str, Any] = {"explicit_device": "NPU", "expected_architecture": expected_arch,
                                 "fallback_allowed": False}
+    cache_dir: Path | None = None
     manifest = run.read_manifest()
     g2 = manifest.get("stages", {}).get("G2-cpu-check", {}).get("status")
     if g2 != "PASS":
@@ -563,17 +591,62 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720") -> dict[str, Any]
         model = core.read_model(str(xml))
         settings["fp16_xml_sha256"] = conversion["fp16_xml_sha256"]
         settings["fp16_bin_sha256"] = conversion["fp16_bin_sha256"]
+        phase = "cache_setup"
+        cache_dir = run.path / "npu-cache"
+        cache_dir.mkdir(parents=True, exist_ok=False)
+        compile_configuration = {"NPU_COMPILER_TYPE": "PLUGIN", "CACHE_DIR": str(cache_dir)}
+        settings["requested_compile_configuration"] = compile_configuration
+        settings["cache_before_compile"] = sorted(path.name for path in cache_dir.iterdir())
+        settings["npu_properties_before_compile"] = {}
+        for key in ("DEVICE_ARCHITECTURE", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION",
+                    "NPU_DRIVER_VERSION", "CACHE_DIR", "NPU_BYPASS_UMD_CACHING"):
+            try:
+                settings["npu_properties_before_compile"][key] = _json_safe(core.get_property("NPU", key))
+            except Exception as property_error:
+                settings["npu_properties_before_compile"][key] = {
+                    "unavailable": True, "error_type": type(property_error).__name__,
+                    "message": safe_message(str(property_error))}
         phase = "compile"
-        compiled = core.compile_model(model, "NPU")
+        compiled = core.compile_model(model, "NPU", compile_configuration)
+        compiled_properties: dict[str, Any] = {}
+        for key in ("EXECUTION_DEVICES", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION", "RUNTIME_REQUIREMENTS"):
+            try:
+                compiled_properties[key] = _json_safe(compiled.get_property(key))
+            except Exception as property_error:
+                compiled_properties[key] = {
+                    "unavailable": True, "error_type": type(property_error).__name__,
+                    "message": safe_message(str(property_error))}
+        settings["compiled_model_properties"] = compiled_properties
+        execution_devices = _execution_device_names(compiled_properties.get("EXECUTION_DEVICES"))
+        settings["cache_after_compile"] = sorted(path.name for path in cache_dir.iterdir())
         try:
-            execution_devices = [str(value) for value in compiled.get_property("EXECUTION_DEVICES")]
+            if not execution_devices:
+                raise RuntimeError("EXECUTION_DEVICESが文字列または配列で取得できません。")
         except Exception as exc:
-            run.blocked("G3", "EXECUTION_DEVICE_EVIDENCE_UNAVAILABLE", f"実行先プロパティを取得できません: {type(exc).__name__}")
+            settings["compiled_model_created"] = True
+            _unique_json(run, "npu-diagnostic", {
+                "phase": "execution_device_evidence", "settings": settings,
+                "compiled_model_created": True, "exception": _exception_details(exc)})
+            run.blocked("G3", "EXECUTION_DEVICE_EVIDENCE_UNAVAILABLE",
+                        f"実行先プロパティを取得できません: {type(exc).__name__}")
             return {"status": "BLOCKED", "code": "EXECUTION_DEVICE_EVIDENCE_UNAVAILABLE"}
-        if not execution_devices or any("npu" not in value.lower() for value in execution_devices):
+        if any(not (value.upper() == "NPU" or value.upper().startswith("NPU."))
+               for value in execution_devices):
             run.blocked("G3", "EXECUTION_DEVICE_MISMATCH", "コンパイル済みモデルの実行先がNPU単独ではありません。",
                         execution_devices=execution_devices)
             return {"status": "BLOCKED", "code": "EXECUTION_DEVICE_MISMATCH"}
+        compiler_type = compiled_properties.get("NPU_COMPILER_TYPE")
+        if not isinstance(compiler_type, str) or not compiler_type.upper().endswith("PLUGIN"):
+            settings["compiled_model_created"] = True
+            _unique_json(run, "npu-diagnostic", {
+                "phase": "compiler_path_evidence", "settings": settings,
+                "compiled_model_created": True,
+                "exception": {"type": "CompilerPathEvidenceUnavailable", "message":
+                    "CompiledModelのNPU_COMPILER_TYPEが要求したPLUGIN経路と一致しません。"}})
+            run.blocked("G3", "NPU_COMPILER_PATH_MISMATCH",
+                        "CompiledModelの実コンパイラーがPLUGINと確認できません。",
+                        actual_compiler_type=compiler_type)
+            return {"status": "BLOCKED", "code": "NPU_COMPILER_PATH_MISMATCH"}
         names = ("input_ids", "attention_mask", "marker_pos", "marker_mask", "qtype")
         outputs: list[dict[str, Any]] = []
         phase = "inference"
@@ -596,9 +669,15 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720") -> dict[str, Any]
         }
         status = "PASS" if all(checks.values()) else "FAIL"
         record = {"status": status, "explicit_device": "NPU", "execution_devices": execution_devices,
+                  "requested_compile_configuration": settings["requested_compile_configuration"],
+                  "compiled_model_properties": compiled_properties,
+                  "cache_before_compile": settings["cache_before_compile"],
+                  "cache_after_compile": settings["cache_after_compile"],
                   "device_architecture": device["device_properties"].get("DEVICE_ARCHITECTURE"),
                   "checks": checks, "comparison_to_original_cpu": comparison,
-                  "label_status": "ai_draft_unverified", "japanese_quality_status": "UNDETERMINED",
+                  "important_new_errors_definition": comparison["important_new_errors_definition"],
+                  "label_status": "ai_draft_unverified", "human_label_errors": "UNDETERMINED",
+                  "japanese_quality_status": "UNDETERMINED",
                   "openvino_version": ov.__version__}
         run.write_jsonl("npu.jsonl", outputs)
         run.write_json("npu-result.json", record)
@@ -621,10 +700,18 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720") -> dict[str, Any]
                 ).items()))
             except Exception:
                 ir_operator_counts = {"inspection": -1}
+        diagnostic = {"phase": phase, "settings": settings,
+                      "compiled_model_created": "compiled" in locals(),
+                      "execution_devices": execution_devices,
+                      "exception": _exception_details(exc)}
+        if cache_dir is not None:
+            diagnostic["cache_after_failure"] = sorted(path.name for path in cache_dir.iterdir())
+        diagnostic_name = _unique_json(run, "npu-diagnostic", diagnostic)
         run.failure("G3", code, exc, phase=phase, settings=settings,
                     execution_devices=execution_devices,
+                    local_diagnostic_file=diagnostic_name,
                     triage_performed=["OpenVINO NPU architecture property", "explicit NPU compilation request",
-                                      "converted FP16 IR operator inventory"],
+                                      "converted FP16 IR operator inventory", "full exception chain saved locally"],
                     ir_operator_counts=ir_operator_counts,
                     unconfirmed=["operator identified by proprietary NPU compiler", "actual NPU inference result"])
         return {"status": "FAIL", "code": code}
