@@ -1,6 +1,9 @@
 import unittest
 
-from som_probe.contracts import ContractError, Profile, softmax, validate_dataset_case, validate_request
+from som_probe.contracts import (
+    ContractError, Profile, profile_from_mapping, profile_mapping, softmax,
+    validate_dataset_case, validate_request,
+)
 
 
 def request(question):
@@ -14,6 +17,20 @@ def request(question):
 
 
 class ContractTests(unittest.TestCase):
+    def test_fixed_profiles_keep_s256_default_and_allow_only_s128(self):
+        self.assertEqual(profile_mapping(Profile()), {
+            "name": "s256-k8", "batch": 1, "sequence_length": 256, "candidate_slots": 8,
+        })
+        self.assertEqual(profile_from_mapping({
+            "name": "s128-k8", "batch": 1, "sequence_length": 128, "candidate_slots": 8,
+        }).sequence_length, 128)
+        for invalid in (
+            {"name": "s129-k8", "batch": 1, "sequence_length": 129, "candidate_slots": 8},
+            {"name": "s128-k8", "batch": True, "sequence_length": 128, "candidate_slots": 8},
+        ):
+            with self.assertRaises(ContractError):
+                profile_from_mapping(invalid)
+
     def test_accepts_choice(self):
         value = request({"type": "choice", "instructions": "どれですか", "criteria": {"a": "A", "b": "B"}})
         self.assertEqual(validate_request(value), value)

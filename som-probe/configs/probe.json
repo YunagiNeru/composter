@@ -6,11 +6,20 @@
     "evaluation_environment": ".local/venv-eval",
     "runtime_environment": ".local/venv-run"
   },
-  "profile": {
-    "name": "s256-k8",
-    "batch": 1,
-    "sequence_length": 256,
-    "candidate_slots": 8
+  "default_profile": "s256-k8",
+  "profiles": {
+    "s256-k8": {
+      "name": "s256-k8",
+      "batch": 1,
+      "sequence_length": 256,
+      "candidate_slots": 8
+    },
+    "s128-k8": {
+      "name": "s128-k8",
+      "batch": 1,
+      "sequence_length": 128,
+      "candidate_slots": 8
+    }
   },
   "timeouts_seconds": {
     "compile": 300,

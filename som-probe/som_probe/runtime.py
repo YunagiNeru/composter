@@ -263,6 +263,12 @@ def _build_input_rows(root: Path, run: Run, agent) -> list[dict[str, Any]]:
     import numpy as np
     from laya.common import QTYPES
 
+    profile = run.profile_config
+    sequence_length = profile["sequence_length"]
+    special_token_ids = {
+        "cls": int(agent.tok.cls_token_id), "sep": int(agent.tok.sep_token_id),
+        "mask": int(agent.tok.mask_token_id), "pad": int(agent.tok.pad_token_id),
+    }
     rows: list[dict[str, Any]] = []
     for case in _load_cases(root):
         question_id, raw_question = next(iter(case["questions"].items()))
@@ -271,9 +277,13 @@ def _build_input_rows(root: Path, run: Run, agent) -> list[dict[str, Any]]:
         Agent._check_question(question_id, question)
         internal = {question_id: Agent._to_internal(question)}
         _ensure_no_question_truncation(agent.tok, question, internal[question_id], question["type"])
-        item = agent._encode_state(case["state"], [question_id], internal, max_len=256, head_max_len=192)[0]
+        item = agent._encode_state(case["state"], [question_id], internal,
+                                   max_len=sequence_length, head_max_len=192)[0]
         if item["state_stats"]["truncated"]:
-            raise RuntimeErrorRecord("STATE_TRUNCATION_REQUIRED", "状態文が256トークン固定入力へ収まりません。")
+            raise RuntimeErrorRecord(
+                "INPUT_SEQUENCE_LENGTH_EXCEEDED",
+                f"{case['case_id']}の質問・候補・状態を含む入力が{sequence_length}トークンに収まりません。",
+            )
         if item["options"]["options_distinct"] != item["options"]["options"]:
             raise RuntimeErrorRecord("CANDIDATES_COLLAPSED", "固定形状へ整形した候補がトークン上で重複しました。")
         if item["options"]["tokens_per_option"] is not None:
@@ -282,11 +292,11 @@ def _build_input_rows(root: Path, run: Run, agent) -> list[dict[str, Any]]:
                                else 2)
         if len(item["markers"]) != expected_candidates:
             raise RuntimeErrorRecord("CANDIDATE_COUNT_MISMATCH", "候補数とマーカー数が一致しません。")
-        if not 2 <= len(item["markers"]) <= 8 or len(item["ids"]) > 256:
+        if not 2 <= len(item["markers"]) <= 8 or len(item["ids"]) > sequence_length:
             raise RuntimeErrorRecord("FIXED_INPUT_SHAPE_INVALID", "トークン列または候補数が固定形状を超えています。")
-        pad_id = int(agent.tok.pad_token_id)
-        token_ids = np.full((1, 256), pad_id, dtype=np.int64)
-        attention = np.zeros((1, 256), dtype=np.int64)
+        pad_id = special_token_ids["pad"]
+        token_ids = np.full((1, sequence_length), pad_id, dtype=np.int64)
+        attention = np.zeros((1, sequence_length), dtype=np.int64)
         token_ids[0, :len(item["ids"])] = np.asarray(item["ids"], dtype=np.int64)
         attention[0, :len(item["ids"])] = 1
         marker_pos = np.zeros((1, 8), dtype=np.int64)
@@ -307,9 +317,72 @@ def _build_input_rows(root: Path, run: Run, agent) -> list[dict[str, Any]]:
                      "candidate_count": size,
                      "candidate_ids": list(raw_question["criteria"].keys()) if raw_question["type"] == "choice"
                      else (list(range(size)) if raw_question["type"] == "score" else [False, True]),
-                     "temperature": temperature, "input_sha256": _input_digest(inputs), "inputs": inputs,
+                     "temperature": temperature, "input_sequence_length": sequence_length,
+                     "special_token_ids": special_token_ids,
+                     "input_sha256": _input_digest(inputs), "inputs": inputs,
                      "label_status": "ai_draft_unverified"})
     return rows
+
+
+def _compare_profile_inputs(baseline_rows: list[dict[str, Any]], candidate_rows: list[dict[str, Any]],
+                            baseline_profile: dict[str, Any], candidate_profile: dict[str, Any]) -> dict[str, Any]:
+    if (baseline_profile.get("name") != "s256-k8" or candidate_profile.get("name") != "s128-k8"
+            or len(baseline_rows) != 60 or len(candidate_rows) != 60):
+        raise RuntimeErrorRecord("PROFILE_INPUT_COMPARISON_INVALID", "形状比較は60件のs256-k8とs128-k8に限定します。")
+    baseline_by_id = {row["case_id"]: row for row in baseline_rows}
+    candidate_by_id = {row["case_id"]: row for row in candidate_rows}
+    if len(baseline_by_id) != 60 or baseline_by_id.keys() != candidate_by_id.keys():
+        raise RuntimeErrorRecord("PROFILE_INPUT_CASE_MISMATCH", "形状比較のケースID集合が一致しません。")
+    active_lengths: list[int] = []
+    for case_id in sorted(baseline_by_id):
+        baseline = baseline_by_id[case_id]
+        candidate = candidate_by_id[case_id]
+        base_inputs, next_inputs = baseline["inputs"], candidate["inputs"]
+        base_mask = base_inputs["attention_mask"][0]
+        next_mask = next_inputs["attention_mask"][0]
+        base_length, next_length = sum(base_mask), sum(next_mask)
+        if (baseline.get("input_sequence_length") != 256 or candidate.get("input_sequence_length") != 128
+                or len(base_inputs["input_ids"][0]) != 256 or len(next_inputs["input_ids"][0]) != 128
+                or base_length != next_length or not 0 < base_length <= 128
+                or base_mask != [1] * base_length + [0] * (256 - base_length)
+                or next_mask != [1] * next_length + [0] * (128 - next_length)):
+            raise RuntimeErrorRecord("PROFILE_INPUT_LENGTH_MISMATCH", f"{case_id}の有効長または固定Shapeが不正です。")
+        if baseline.get("special_token_ids") != candidate.get("special_token_ids"):
+            raise RuntimeErrorRecord("PROFILE_SPECIAL_TOKEN_MISMATCH", f"{case_id}の特殊トークンIDが異なります。")
+        special = baseline["special_token_ids"]
+        base_active = base_inputs["input_ids"][0][:base_length]
+        next_active = next_inputs["input_ids"][0][:next_length]
+        if base_active != next_active:
+            raise RuntimeErrorRecord("PROFILE_ACTIVE_TOKEN_MISMATCH", f"{case_id}の有効input_idsが形状間で変わりました。")
+        if (base_inputs["input_ids"][0][base_length:] != [special["pad"]] * (256 - base_length)
+                or next_inputs["input_ids"][0][next_length:] != [special["pad"]] * (128 - next_length)
+                or base_active[0] != special["cls"] or base_active[-1] != special["sep"]):
+            raise RuntimeErrorRecord("PROFILE_PADDING_OR_SPECIAL_TOKEN_MISMATCH",
+                                     f"{case_id}のpaddingまたは先頭・終端特殊トークンが不正です。")
+        if (baseline["candidate_ids"] != candidate["candidate_ids"]
+                or baseline["candidate_count"] != candidate["candidate_count"]
+                or baseline["question_type"] != candidate["question_type"]
+                or baseline["qtype"] != candidate["qtype"]
+                or baseline["temperature"] != candidate["temperature"]
+                or base_inputs["marker_pos"] != next_inputs["marker_pos"]
+                or base_inputs["marker_mask"] != next_inputs["marker_mask"]
+                or base_inputs["qtype"] != next_inputs["qtype"]):
+            raise RuntimeErrorRecord("PROFILE_CANDIDATE_LAYOUT_MISMATCH",
+                                     f"{case_id}の候補ID・順序・位置・型・温度が形状間で変わりました。")
+        if any(base_active[position] != special["mask"]
+               for position, enabled in zip(base_inputs["marker_pos"][0], base_inputs["marker_mask"][0])
+               if enabled):
+            raise RuntimeErrorRecord("PROFILE_MASK_MARKER_MISMATCH", f"{case_id}の候補マスク位置に[MASK]がありません。")
+        active_lengths.append(base_length)
+    return {
+        "status": "PASS", "baseline_profile": "s256-k8", "candidate_profile": "s128-k8",
+        "cases": len(active_lengths), "same_active_input_ids": len(active_lengths),
+        "same_candidate_ids_order_positions_masks_qtype_temperature": len(active_lengths),
+        "same_special_token_ids_and_active_sequence_boundaries": len(active_lengths),
+        "sequence_shape_before": [1, 256], "sequence_shape_after": [1, 128],
+        "active_token_length_min": min(active_lengths), "active_token_length_max": max(active_lengths),
+        "overlength_cases_rejected": 0,
+    }
 
 
 def _model_output(agent, input_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -361,6 +434,26 @@ def run_reference(root: Path, run: Run) -> dict[str, Any]:
     try:
         agent = _load_agent(root, run)
         rows = _build_input_rows(root, run, agent)
+        profile_equivalence = None
+        compare_input_run_id = run.read_manifest().get("compare_input_run_id")
+        if compare_input_run_id:
+            baseline_run = open_run(root, compare_input_run_id)
+            baseline_manifest = baseline_run.read_manifest()
+            current_manifest = run.read_manifest()
+            if (baseline_run.profile_config["name"] != "s256-k8"
+                    or run.profile_config["name"] != "s128-k8"
+                    or baseline_manifest.get("stages", {}).get("G1", {}).get("status")
+                    != "UNVERIFIED_LABEL_REFERENCE_ONLY"
+                    or baseline_manifest.get("worktree_dirty") is not False
+                    or current_manifest.get("worktree_dirty") is not False
+                    or any(baseline_manifest.get(key) != current_manifest.get(key)
+                           for key in ("git_revision", "source_tree_sha256", "input_sha256"))):
+                raise RuntimeErrorRecord("PROFILE_INPUT_BASELINE_MISMATCH",
+                                         "入力比較元とコード・設定・データ・依存ロックが一致しません。")
+            baseline_rows = _read_jsonl(baseline_run.path / "inputs.jsonl")
+            profile_equivalence = _compare_profile_inputs(
+                baseline_rows, rows, baseline_run.profile_config, run.profile_config
+            )
         reference = _model_output(agent, rows)
         run.write_jsonl("inputs.jsonl", rows)
         run.write_jsonl("reference.jsonl", reference)
@@ -368,6 +461,7 @@ def run_reference(root: Path, run: Run) -> dict[str, Any]:
                   "label_state": "ai_draft_unverified", "model_device": str(agent.device),
                   "input_hashes_recorded": True,
                   "score_return_contract": _score_return_contract(root),
+                  "profile_input_equivalence": profile_equivalence,
                   "question_type_counts": {
                       kind: sum(row["question_type"] == kind for row in rows)
                       for kind in ("choice", "score", "noul")
@@ -396,7 +490,10 @@ def _input_arrays(row: dict[str, Any]) -> dict[str, Any]:
     if set(row["inputs"]) != set(expected):
         raise RuntimeErrorRecord("INPUT_CONTRACT_MISMATCH", "保存済み入力の項目が固定契約と一致しません。")
     arrays = {name: np.asarray(row["inputs"][name], dtype=dtype) for name, dtype in expected.items()}
-    shapes = {"input_ids": (1, 256), "attention_mask": (1, 256), "marker_pos": (1, 8),
+    sequence_length = row.get("input_sequence_length", 256)
+    if sequence_length not in (128, 256):
+        raise RuntimeErrorRecord("INPUT_PROFILE_INVALID", "入力の系列長が固定プロファイルではありません。")
+    shapes = {"input_ids": (1, sequence_length), "attention_mask": (1, sequence_length), "marker_pos": (1, 8),
               "marker_mask": (1, 8), "qtype": (1,)}
     if any(arrays[name].shape != shape for name, shape in shapes.items()):
         raise RuntimeErrorRecord("INPUT_SHAPE_MISMATCH", "保存済み入力が固定Shapeと一致しません。")
@@ -630,22 +727,40 @@ def _onnx_cpu(root: Path, rows: list[dict[str, Any]]) -> tuple[list[dict[str, An
                      "model_sha256": sha256_file(model_path)}
 
 
-def _static_shape(model: Any) -> None:
+def _static_shape(model: Any, sequence_length: int) -> dict[str, dict[str, Any]]:
     import openvino as ov
 
-    shapes = {"input_ids": ov.PartialShape([1, 256]), "attention_mask": ov.PartialShape([1, 256]),
+    if sequence_length not in (128, 256):
+        raise RuntimeErrorRecord("PROFILE_INVALID", "固定Shapeの系列長が不正です。")
+    shapes = {"input_ids": ov.PartialShape([1, sequence_length]),
+              "attention_mask": ov.PartialShape([1, sequence_length]),
               "marker_pos": ov.PartialShape([1, 8]), "marker_mask": ov.PartialShape([1, 8]),
               "qtype": ov.PartialShape([1])}
+    expected_types = {"input_ids": ov.Type.i64, "attention_mask": ov.Type.i64,
+                      "marker_pos": ov.Type.i64, "marker_mask": ov.Type.boolean, "qtype": ov.Type.i64}
     available = {name for port in model.inputs for name in port.get_names()}
     if available != set(shapes):
         raise RuntimeErrorRecord("OV_INPUT_CONTRACT_MISMATCH", "OpenVINO変換入力が固定入力契約と異なります。")
     model.reshape(shapes)
+    recorded: dict[str, dict[str, Any]] = {}
     for port in model.inputs:
         if not port.partial_shape.is_static:
             raise RuntimeErrorRecord("OV_FIXED_SHAPE_FAILED", "OpenVINOの入力Shapeが静的ではありません。")
+        name = port.get_any_name()
         shape = tuple(port.partial_shape.to_shape())
-        if shape != tuple(shapes[port.get_any_name()].to_shape()):
+        if shape != tuple(shapes[name].to_shape()):
             raise RuntimeErrorRecord("OV_FIXED_SHAPE_FAILED", "OpenVINO変換後に固定Shapeを確認できません。")
+        if port.element_type != expected_types[name]:
+            raise RuntimeErrorRecord("OV_INPUT_DTYPE_MISMATCH", f"OpenVINO入力{name}のdtypeが固定契約と一致しません。")
+        recorded[name] = {"shape": list(shape), "dtype": str(port.element_type)}
+    return recorded
+
+
+def _verify_saved_ir(root: Path, xml: Path, sequence_length: int) -> dict[str, dict[str, Any]]:
+    import openvino as ov
+
+    model = ov.Core().read_model(str(xml))
+    return _static_shape(model, sequence_length)
 
 
 def convert_model(root: Path, run: Run) -> dict[str, Any]:
@@ -655,16 +770,26 @@ def convert_model(root: Path, run: Run) -> dict[str, Any]:
         verify_assets(root)
         source = asset_path(root, "onnx/model.onnx")
         digest = sha256_file(source)
+        profile = run.profile_config
+        sequence_length = profile["sequence_length"]
         destination = run.path / "models" / "converted"
         fp32_xml = destination / "fp32" / "model.xml"
         fp16_xml = destination / "fp16" / "model.xml"
         model = ov.convert_model(str(source))
-        _static_shape(model)
+        input_contract = _static_shape(model, sequence_length)
         (destination / "fp32").mkdir(parents=True)
         ov.save_model(model, str(fp32_xml), compress_to_fp16=False)
         (destination / "fp16").mkdir(parents=True)
         ov.save_model(model, str(fp16_xml), compress_to_fp16=True)
-        record = {"source_model_sha256": digest, "profile": "s256-k8",
+        saved_contracts = {
+            "fp32": _verify_saved_ir(root, fp32_xml, sequence_length),
+            "fp16": _verify_saved_ir(root, fp16_xml, sequence_length),
+        }
+        if saved_contracts["fp32"] != input_contract or saved_contracts["fp16"] != input_contract:
+            raise RuntimeErrorRecord("SAVED_IR_CONTRACT_MISMATCH", "保存後IRのshapeまたはdtypeが変換元と異なります。")
+        record = {"source_model_sha256": digest, "profile": profile["name"],
+                  "sequence_length": sequence_length, "input_contract": input_contract,
+                  "saved_ir_input_contracts": saved_contracts,
                   "fp32_xml": fp32_xml.relative_to(root).as_posix(),
                   "fp32_xml_sha256": sha256_file(fp32_xml),
                   "fp32_bin_sha256": sha256_file(fp32_xml.with_suffix(".bin")),
@@ -806,7 +931,12 @@ def run_cpu_check(root: Path, run: Run) -> dict[str, Any]:
 def _load_run_conversion(root: Path, run: Run) -> dict[str, Any]:
     try:
         record = json.loads((run.path / "conversion.json").read_text(encoding="utf-8"))
+        if (record.get("profile") != run.profile_config["name"]
+                or record.get("sequence_length") != run.profile_config["sequence_length"]):
+            raise RuntimeErrorRecord("CONVERSION_PROFILE_MISMATCH", "変換IRとRunプロファイルが一致しません。")
         return record
+    except RuntimeErrorRecord:
+        raise
     except (OSError, json.JSONDecodeError) as exc:
         raise RuntimeErrorRecord("CONVERSION_REQUIRED", "同一runでG2固定Shape変換を完了してください。") from exc
 
@@ -838,7 +968,8 @@ def _npu_cache_for_run(root: Path, run: Run, conversion: dict[str, Any],
     source_run = open_run(root, cache_from_run)
     source_manifest = source_run.read_manifest()
     current_manifest = run.read_manifest()
-    if (source_manifest.get("git_revision") != current_manifest.get("git_revision")
+    if (source_run.profile_config != run.profile_config
+            or source_manifest.get("git_revision") != current_manifest.get("git_revision")
             or source_manifest.get("source_tree_sha256") != current_manifest.get("source_tree_sha256")
             or source_manifest.get("input_sha256") != current_manifest.get("input_sha256")):
         raise RuntimeErrorRecord("CACHE_SOURCE_FINGERPRINT_MISMATCH", "キャッシュ元とコード・設定・データ・依存ロックが一致しません。")
@@ -886,6 +1017,8 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720",
     try:
         inputs = _read_jsonl(data_run.path / "inputs.jsonl")
         reference = _read_jsonl(data_run.path / "reference.jsonl")
+        if run.profile_config != data_run.profile_config:
+            raise RuntimeErrorRecord("NPU_PROFILE_MISMATCH", "NPU Runと入力Runの固定プロファイルが一致しません。")
         conversion = _load_run_conversion(root, data_run)
         device_start = time.perf_counter()
         device = inspect_device("NPU", expected_arch)

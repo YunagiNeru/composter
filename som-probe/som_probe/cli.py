@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from .assets import AssetError, prepare_assets, verify_assets
-from .contracts import ContractError, Profile, validate_dataset_case, validate_request
+from .contracts import (ContractError, Profile, profile_from_mapping, profile_mapping,
+                        validate_dataset_case, validate_request)
 from .runtime import convert_model, doctor, run_cpu_check, run_npu, run_npu_control, run_reference
 from .storage import Run, open_run
 
@@ -35,7 +36,22 @@ def _json(path: Path) -> Any:
         raise ContractError("INVALID_FILE", f"JSONを読み込めません: {path.name}") from exc
 
 
-def validate_project(root: Path) -> dict[str, Any]:
+def _profile_for(root: Path, selected: str | None = None) -> dict[str, Any]:
+    config = _json(root / "configs/probe.json")
+    profiles = config.get("profiles")
+    if (config.get("default_profile") != "s256-k8" or not isinstance(profiles, dict)
+            or set(profiles) != {"s256-k8", "s128-k8"}):
+        raise ContractError("PROFILE_CONFIG_INVALID", "固定プロファイルが不足または変更されています。")
+    for name, value in profiles.items():
+        if profile_mapping(profile_from_mapping(value)) != value or value["name"] != name:
+            raise ContractError("PROFILE_CONFIG_INVALID", "プロファイル名と固定形状が一致しません。")
+    name = selected or config["default_profile"]
+    if name not in profiles:
+        raise ContractError("PROFILE_UNKNOWN", "指定された固定プロファイルがありません。")
+    return profiles[name]
+
+
+def validate_project(root: Path, selected_profile: str = "s256-k8") -> dict[str, Any]:
     required = [
         "configs/probe.json", "configs/models.lock.json", "configs/gates.json",
         "datasets/manifest.json", "datasets/dev.jsonl",
@@ -44,11 +60,11 @@ def validate_project(root: Path) -> dict[str, Any]:
     if missing:
         raise ContractError("REQUIRED_FILES_MISSING", "必須ファイルがありません: " + ", ".join(missing))
     config = _json(root / "configs/probe.json")
+    profile_spec = _profile_for(root, selected_profile)
+    profile = profile_from_mapping(profile_spec)
     lock = _json(root / "configs/models.lock.json")
     gates = _json(root / "configs/gates.json")
     dataset_manifest = _json(root / "datasets/manifest.json")
-    if config.get("profile") != {"name": "s256-k8", "batch": 1, "sequence_length": 256, "candidate_slots": 8}:
-        raise ContractError("PROFILE_MISMATCH", "s256-k8の形状設定が計画値と一致しません。")
     if lock.get("schema_version") != 1 or not lock.get("sources") or not lock.get("downloads"):
         raise ContractError("MODEL_LOCK_INVALID", "モデル固定情報が不正です。")
     if gates.get("schema_version") != 1 or not {"G0", "G1", "G2", "G3", "G4", "G5"}.issubset(gates.get("stages", {})):
@@ -60,7 +76,7 @@ def validate_project(root: Path) -> dict[str, Any]:
                 continue
             try:
                 case = json.loads(line)
-                validate_dataset_case(case)
+                validate_dataset_case(case, profile)
             except (json.JSONDecodeError, ContractError) as exc:
                 raise ContractError("DATASET_INVALID", f"dev.jsonl の {line_number} 行目が不正です。") from exc
             rows.append(case)
@@ -82,7 +98,8 @@ def validate_project(root: Path) -> dict[str, Any]:
     if type_counts != dev.get("question_types"):
         raise ContractError("DATASET_TYPE_COUNT_MISMATCH", "devデータの型別件数が固定値と一致しません。")
     verified = verify_assets(root)
-    return {"files_checked": len(required), "dev_cases": len(rows), "verified_artifacts": len(verified),
+    return {"files_checked": len(required), "profile": profile_spec,
+            "dev_cases": len(rows), "verified_artifacts": len(verified),
             "verified_artifact_sha256": verified,
             "label_state": "ai_draft_unverified", "official_quality_status": "BLOCKED_UNTIL_HUMAN_LABEL_REVIEW"}
 
@@ -99,6 +116,8 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     init = commands.add_parser("run-init", help="新しいローカルrunを作成")
     init.add_argument("--purpose", choices=("G0", "G1", "G2", "G3"), default="G0")
+    init.add_argument("--profile", choices=("s256-k8", "s128-k8"), default=None)
+    init.add_argument("--compare-input-run", help="s128-k8入力を照合するs256-k8の元入力Run")
     validate = commands.add_parser("validate", help="設定、固定情報、60件の入力契約を検査")
     validate.add_argument("--run-id")
     request = commands.add_parser("validate-request", help="1件の入力JSONを検査")
@@ -130,6 +149,13 @@ def _parser() -> argparse.ArgumentParser:
     perf.add_argument("--cache-from-run", help="NPUのキャッシュ再利用元Run。CPUでは使用不可")
     perf.add_argument("--idle-seconds", type=int, choices=(0, 300), default=0,
                       help="測定後の待機観測秒数（0または300）")
+    perf.add_argument("--load-method", choices=("read-compile", "path-compile"), default="read-compile")
+    memory = commands.add_parser("memory-run", help="通常時間測定と分離した段階別メモリ測定")
+    memory.add_argument("--source-run", required=True)
+    memory.add_argument("--backend", choices=("cpu", "npu"), required=True)
+    memory.add_argument("--threads", type=int, choices=(1, 2))
+    memory.add_argument("--load-method", choices=("read-compile", "path-compile"), required=True)
+    memory.add_argument("--cache-from-run", help="NPUキャッシュ再利用元Run。CPUでは使用不可")
     review = commands.add_parser("review-html", help="60件の人手確認資料HTMLを生成")
     review.add_argument("--output", default="QUALITY-REVIEW-JA-60.html")
     return parser
@@ -144,7 +170,14 @@ def main(argv: list[str] | None = None) -> int:
     root = project_root()
     try:
         if args.command == "run-init":
-            run = Run.create(root, args.purpose)
+            profile = _profile_for(root, args.profile)
+            if args.compare_input_run:
+                if profile["name"] != "s128-k8":
+                    raise ContractError("PROFILE_COMPARISON_INVALID", "--compare-input-runはs128-k8だけで使えます。")
+                baseline = open_run(root, args.compare_input_run)
+                if baseline.profile_config["name"] != "s256-k8":
+                    raise ContractError("PROFILE_COMPARISON_INVALID", "比較元はs256-k8でなければなりません。")
+            run = Run.create(root, args.purpose, profile, args.compare_input_run)
             print(json.dumps({"status": "RUNNING", "run_id": run.run_id}, ensure_ascii=False))
             return EXIT_OK
         if args.command == "validate-request":
@@ -154,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "validate":
             run = _run_for(root, args.run_id, "G0")
             try:
-                result = validate_project(root)
+                result = validate_project(root, run.profile_config["name"])
                 run.stage("G0", "PASS", **result)
                 print(json.dumps({"status": "PASS", "run_id": run.run_id, **result}, ensure_ascii=False))
                 return EXIT_OK
@@ -209,11 +242,12 @@ def main(argv: list[str] | None = None) -> int:
                 raise ContractError("SOURCE_RUN_REQUIRED", "kind=layaでは--source-runが必要です。")
             if args.kind == "control" and args.source_run:
                 raise ContractError("SOURCE_RUN_NOT_ALLOWED", "kind=controlでは--source-runを指定しません。")
-            run = Run.create(root, "NPU_DIAGNOSTIC")
             if args.kind == "control":
+                run = Run.create(root, "NPU_DIAGNOSTIC")
                 result = run_npu_control(root, run, args.compiler.upper(), "3720")
             else:
                 source_run = open_run(root, args.source_run)
+                run = Run.create(root, "NPU_DIAGNOSTIC", source_run.profile_config)
                 result = run_npu(root, run, "3720", compiler_type=args.compiler.upper(), source_run=source_run)
             print(json.dumps({"run_id": run.run_id, **result}, ensure_ascii=False))
             return EXIT_OK if result["status"] == "PASS" else EXIT_ENVIRONMENT if result["status"] == "BLOCKED" else EXIT_MODEL
@@ -225,7 +259,18 @@ def main(argv: list[str] | None = None) -> int:
             from .performance import run_performance
             source_run = open_run(root, args.source_run)
             result = run_performance(root, source_run, args.backend, args.threads, args.trial,
-                                     args.cache_from_run, args.idle_seconds)
+                                     args.cache_from_run, args.idle_seconds, args.load_method)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "PASS" else EXIT_RESOURCE
+        if args.command == "memory-run":
+            if args.backend == "cpu" and (args.threads not in (1, 2) or args.cache_from_run):
+                raise ContractError("MEMORY_OPTIONS_INVALID", "CPUメモリ測定は1/2スレッドでキャッシュ再利用なしです。")
+            if args.backend == "npu" and args.threads is not None:
+                raise ContractError("MEMORY_OPTIONS_INVALID", "NPUメモリ測定では--threadsを指定しません。")
+            from .performance import run_memory_diagnostic
+            source_run = open_run(root, args.source_run)
+            result = run_memory_diagnostic(root, source_run, args.backend, args.threads,
+                                           args.load_method, args.cache_from_run)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result["status"] == "PASS" else EXIT_RESOURCE
         if args.command == "review-html":

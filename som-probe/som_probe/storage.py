@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .contracts import Profile, profile_from_mapping, profile_mapping
+
 
 _PATH = re.compile(r"(?i)(?:[a-z]:\\|\\\\)[^\s\"']+")
 _SECRET = re.compile(r"(?i)(?:hf_[a-z0-9]{20,}|sk-[a-z0-9]{20,}|gh[pousr]_[a-z0-9]{20,})")
@@ -72,7 +74,11 @@ class Run:
         self.run_id = run_id
 
     @classmethod
-    def create(cls, root: Path, purpose: str) -> "Run":
+    def create(cls, root: Path, purpose: str, profile: dict[str, Any] | None = None,
+               compare_input_run_id: str | None = None) -> "Run":
+        profile = profile_mapping(Profile()) if profile is None else profile_mapping(profile_from_mapping(profile))
+        if compare_input_run_id is not None and not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{8}", compare_input_run_id):
+            raise ValueError("入力比較元Run IDの形式が不正です。")
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         while True:
             run_id = f"{timestamp}-{uuid.uuid4().hex[:8]}"
@@ -110,7 +116,9 @@ class Run:
             "input_sha256": _provenance_files(root),
             "verified_model_artifact_sha256": {},
             "converted_ir_sha256": {},
-            "profile": "s256-k8",
+            "profile": profile["name"],
+            "profile_config": profile,
+            "compare_input_run_id": compare_input_run_id,
             "stages": {},
         })
         return run
@@ -120,6 +128,17 @@ class Run:
         if not path.is_file():
             raise FileNotFoundError("run manifestがありません。")
         return json.loads(path.read_text(encoding="utf-8"))
+
+    @property
+    def profile_config(self) -> dict[str, Any]:
+        manifest = self.read_manifest()
+        value = manifest.get("profile_config")
+        if value is None and manifest.get("profile") == "s256-k8":
+            value = profile_mapping(Profile())
+        profile = profile_mapping(profile_from_mapping(value))
+        if manifest.get("profile") != profile["name"]:
+            raise ValueError("Run manifestのプロファイル名と設定が一致しません。")
+        return profile
 
     def stage(self, name: str, status: str, **fields: Any) -> None:
         manifest = self.read_manifest()

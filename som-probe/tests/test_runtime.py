@@ -1,12 +1,43 @@
 import unittest
 
 from som_probe.runtime import (
-    RuntimeErrorRecord, _comparison, _execution_device_names, _npu_error_code, _row_output,
+    RuntimeErrorRecord, _compare_profile_inputs, _comparison, _execution_device_names,
+    _npu_error_code, _row_output,
     _score_value, _type_comparison,
 )
 
 
 class RuntimeFailureTests(unittest.TestCase):
+    def test_profile_comparison_preserves_active_tokens_candidates_and_specials(self):
+        special = {"cls": 101, "sep": 102, "mask": 103, "pad": 0}
+
+        def row(sequence_length, case_id):
+            active = [101, 103, 11, 103, 12, 102]
+            inputs = {
+                "input_ids": [active + [0] * (sequence_length - len(active))],
+                "attention_mask": [[1] * len(active) + [0] * (sequence_length - len(active))],
+                "marker_pos": [[1, 3, 0, 0, 0, 0, 0, 0]],
+                "marker_mask": [[True, True, False, False, False, False, False, False]],
+                "qtype": [0],
+            }
+            return {"case_id": case_id, "question_id": "intent", "question_type": "choice",
+                    "candidate_ids": ["a", "b"], "candidate_count": 2, "qtype": 0,
+                    "temperature": 1.0, "input_sequence_length": sequence_length,
+                    "special_token_ids": special, "inputs": inputs}
+
+        baseline_rows = [row(256, f"case-{index:02}") for index in range(60)]
+        candidate_rows = [row(128, f"case-{index:02}") for index in range(60)]
+        result = _compare_profile_inputs(baseline_rows, candidate_rows,
+                                        {"name": "s256-k8"}, {"name": "s128-k8"})
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["same_active_input_ids"], 60)
+
+        changed = row(128, "case-00")
+        changed["inputs"]["input_ids"][0][2] = 99
+        with self.assertRaisesRegex(RuntimeErrorRecord, "有効input_ids"):
+            _compare_profile_inputs(baseline_rows, [changed, *candidate_rows[1:]],
+                                   {"name": "s256-k8"}, {"name": "s128-k8"})
+
     def test_score_value_matches_zero_based_expected_value_and_four_place_rounding(self):
         raw, returned = _score_value([0.2, 0.6, 0.2])
 

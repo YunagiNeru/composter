@@ -9,7 +9,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .assets import asset_path, load_lock, sha256_file, verify_assets
 from .runtime import (
@@ -41,30 +41,38 @@ def _render_options(question: dict[str, Any]) -> list[str]:
 
 
 def _preprocess_case(case: dict[str, Any], saved: dict[str, Any], tokenizer, special: dict[str, int],
-                     mask_token: str) -> tuple[dict[str, Any], int]:
+                     mask_token: str, sequence_length: int) -> tuple[dict[str, Any], int]:
     question_id, question = next(iter(case["questions"].items()))
     kind = "noul" if question["type"] == "bool" else question["type"]
     head = _encode(tokenizer, f"{kind} question: {question['instructions'].replace(mask_token, ' ')}")
-    option_ids = [[special["mask"]] + _encode(tokenizer, " " + option.replace(mask_token, " "))[:48]
+    option_ids = [[special["mask"]] + _encode(tokenizer, " " + option.replace(mask_token, " "))
                   for option in _render_options(question)]
+    if any(len(option) > 49 for option in option_ids):
+        raise RuntimeErrorRecord("OPTION_TRUNCATION_REQUIRED", f"{case['case_id']}の候補が48トークン上限を超えています。")
     budget = 192 - sum(len(option) for option in option_ids)
     if budget < 16:
         per_option = max(4, (192 - 16) // max(1, len(option_ids)))
-        option_ids = [option[:per_option] for option in option_ids]
+        if any(len(option) > per_option for option in option_ids):
+            raise RuntimeErrorRecord("OPTION_TRUNCATION_REQUIRED", f"{case['case_id']}の候補群を固定ヘッダーに収められません。")
         budget = 192 - sum(len(option) for option in option_ids)
-    ids = [special["cls"]] + head[:max(8, budget)] + [special["sep"]]
+    if len(head) > max(8, budget):
+        raise RuntimeErrorRecord("INSTRUCTION_TRUNCATION_REQUIRED", f"{case['case_id']}の質問文を固定ヘッダーに収められません。")
+    ids = [special["cls"]] + head + [special["sep"]]
     markers: list[int] = []
     for option in option_ids:
         markers.append(len(ids))
         ids.extend(option)
     ids.append(special["sep"])
     state_ids = _encode(tokenizer, str(case["state"]).replace(mask_token, " "))
-    state_ids = state_ids[:max(0, 256 - len(ids) - 1)]
-    ids = (ids + state_ids + [special["sep"]])[:256]
+    ids.extend(state_ids)
+    ids.append(special["sep"])
+    if len(ids) > sequence_length:
+        raise RuntimeErrorRecord("INPUT_SEQUENCE_LENGTH_EXCEEDED",
+                                 f"{case['case_id']}の完全な入力が{sequence_length}トークンを超えています。")
     token_count = len(ids)
     inputs = {
-        "input_ids": [ids + [special["pad"]] * (256 - len(ids))],
-        "attention_mask": [[1] * len(ids) + [0] * (256 - len(ids))],
+        "input_ids": [ids + [special["pad"]] * (sequence_length - len(ids))],
+        "attention_mask": [[1] * len(ids) + [0] * (sequence_length - len(ids))],
         "marker_pos": [markers + [0] * (8 - len(markers))],
         "marker_mask": [[True] * len(markers) + [False] * (8 - len(markers))],
         "qtype": [{"choice": 0, "score": 1, "noul": 2}[kind]],
@@ -77,7 +85,9 @@ def _preprocess_case(case: dict[str, Any], saved: dict[str, Any], tokenizer, spe
 
 
 def _verify_preprocessor(root: Path, cases: list[dict[str, Any]],
-                         input_rows: list[dict[str, Any]]) -> tuple[Any, dict[str, int], list[dict[str, Any]], dict[str, int], float]:
+                         input_rows: list[dict[str, Any]], sequence_length: int,
+                         memory_recorder: Callable[[str], None] | None = None
+                         ) -> tuple[Any, dict[str, int], list[dict[str, Any]], dict[str, int], float]:
     try:
         from tokenizers import Tokenizer
     except Exception as exc:
@@ -86,6 +96,8 @@ def _verify_preprocessor(root: Path, cases: list[dict[str, Any]],
     load_start = time.perf_counter()
     tokenizer = Tokenizer.from_file(str(asset_path(root, "reference/tokenizer/tokenizer.json")))
     tokenizer_load_ms = (time.perf_counter() - load_start) * 1000
+    if memory_recorder is not None:
+        memory_recorder("after_tokenizer_load")
     special = {key: tokenizer.token_to_id(tokenizer_config[field])
                for key, field in (("cls", "cls_token"), ("sep", "sep_token"),
                                   ("mask", "mask_token"), ("pad", "pad_token"))}
@@ -100,7 +112,10 @@ def _verify_preprocessor(root: Path, cases: list[dict[str, Any]],
         saved = saved_by_id.get(case["case_id"])
         if saved is None:
             raise RuntimeErrorRecord("PERF_INPUT_ID_MISMATCH", "固定データに対応するG3入力がありません。")
-        row, token_count = _preprocess_case(case, saved, tokenizer, special, tokenizer_config["mask_token"])
+        if saved.get("input_sequence_length", 256) != sequence_length:
+            raise RuntimeErrorRecord("PERF_PROFILE_MISMATCH", "保存入力と性能測定の系列長が一致しません。")
+        row, token_count = _preprocess_case(case, saved, tokenizer, special,
+                                            tokenizer_config["mask_token"], sequence_length)
         if row["input_sha256"] != saved["input_sha256"] or row["inputs"] != saved["inputs"]:
             raise RuntimeErrorRecord("PERF_TOKENIZER_PARITY_FAILED", f"{case['case_id']}の再生成入力がG3保存入力と一致しません。")
         token_lengths[case["case_id"]] = token_count
@@ -144,11 +159,22 @@ def _memory() -> dict[str, Any]:
     ok = psapi.GetProcessMemoryInfo(kernel.GetCurrentProcess(), ctypes.byref(counters), counters.cb)
     if not ok:
         return {"status": "unavailable", "error_code": ctypes.get_last_error()}
-    return {"status": "available", "working_set_bytes": int(counters.WorkingSetSize),
-            "peak_working_set_bytes": int(counters.PeakWorkingSetSize),
-            "private_bytes": int(counters.PrivateUsage),
-            "pagefile_usage_bytes": int(counters.PagefileUsage),
-            "peak_pagefile_usage_bytes": int(counters.PeakPagefileUsage)}
+    raw_fields = {"WorkingSetSize": int(counters.WorkingSetSize),
+                  "PeakWorkingSetSize": int(counters.PeakWorkingSetSize),
+                  "PrivateUsage": int(counters.PrivateUsage),
+                  "PagefileUsage": int(counters.PagefileUsage),
+                  "PeakPagefileUsage": int(counters.PeakPagefileUsage)}
+    return {"status": "available", "api_fields_raw": raw_fields,
+            "working_set_bytes": raw_fields["WorkingSetSize"],
+            "peak_working_set_bytes": raw_fields["PeakWorkingSetSize"],
+            "private_bytes": raw_fields["PrivateUsage"],
+            "pagefile_usage_bytes": raw_fields["PagefileUsage"],
+            "peak_pagefile_usage_bytes": raw_fields["PeakPagefileUsage"],
+            "semantics": {"WorkingSetSize": "current resident working set",
+                          "PeakWorkingSetSize": "working-set peak since process start",
+                          "PrivateUsage": "current process Commit Charge",
+                          "PagefileUsage": "current process Commit Charge",
+                          "PeakPagefileUsage": "process lifetime peak Commit Charge"}}
 
 
 def _available_ram() -> int | None:
@@ -178,6 +204,24 @@ def _system_cpu_ticks() -> tuple[int, int] | None:
     def value(item: Any) -> int:
         return (int(item.dwHighDateTime) << 32) | int(item.dwLowDateTime)
     return value(idle), value(kernel) + value(user)
+
+
+def _host_cpu_observation(before: tuple[int, int] | None, after: tuple[int, int] | None,
+                          elapsed_seconds: float, process_cpu_seconds: float) -> dict[str, Any]:
+    if before is None or after is None or elapsed_seconds <= 0 or not os.cpu_count():
+        return {"status": "unavailable", "process_cpu_seconds": process_cpu_seconds}
+    idle_ticks = after[0] - before[0]
+    total_ticks = after[1] - before[1]
+    if total_ticks <= 0:
+        return {"status": "unavailable", "process_cpu_seconds": process_cpu_seconds}
+    system_busy = max(0.0, min(100.0, 100.0 * (1 - idle_ticks / total_ticks)))
+    process_capacity = 100.0 * process_cpu_seconds / (elapsed_seconds * os.cpu_count())
+    return {"status": "measured", "system_cpu_busy_percent": system_busy,
+            "process_cpu_percent_of_host_capacity": process_capacity,
+            "estimated_other_host_busy_percent": max(0.0, system_busy - process_capacity),
+            "logical_cpu_count": os.cpu_count(), "process_cpu_seconds": process_cpu_seconds,
+            "elapsed_seconds": elapsed_seconds,
+            "method": "GetSystemTimes aggregate busy minus this process CPU normalized by logical CPUs"}
 
 
 def _tree_size(path: Path) -> dict[str, Any]:
@@ -210,7 +254,8 @@ def _event(case_rows: list[tuple[dict[str, Any], dict[str, Any]]], tokenizer, sp
     outputs = []
     for case, saved in case_rows:
         start = time.perf_counter()
-        row, _ = _preprocess_case(case, saved, tokenizer, special, mask_token)
+        sequence_length = saved.get("input_sequence_length", 256)
+        row, _ = _preprocess_case(case, saved, tokenizer, special, mask_token, sequence_length)
         arrays = _input_arrays(row)
         prep_ms += (time.perf_counter() - start) * 1000
         start = time.perf_counter()
@@ -224,10 +269,203 @@ def _event(case_rows: list[tuple[dict[str, Any], dict[str, Any]]], tokenizer, sp
     return {"preprocess_ms": prep_ms, "model_ms": model_ms, "postprocess_ms": post_ms}, outputs
 
 
+def run_memory_diagnostic(root: Path, source_run: Run, backend: str, threads: int | None,
+                          load_method: str, cache_from_run: str | None = None) -> dict[str, Any]:
+    run = Run.create(root, f"MEMORY_{backend.upper()}_{threads or 'PLUGIN'}_{load_method}",
+                     source_run.profile_config)
+    source_manifest = source_run.read_manifest()
+    current_manifest = run.read_manifest()
+    if (source_manifest.get("stages", {}).get("G2-cpu-check", {}).get("status") != "PASS"
+            or source_manifest.get("stages", {}).get("G3", {}).get("status") != "PASS"):
+        run.blocked("MEMORY", "G3_NOT_PASS", "CPU照合とG3実推論がPASSしたRunが必要です。")
+        return {"status": "BLOCKED", "run_id": run.run_id, "code": "G3_NOT_PASS"}
+    if any(source_manifest.get(key) != current_manifest.get(key)
+           for key in ("git_revision", "source_tree_sha256", "input_sha256")):
+        run.blocked("MEMORY", "SOURCE_FINGERPRINT_MISMATCH", "診断RunとG3 Runのコード・入力構成が一致しません。")
+        return {"status": "BLOCKED", "run_id": run.run_id, "code": "SOURCE_FINGERPRINT_MISMATCH"}
+    try:
+        if backend not in {"cpu", "npu"} or load_method not in {"read-compile", "path-compile"}:
+            raise RuntimeErrorRecord("MEMORY_OPTIONS_INVALID", "バックエンドまたはロード方式が不正です。")
+        if (backend == "cpu" and (threads not in (1, 2) or cache_from_run)
+                or backend == "npu" and threads is not None):
+            raise RuntimeErrorRecord("MEMORY_OPTIONS_INVALID", "CPU/NPUのメモリ測定設定が不正です。")
+        started = time.perf_counter()
+        process_age_at_entry_ms = _process_age_ms()
+        phases: dict[str, Any] = {}
+
+        def capture(name: str) -> None:
+            counters = _memory()
+            if counters.get("status") != "available":
+                raise RuntimeErrorRecord("MEMORY_COUNTERS_UNAVAILABLE", "Windowsプロセスメモリカウンターを取得できません。")
+            phases[name] = {"elapsed_since_process_entry_ms": (time.perf_counter() - started) * 1000,
+                            "counters": counters, "available_physical_ram_bytes": _available_ram()}
+
+        capture("process_entry")
+        import openvino as ov
+        capture("after_openvino_library_import")
+        conversion = _load_run_conversion(root, source_run)
+        actual_assets = verify_assets(root)
+        if actual_assets != source_manifest.get("verified_model_artifact_sha256"):
+            raise RuntimeErrorRecord("MODEL_ARTIFACT_FINGERPRINT_MISMATCH", "モデル取得物のハッシュがG3 Runと一致しません。")
+        xml = root / conversion["fp16_xml"]
+        if (sha256_file(xml) != conversion["fp16_xml_sha256"]
+                or sha256_file(xml.with_suffix(".bin")) != conversion["fp16_bin_sha256"]):
+            raise RuntimeErrorRecord("CONVERTED_MODEL_HASH_MISMATCH", "固定IRのXML/BINハッシュがG3 Runと一致しません。")
+        input_rows = _read_jsonl(source_run.path / "inputs.jsonl")
+        references = _read_jsonl(source_run.path / "reference.jsonl")
+        cases = [json.loads(line) for line in (root / "datasets" / "dev.jsonl").read_text(encoding="utf-8").splitlines()
+                 if line.strip()]
+        if len(input_rows) != 60 or len(references) != 60 or len(cases) != 60:
+            raise RuntimeErrorRecord("MEMORY_INPUT_COUNT_INVALID", "固定入力、参照出力、ケースは各60件必要です。")
+        special_config = json.loads(asset_path(root, "reference/tokenizer/tokenizer_config.json").read_text(encoding="utf-8"))
+        tokenizer, special, prepared, lengths, tokenizer_ms = _verify_preprocessor(
+            root, cases, input_rows, source_run.profile_config["sequence_length"],
+            lambda name: capture(name))
+        capture("after_tokenizer_and_fixed_input_validation")
+        input_by_id = {row["case_id"]: row for row in input_rows}
+        if any(row["input_sha256"] != input_by_id[row["case_id"]]["input_sha256"]
+               for row in prepared):
+            raise RuntimeErrorRecord("PERF_TOKENIZER_PARITY_FAILED", "測定入力の再生成ハッシュがG3保存入力と異なります。")
+        core = ov.Core()
+        capture("after_openvino_core_creation")
+        model = None
+        if load_method == "read-compile":
+            model = core.read_model(str(xml))
+            capture("after_ir_read_model")
+        else:
+            phases["ir_read_model"] = {"status": "not_separately_observable",
+                                        "reason": "compile_modelへ固定IRパスを直接渡すため、read_model境界がない"}
+        compile_config: dict[str, Any]
+        cache_dir: Path | None = None
+        cache_before: dict[str, str] = {}
+        cache_mode = "not_applicable"
+        device_evidence: dict[str, Any] | None = None
+        if backend == "cpu":
+            compile_config = {"INFERENCE_NUM_THREADS": threads}
+            device_name = "CPU"
+        else:
+            device_evidence = inspect_device("NPU", "3720")
+            if device_evidence.get("status") != "PASS":
+                raise RuntimeErrorRecord(device_evidence.get("code", "NPU_DEVICE_BLOCKED"),
+                                         "NPU実アーキテクチャ3720を確認できません。")
+            cache_dir, cache_before, cache_mode = __import__(
+                "som_probe.runtime", fromlist=["_npu_cache_for_run"]
+            )._npu_cache_for_run(root, run, conversion, cache_from_run)
+            compile_config = {"NPU_COMPILER_TYPE": "PLUGIN", "CACHE_DIR": str(cache_dir)}
+            device_name = "NPU"
+        capture("before_compile_or_cache_load")
+        compile_input = model if model is not None else str(xml)
+        compiled = core.compile_model(compile_input, device_name, compile_config)
+        properties: dict[str, Any] = {}
+        property_names = (("INFERENCE_NUM_THREADS",) if backend == "cpu" else
+                          ("EXECUTION_DEVICES", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION", "LOADED_FROM_CACHE"))
+        for key in property_names:
+            try:
+                properties[key] = _json_safe(compiled.get_property(key))
+            except Exception as exc:
+                properties[key] = {"unavailable": True, "error_type": type(exc).__name__, "message": str(exc)}
+        if backend == "cpu" and int(properties.get("INFERENCE_NUM_THREADS", -1)) != threads:
+            raise RuntimeErrorRecord("CPU_THREAD_MISMATCH", "CompiledModelの実スレッド数が要求値と異なります。")
+        execution_devices = _execution_device_names(properties.get("EXECUTION_DEVICES")) if backend == "npu" else ["CPU"]
+        if backend == "npu":
+            if (not execution_devices or any(not (name.upper() == "NPU" or name.upper().startswith("NPU."))
+                                              for name in execution_devices)
+                    or not str(properties.get("NPU_COMPILER_TYPE", "")).upper().endswith("PLUGIN")):
+                raise RuntimeErrorRecord("NPU_EXECUTION_EVIDENCE_MISMATCH", "NPU PLUGIN実行先を確認できません。")
+            if cache_mode == "reuse" and properties.get("LOADED_FROM_CACHE") is not True:
+                raise RuntimeErrorRecord("NPU_CACHE_REUSE_NOT_CONFIRMED", "キャッシュ再利用を確認できません。")
+        capture("after_compile_or_cache_load")
+        first = prepared[0]
+        first_arrays = {name: _input_arrays(first)[name] for name in INPUT_NAMES}
+        capture("after_inference_input_arrays_created")
+        first_result = compiled(first_arrays)
+        capture("after_first_compiledmodel_call_request_creation_and_inference")
+        result_named = {port.get_any_name(): value for port, value in first_result.items()}
+        first_logits, first_actions = _select_outputs(result_named)
+        _row_output(first, first_logits, first_actions)
+        for _ in range(WARMUP_EVENTS):
+            compiled(first_arrays)
+        capture("after_20_warm_inferences")
+        runtime_lock_sha = hashlib.sha256((root / "requirements" / "run-win-x64.lock").read_bytes()).hexdigest()
+        record = {
+            "status": "PASS", "purpose": "MEMORY_DIAGNOSTIC_SEPARATE_FROM_NORMAL_TIMING",
+            "run_id": run.run_id, "source_run": source_run.run_id,
+            "git_revision": source_manifest.get("git_revision"),
+            "source_tree_sha256": source_manifest.get("source_tree_sha256"),
+            "source_input_sha256": source_manifest.get("input_sha256"),
+            "profile": source_run.profile_config,
+            "backend": backend, "threads": threads, "load_method": load_method,
+            "environment": {"python_version": sys.version, "python_executable": sys.executable,
+                            "openvino_version": ov.__version__, "runtime_lock_sha256": runtime_lock_sha},
+            "process_age_at_diagnostic_entry_ms": process_age_at_entry_ms,
+            "model": {"precision": "FP16", "xml_sha256": conversion["fp16_xml_sha256"],
+                      "bin_sha256": conversion["fp16_bin_sha256"],
+                      "xml_bytes": xml.stat().st_size, "bin_bytes": xml.with_suffix(".bin").stat().st_size},
+            "compile_configuration": compile_config, "compiled_model_properties": properties,
+            "execution_devices": execution_devices, "device_evidence": device_evidence,
+            "cache": {"mode": cache_mode, "source_run": cache_from_run,
+                      "before": cache_before, "after": _cache_inventory(cache_dir) if cache_dir else {}},
+            "stages": phases,
+            "object_retention": {
+                "openvino_core_python_objects": 1,
+                "openvino_model_python_references": 1 if load_method == "read-compile" else 0,
+                "compiled_model_python_references": 1,
+                "compiled_model_call_count_after_warmup": WARMUP_EVENTS + 1,
+                "same_compiled_model_reference_used_for_all_calls": True,
+                "infer_request_explicitly_created_by_probe": 0,
+                "infer_request_internal_reference": "CompiledModel.__call__は最初の呼出しで内部InferRequestを作り、後続呼出しで再利用する。OpenVINO APIは内部参照数を公開しない。",
+                "loaded_case_rows": len(cases), "saved_input_rows": len(input_rows),
+                "saved_reference_rows": len(references), "prepared_input_rows": len(prepared),
+                "saved_input_tensor_values": sum(
+                    len(value) * len(value[0]) if value and isinstance(value[0], list) else len(value)
+                    for row in input_rows for value in row["inputs"].values()
+                ),
+                "prepared_input_tensor_values": sum(
+                    len(value) * len(value[0]) if value and isinstance(value[0], list) else len(value)
+                    for row in prepared for value in row["inputs"].values()
+                ),
+                "large_model_or_graph_copies_added_by_probe": 0,
+                "lifetimes": {"read_model_object": "read-compile時はコンパイルからプロセス終了まで1参照。path-compileはPython参照なし。",
+                              "compiled_model": "コンパイル完了からプロセス終了まで1参照。",
+                              "infer_request": "初回CompiledModel呼出し時に内部生成され、CompiledModel内で再利用。",
+                              "input_rows_and_prepared_rows": "診断Runのプロセス終了まで各60行を保持。",
+                              "temporary_numpy_input_arrays": "初回要求と各ウォーム要求の呼出しスコープ内。",
+                              "note": "保持数は診断関数が保持するPython側参照数。OpenVINO内部のグラフ複製数は公開APIから数えられない。"},
+            },
+            "input_summary": {"rows": len(prepared), "sequence_length": source_run.profile_config["sequence_length"],
+                              "token_count_min": min(lengths.values()), "token_count_max": max(lengths.values()),
+                              "special_tokenizer_read_count": 1},
+            "memory_semantics": {
+                "WorkingSetSize": "各段階の現在Working Set。Private Bytesと合算しない。",
+                "PrivateUsage_and_PagefileUsage": "各段階の現在Commit Charge。ディスクへのページ書込量ではない。",
+                "PeakPagefileUsage": "プロセス開始から各採取時点までの累積最大Commit Charge。段階別瞬間ピークではない。",
+                "PeakWorkingSetSize": "プロセス開始から各採取時点までの累積最大Working Set。",
+            },
+            "inference_request_evidence": {
+                "source": "OpenVINO 2026 Python CompiledModel API",
+                "url": "https://docs.openvino.ai/2026/api/ie_python_api/_autosummary/openvino.CompiledModel.html",
+                "method": "CompiledModel.__call__のみを反復。create_infer_requestは追加で呼ばず、requestを重複保持しない。",
+            },
+        }
+        run.write_json("memory-result.json", record)
+        run.stage("MEMORY", "PASS", result_file="memory-result.json", source_run=source_run.run_id,
+                  backend=backend, load_method=load_method, cache_mode=cache_mode)
+        return record
+    except Exception as exc:
+        run.write_json("memory-diagnostic.json", {"source_run": source_run.run_id,
+                                                   "exception": _exception_details(exc)})
+        run.failure("MEMORY", getattr(exc, "code", "MEMORY_DIAGNOSTIC_FAILED"), exc,
+                    source_run=source_run.run_id, backend=backend, load_method=load_method)
+        return {"status": "FAIL", "run_id": run.run_id,
+                "code": getattr(exc, "code", "MEMORY_DIAGNOSTIC_FAILED"),
+                "error_type": type(exc).__name__, "message": str(exc)[:512]}
+
+
 def run_performance(root: Path, source_run: Run, backend: str, threads: int | None,
                     trial: int, cache_from_run: str | None = None,
-                    idle_seconds: int = 0) -> dict[str, Any]:
-    run = Run.create(root, f"PERF_{backend.upper()}_{threads or 'PLUGIN'}_TRIAL_{trial}")
+                    idle_seconds: int = 0, load_method: str = "read-compile") -> dict[str, Any]:
+    run = Run.create(root, f"PERF_{backend.upper()}_{threads or 'PLUGIN'}_{load_method}_TRIAL_{trial}",
+                     source_run.profile_config)
     manifest = source_run.read_manifest()
     if manifest.get("stages", {}).get("G2-cpu-check", {}).get("status") != "PASS":
         run.blocked("PERFORMANCE", "CPU_PARITY_NOT_PASS", "参照RunのCPU照合がPASSしていません。")
@@ -256,13 +494,12 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
         run.blocked("PERFORMANCE", "SOURCE_FINGERPRINT_MISMATCH", "性能RunとG3入力Runのコミット・コード・設定・データ・依存ロックが一致しません。")
         return {"status": "BLOCKED", "run_id": run.run_id, "code": "SOURCE_FINGERPRINT_MISMATCH"}
     try:
+        if load_method not in {"read-compile", "path-compile"}:
+            raise RuntimeErrorRecord("PERF_LOAD_METHOD_INVALID", "未対応のIRロード方式です。")
         launch_age_ms = _process_age_ms()
-        phase_memory: dict[str, Any] = {"process_start": _memory()}
         openvino_import_start = time.perf_counter()
         import openvino as ov
         openvino_import_ms = (time.perf_counter() - openvino_import_start) * 1000
-        phase_memory["after_openvino_import"] = _memory()
-        phase_memory["available_physical_ram_after_import"] = _available_ram()
 
         conversion = _load_run_conversion(root, source_run)
         actual_assets = verify_assets(root)
@@ -278,19 +515,19 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
         saved_by_id = {row["case_id"]: row for row in input_rows}
         special_config = json.loads(asset_path(root, "reference/tokenizer/tokenizer_config.json").read_text(encoding="utf-8"))
         tokenizer, special, preflight_rows, token_lengths, tokenizer_load_ms = _verify_preprocessor(
-            root, cases, input_rows
+            root, cases, input_rows, source_run.profile_config["sequence_length"]
         )
         if len(preflight_rows) != 60:
             raise RuntimeErrorRecord("PERF_INPUT_COUNT_MISMATCH", "性能測定の入力が60件ではありません。")
-        phase_memory["after_tokenizer_and_fixed_input_check"] = _memory()
         core_start = time.perf_counter()
         core = ov.Core()
         core_ready_ms = (time.perf_counter() - core_start) * 1000
-        phase_memory["after_openvino_core"] = _memory()
-        model_read_start = time.perf_counter()
-        model = core.read_model(str(xml))
-        model_read_ms = (time.perf_counter() - model_read_start) * 1000
-        phase_memory["after_model_read"] = _memory()
+        model: Any | None = None
+        model_read_ms: float | None = None
+        if load_method == "read-compile":
+            model_read_start = time.perf_counter()
+            model = core.read_model(str(xml))
+            model_read_ms = (time.perf_counter() - model_read_start) * 1000
         compile_config: dict[str, Any] = {}
         cache_before: dict[str, str] = {}
         cache_dir: Path | None = None
@@ -300,9 +537,8 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
             if threads not in (1, 2) or cache_from_run:
                 raise RuntimeErrorRecord("PERF_OPTIONS_INVALID", "CPUは1/2スレッドでキャッシュ再利用なしに限定します。")
             compile_config = {"INFERENCE_NUM_THREADS": threads}
-            phase_memory["before_compile"] = _memory()
             compile_start = time.perf_counter()
-            compiled = core.compile_model(model, "CPU", compile_config)
+            compiled = core.compile_model(model if model is not None else str(xml), "CPU", compile_config)
             compile_ms = (time.perf_counter() - compile_start) * 1000
             try:
                 actual_threads = int(compiled.get_property("INFERENCE_NUM_THREADS"))
@@ -327,9 +563,8 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                 root, run, conversion, cache_from_run)
             cache_source = cache_from_run
             compile_config = {"NPU_COMPILER_TYPE": "PLUGIN", "CACHE_DIR": str(cache_dir)}
-            phase_memory["before_compile"] = _memory()
             compile_start = time.perf_counter()
-            compiled = core.compile_model(model, "NPU", compile_config)
+            compiled = core.compile_model(model if model is not None else str(xml), "NPU", compile_config)
             compile_ms = (time.perf_counter() - compile_start) * 1000
             compiled_properties: dict[str, Any] = {}
             for key in ("EXECUTION_DEVICES", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION",
@@ -349,12 +584,9 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                 raise RuntimeErrorRecord("NPU_CACHE_REUSE_NOT_CONFIRMED", "OpenVINOがキャッシュ読込を確認しませんでした。")
             compiled_properties = {key: value if isinstance(value, (str, int, float, bool, list, dict)) else str(value)
                                   for key, value in compiled_properties.items()}
-        phase_memory["after_compile"] = _memory()
-        phase_memory["available_physical_ram_after_compile"] = _available_ram()
         first_start = time.perf_counter()
         first_result = compiled({name: _input_arrays(preflight_rows[0])[name] for name in INPUT_NAMES})
         first_inference_ms = (time.perf_counter() - first_start) * 1000
-        phase_memory["after_first_inference"] = _memory()
         result_named = {port.get_any_name(): value for port, value in first_result.items()}
         first_logits, first_actions = _select_outputs(result_named)
         _row_output(preflight_rows[0], first_logits, first_actions)
@@ -378,6 +610,13 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
         bundles_1 = [[row] for row in preflight_rows]
         bundles_4 = _four_request_bundles(preflight_rows)
         case_pairs = {case["case_id"]: (case, saved_by_id[case["case_id"]]) for case in cases}
+        bundle_state_counts = [
+            len({json.dumps(case_pairs[row["case_id"]][0]["state"], ensure_ascii=False, sort_keys=True)
+                 for row in bundle})
+            for bundle in bundles_4
+        ]
+        if len(bundle_state_counts) != 15 or any(count != 4 for count in bundle_state_counts):
+            raise RuntimeErrorRecord("PERF_BUNDLE_STATE_REPEATED", "4判断束には異なる4状態が必要です。")
         raw_samples: list[dict[str, Any]] = []
         segment_samples: dict[int, dict[str, list[float]]] = {
             size: {key: [] for key in ("preprocess_ms", "model_ms", "postprocess_ms")} for size in (1, 4)
@@ -393,6 +632,7 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
             for size in (1, 4)
         }
         measured_process_cpu_ms = 0.0
+        host_load_by_round: dict[str, Any] = {}
         failure_count = 0
         warmup_failure_count = 0
         measurement_failure_count = 0
@@ -409,10 +649,10 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                     warmup_failure_count += 1
                     failed_samples.append({"phase": "warmup", "event_size": event_size,
                                            "error_type": type(exc).__name__, "message": str(exc)[:512]})
-            if event_size == 4:
-                phase_memory["steady_after_warmup"] = _memory()
-                phase_memory["available_physical_ram_after_warmup"] = _available_ram()
             for round_index in range(MEASUREMENT_ROUNDS):
+                host_start = _system_cpu_ticks()
+                host_wall_start = time.perf_counter()
+                host_process_start = time.process_time()
                 for sample_index in range(MEASURED_EVENTS_PER_ROUND):
                     bundle_index = (round_index * MEASURED_EVENTS_PER_ROUND + sample_index) % len(bundles)
                     bundle = bundles[bundle_index]
@@ -446,11 +686,12 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                         raw_samples.append({"event_size": event_size, "round": round_index + 1,
                                             "sample": sample_index + 1, "case_ids": [row["case_id"] for row in bundle],
                                             "status": "FAIL"})
+                host_load_by_round[f"event-{event_size}-round-{round_index + 1}"] = _host_cpu_observation(
+                    host_start, _system_cpu_ticks(), time.perf_counter() - host_wall_start,
+                    time.process_time() - host_process_start)
         idle: dict[str, Any] = {"requested_seconds": idle_seconds, "status": "not_requested"}
         if idle_seconds:
             before_cpu = time.process_time()
-            before_memory = _memory()
-            before_available_ram = _available_ram()
             before_system_cpu = _system_cpu_ticks()
             wait_start = time.perf_counter()
             time.sleep(idle_seconds)
@@ -466,9 +707,7 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                     "process_cpu_seconds": time.process_time() - before_cpu,
                     "system_cpu_percent": system_cpu_percent,
                     "system_cpu_evidence": "GetSystemTimes delta across the idle interval" if system_cpu_percent is not None else "unavailable",
-                    "available_physical_ram_before": before_available_ram,
-                    "available_physical_ram_after": _available_ram(),
-                    "memory_before": before_memory, "memory_after": _memory(), "status": "measured"}
+                    "status": "measured"}
         run.write_jsonl("performance-samples.jsonl", raw_samples)
         if failed_samples:
             run.write_json("performance-failures.json", {"count": len(failed_samples), "failures": failed_samples})
@@ -503,18 +742,27 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                        "candidate_count_max": max(row["candidate_count"] for row in input_rows),
                        "question_type_counts": {kind: sum(row["question_type"] == kind for row in input_rows)
                                                 for kind in ("choice", "score", "noul")}},
-            "settings": {"profile": "s256-k8", "warmup_events_per_size": WARMUP_EVENTS,
+            "settings": {"profile": source_run.profile_config["name"],
+                         "sequence_length": source_run.profile_config["sequence_length"],
+                         "warmup_events_per_size": WARMUP_EVENTS,
                          "measured_events_per_round": MEASURED_EVENTS_PER_ROUND,
                          "rounds": MEASUREMENT_ROUNDS, "event_sizes": [1, 4],
-                         "four_request_bundle": "15 synthetic groups; 60 fixed cases once each, balanced across Choice/Score/Noul",
-                         "profiling_enabled": False, "cache_mode": cache_mode,
+                         "four_request_bundle": {"groups": 15, "cases_per_group": 4,
+                                                 "unique_states_per_group": bundle_state_counts,
+                                                 "all_60_fixed_cases_once": True,
+                                                 "balanced_question_types": {"choice": 20, "score": 20, "noul": 20}},
+                         "profiling_enabled": False, "memory_diagnostics": "separate memory-run records",
+                         "load_method": load_method, "cache_mode": cache_mode,
                          "cache_source_run": cache_source, "cache_before": cache_before,
                          "cache_after": _cache_inventory(cache_dir) if cache_dir else {},
                          "compile_configuration": compile_config},
             "startup": startup,
-            "memory": {"samples": phase_memory,
-                       "process_peak_since_start_after_run": _memory(),
-                       "npu_memory": {"status": "not_exposed_by_measured_runtime"}},
+            "memory": {"status": "MEASURED_IN_SEPARATE_MEMORY_DIAGNOSTIC_RUN"},
+            "host_load_by_round": host_load_by_round,
+            "measurement_environment": {"other_applications_stopped": False,
+                                         "scenario": "single-process basic performance sample",
+                                         "host_busy_estimate_includes_system_activity": True,
+                                         "concurrent_competition_trial": "NOT_RUN"},
             "latency": {str(size): {"event_e2e": _percentiles(e2e_samples[size]),
                                      "per_judgment": {key: _percentiles(values)
                                                       for key, values in segment_samples[size].items()},

@@ -24,6 +24,18 @@ class StorageTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 run.write_json("metadata.json", {"status": "PASS"})
 
+    def test_run_pins_profile_and_input_comparison_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            run = Run.create(Path(directory), "G3", {
+                "name": "s128-k8", "batch": 1, "sequence_length": 128, "candidate_slots": 8,
+            }, "20261024-000000-00000000")
+            manifest = run.read_manifest()
+
+            self.assertEqual(manifest["profile"], "s128-k8")
+            self.assertEqual(manifest["profile_config"]["sequence_length"], 128)
+            self.assertEqual(manifest["compare_input_run_id"], "20261024-000000-00000000")
+            self.assertEqual(run.profile_config["name"], "s128-k8")
+
     def test_blocked_stage_keeps_the_failure_reason(self):
         with tempfile.TemporaryDirectory() as directory:
             run = Run.create(Path(directory), "G3")

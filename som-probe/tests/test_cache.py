@@ -13,7 +13,8 @@ class CacheReuseTests(unittest.TestCase):
             root = Path(directory)
             source = Run.create(root, "G3")
             destination = Run.create(root, "G3_CACHE_REUSE")
-            conversion = {"fp16_xml_sha256": "xml", "fp16_bin_sha256": "bin"}
+            conversion = {"profile": "s256-k8", "sequence_length": 256,
+                          "fp16_xml_sha256": "xml", "fp16_bin_sha256": "bin"}
             for run in (source, destination):
                 run.write_json("conversion.json", conversion)
             source.stage("G2-cpu-check", "PASS")

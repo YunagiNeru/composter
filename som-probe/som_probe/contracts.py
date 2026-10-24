@@ -22,6 +22,31 @@ class Profile:
     candidate_slots: int = 8
     max_questions: int = 4
 
+    @property
+    def name(self) -> str:
+        return f"s{self.sequence_length}-k{self.candidate_slots}"
+
+
+def profile_from_mapping(value: Any) -> Profile:
+    required = {"name", "batch", "sequence_length", "candidate_slots"}
+    if not isinstance(value, dict) or set(value) != required:
+        raise ContractError("PROFILE_INVALID", "固定プロファイルの項目構成が不正です。")
+    sequence_length = value["sequence_length"]
+    candidate_slots = value["candidate_slots"]
+    if (type(value["batch"]) is not int or value["batch"] != 1 or type(sequence_length) is not int
+            or type(candidate_slots) is not int or candidate_slots != 8
+            or sequence_length not in (128, 256)
+            or value["name"] != f"s{sequence_length}-k8"):
+        raise ContractError("PROFILE_INVALID", "s256-k8またはs128-k8以外の形状は使用できません。")
+    return Profile(sequence_length=sequence_length, candidate_slots=candidate_slots)
+
+
+def profile_mapping(profile: Profile) -> dict[str, Any]:
+    if profile.name not in {"s256-k8", "s128-k8"} or profile.max_questions != 4:
+        raise ContractError("PROFILE_INVALID", "承認済みの固定プロファイルではありません。")
+    return {"name": profile.name, "batch": 1,
+            "sequence_length": profile.sequence_length, "candidate_slots": profile.candidate_slots}
+
 
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _TOP_LEVEL_KEYS = {"schema_version", "request_id", "state", "state_version", "questions", "now", "timezone"}
