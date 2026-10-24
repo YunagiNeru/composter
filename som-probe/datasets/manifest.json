@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "source": "generated_for_initial_g0_g3_implementation",
+  "verified_by_human": false,
+  "splits": {
+    "dev": {
+      "path": "datasets/dev.jsonl",
+      "cases": 60,
+      "sha256": "dc63d8abf55a74acaf330db5f0dbd1be507a532d32a5def4d22ec8e35f26bb1c",
+      "question_types": {
+        "choice": 20,
+        "score": 20,
+        "bool": 20
+      },
+      "verification_status": "ai_draft_unverified",
+      "official_quality_status": "BLOCKED_UNTIL_HUMAN_LABEL_REVIEW"
+    }
+  }
+}

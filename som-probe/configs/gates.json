@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "policy": "thresholds_are_frozen_before_measurement",
+  "stages": {
+    "G0": {
+      "purpose": "schema, source revision, artifact hash, and environment integrity",
+      "required": ["all_required_artifacts_hash_match", "request_contract_valid"]
+    },
+    "G1": {
+      "purpose": "CPU reference and preliminary Japanese cases",
+      "official_quality_status": "BLOCKED_UNTIL_HUMAN_LABEL_REVIEW",
+      "draft_results_must_be_labeled": "UNVERIFIED_LABEL_REFERENCE_ONLY"
+    },
+    "G2": {
+      "purpose": "fixed-shape conversion and CPU parity",
+      "fp32_max_probability_abs_difference": 0.001,
+      "transformed_decision_match_ratio": 0.99,
+      "important_new_errors": 0,
+      "input_token_id_match_ratio": 1.0
+    },
+    "G3": {
+      "purpose": "explicit NPU compilation, inference, and execution-path evidence",
+      "expected_architecture": "3720",
+      "fp16_max_probability_abs_difference": 0.05,
+      "fp16_mean_probability_abs_difference": 0.01,
+      "transformed_decision_match_ratio": 0.99,
+      "important_new_errors": 0,
+      "require_cpu_g2_pass": true,
+      "allow_auto_hetero_or_fallback": false
+    },
+    "G4": {
+      "purpose": "full quality and performance evaluation",
+      "status": "NOT_IN_INITIAL_SCOPE",
+      "proposed_quality_targets_are_not_g0_g3_gates": true
+    },
+    "G5": {
+      "purpose": "lightweight runtime and low-resource device evaluation",
+      "status": "NOT_IN_INITIAL_SCOPE",
+      "proposed_memory_and_coexistence_targets_are_not_g0_g3_gates": true
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "python": {
+    "version": "3.11.14",
+    "architecture": "x86_64",
+    "evaluation_environment": ".local/venv-eval",
+    "runtime_environment": ".local/venv-run"
+  },
+  "profile": {
+    "name": "s256-k8",
+    "batch": 1,
+    "sequence_length": 256,
+    "candidate_slots": 8
+  },
+  "timeouts_seconds": {
+    "compile": 300,
+    "inference": 30
+  },
+  "paths": {
+    "model_lock": "configs/models.lock.json",
+    "gates": "configs/gates.json",
+    "dataset_manifest": "datasets/manifest.json",
+    "dev_dataset": "datasets/dev.jsonl",
+    "run_root": ".local/runs"
+  }
+}

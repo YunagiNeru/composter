@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "laya_code": {
+      "repository": "https://github.com/NandhaKishorM/laya",
+      "commit": "0a05a45052e23ae0b887a490fe8d6d9c8cff2ab5",
+      "archive": "https://codeload.github.com/NandhaKishorM/laya/tar.gz/0a05a45052e23ae0b887a490fe8d6d9c8cff2ab5",
+      "license": "Apache-2.0",
+      "archive_sha256": "96c985a33f2015692b5b0965caff7fad7c8c12f89fc4c402e3e9eafdd543ac2e",
+      "archive_size": 10618362,
+      "reviewed_python_files": ["laya/__init__.py", "laya/agent.py", "laya/common.py"],
+      "execution_constraints": ["local_checkpoint_only", "hub_offline", "compile_disabled", "cpu_only"]
+    },
+    "reference_checkpoint": {
+      "repository": "https://huggingface.co/convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "license": "Apache-2.0"
+    },
+    "onnx_model": {
+      "repository": "https://huggingface.co/onnx-community/laya-multilingual-ONNX",
+      "revision": "46b77bbf5642fec5f14e540570228a8cbe8ab81f",
+      "license": "Apache-2.0"
+    }
+  },
+  "artifacts": {
+    "laya-source-archive.tar.gz": "96c985a33f2015692b5b0965caff7fad7c8c12f89fc4c402e3e9eafdd543ac2e",
+    "reference/model.safetensors": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+    "reference/rl_agent_config.json": "25061739243b617ad88d1219ba6f8a9c86c5881ca28df024fa2d9b3b2fcc30c6",
+    "reference/encoder/config.json": "83f6916d13ef0f556ac461f28308dc2bffa7ebeadee8ec9e2db5812020ea5bb4",
+    "reference/tokenizer/tokenizer.json": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f",
+    "reference/tokenizer/tokenizer_config.json": "424b69444bf7b5809dc2cd2e36d0bd71b8055124dd24274d6db3c655d38205e7",
+    "onnx/model.onnx": "22461d988f675dd6c2b89ff8feb9ed7ffcf7e37854e5ed512f8b275178cf2f9f",
+    "onnx/model.onnx_data": "f01238e183ace77661282e4eb2dd9b872c7044cb9678f904cf409e6cc1146d09",
+    "onnx/config.json": "cc32109b1fded91ec6734127ffb1827f80cdcf8ffdd4eeda75a1b0f4d3687dcc"
+  },
+  "downloads": [
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/resolve/e4e9ddf21a7b1903b7acffd8814ad4307bf63a67/model.safetensors?download=true",
+      "target": "reference/model.safetensors",
+      "sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "size": 643835514
+    },
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/resolve/e4e9ddf21a7b1903b7acffd8814ad4307bf63a67/rl_agent_config.json?download=true",
+      "target": "reference/rl_agent_config.json",
+      "sha256": "25061739243b617ad88d1219ba6f8a9c86c5881ca28df024fa2d9b3b2fcc30c6",
+      "size": 472
+    },
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/resolve/e4e9ddf21a7b1903b7acffd8814ad4307bf63a67/encoder/config.json?download=true",
+      "target": "reference/encoder/config.json",
+      "sha256": "83f6916d13ef0f556ac461f28308dc2bffa7ebeadee8ec9e2db5812020ea5bb4",
+      "size": 1938
+    },
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/resolve/e4e9ddf21a7b1903b7acffd8814ad4307bf63a67/tokenizer/tokenizer.json?download=true",
+      "target": "reference/tokenizer/tokenizer.json",
+      "sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f",
+      "size": 34363188
+    },
+    {
+      "url": "https://huggingface.co/convaiinnovations/laya-multilingual/resolve/e4e9ddf21a7b1903b7acffd8814ad4307bf63a67/tokenizer/tokenizer_config.json?download=true",
+      "target": "reference/tokenizer/tokenizer_config.json",
+      "sha256": "424b69444bf7b5809dc2cd2e36d0bd71b8055124dd24274d6db3c655d38205e7",
+      "size": 502
+    },
+    {
+      "url": "https://huggingface.co/onnx-community/laya-multilingual-ONNX/resolve/46b77bbf5642fec5f14e540570228a8cbe8ab81f/onnx/model.onnx?download=true",
+      "target": "onnx/model.onnx",
+      "sha256": "22461d988f675dd6c2b89ff8feb9ed7ffcf7e37854e5ed512f8b275178cf2f9f",
+      "size": 3553251
+    },
+    {
+      "url": "https://huggingface.co/onnx-community/laya-multilingual-ONNX/resolve/46b77bbf5642fec5f14e540570228a8cbe8ab81f/onnx/model.onnx_data?download=true",
+      "target": "onnx/model.onnx_data",
+      "sha256": "f01238e183ace77661282e4eb2dd9b872c7044cb9678f904cf409e6cc1146d09",
+      "size": 1287635968
+    },
+    {
+      "url": "https://huggingface.co/onnx-community/laya-multilingual-ONNX/resolve/46b77bbf5642fec5f14e540570228a8cbe8ab81f/config.json?download=true",
+      "target": "onnx/config.json",
+      "sha256": "cc32109b1fded91ec6734127ffb1827f80cdcf8ffdd4eeda75a1b0f4d3687dcc",
+      "size": 2859
+    }
+  ]
+}
