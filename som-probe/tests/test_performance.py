@@ -1,7 +1,9 @@
 import unittest
+import os
 
-from som_probe.performance import _four_request_bundles
+from som_probe.performance import _four_request_bundles, _memory
 from som_probe.cli import _parser
+from som_probe.runtime import process_age_ms
 
 
 class PerformancePlanTests(unittest.TestCase):
@@ -31,6 +33,18 @@ class PerformancePlanTests(unittest.TestCase):
         self.assertEqual(args.backend, "npu")
         self.assertEqual(args.cache_from_run, "20261024-000000-00000001")
         self.assertEqual(args.idle_seconds, 300)
+
+    @unittest.skipUnless(os.name == "nt", "Windows APIを使うメモリ測定の確認")
+    def test_windows_process_memory_and_startup_time_are_available(self):
+        memory = _memory()
+        age = process_age_ms()
+
+        self.assertEqual(memory["status"], "available")
+        self.assertGreater(memory["working_set_bytes"], 0)
+        self.assertGreater(memory["private_bytes"], 0)
+        self.assertIn("peak_pagefile_usage_bytes", memory)
+        self.assertIsNotNone(age)
+        self.assertGreater(age, 0)
 
 
 if __name__ == "__main__":

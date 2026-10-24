@@ -124,6 +124,8 @@ def _four_request_bundles(rows: list[dict[str, Any]]) -> list[list[dict[str, Any
 def _memory() -> dict[str, Any]:
     if os.name != "nt":
         return {"status": "unavailable_non_windows"}
+    from ctypes import wintypes
+
     class MemoryCounters(ctypes.Structure):
         _fields_ = [("cb", ctypes.c_ulong), ("PageFaultCount", ctypes.c_ulong),
                     ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t),
@@ -133,14 +135,20 @@ def _memory() -> dict[str, Any]:
                     ("PrivateUsage", ctypes.c_size_t)]
     counters = MemoryCounters()
     counters.cb = ctypes.sizeof(counters)
-    psapi = ctypes.WinDLL("Psapi.dll")
-    kernel = ctypes.WinDLL("kernel32.dll")
+    psapi = ctypes.WinDLL("Psapi.dll", use_last_error=True)
+    kernel = ctypes.WinDLL("kernel32.dll", use_last_error=True)
+    kernel.GetCurrentProcess.argtypes = []
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(MemoryCounters), wintypes.DWORD]
+    psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
     ok = psapi.GetProcessMemoryInfo(kernel.GetCurrentProcess(), ctypes.byref(counters), counters.cb)
     if not ok:
         return {"status": "unavailable", "error_code": ctypes.get_last_error()}
     return {"status": "available", "working_set_bytes": int(counters.WorkingSetSize),
             "peak_working_set_bytes": int(counters.PeakWorkingSetSize),
-            "private_bytes": int(counters.PrivateUsage), "peak_private_bytes": int(counters.PeakPagefileUsage)}
+            "private_bytes": int(counters.PrivateUsage),
+            "pagefile_usage_bytes": int(counters.PagefileUsage),
+            "peak_pagefile_usage_bytes": int(counters.PeakPagefileUsage)}
 
 
 def _available_ram() -> int | None:

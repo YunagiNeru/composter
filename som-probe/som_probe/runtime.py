@@ -28,10 +28,17 @@ def process_age_ms() -> float | None:
     """現在プロセスの開始からの経過時間をWindowsで取得する。"""
     if os.name != "nt":
         return None
+    from ctypes import wintypes
+
     class FileTime(ctypes.Structure):
         _fields_ = [("dwLowDateTime", ctypes.c_ulong), ("dwHighDateTime", ctypes.c_ulong)]
     created, exited, kernel_time, user_time = FileTime(), FileTime(), FileTime(), FileTime()
-    kernel = ctypes.WinDLL("kernel32.dll")
+    kernel = ctypes.WinDLL("kernel32.dll", use_last_error=True)
+    kernel.GetCurrentProcess.argtypes = []
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.GetProcessTimes.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileTime), ctypes.POINTER(FileTime),
+                                       ctypes.POINTER(FileTime), ctypes.POINTER(FileTime)]
+    kernel.GetProcessTimes.restype = wintypes.BOOL
     if not kernel.GetProcessTimes(kernel.GetCurrentProcess(), ctypes.byref(created), ctypes.byref(exited),
                                   ctypes.byref(kernel_time), ctypes.byref(user_time)):
         return None
