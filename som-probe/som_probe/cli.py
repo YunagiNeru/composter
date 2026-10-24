@@ -10,7 +10,7 @@ from typing import Any
 
 from .assets import AssetError, prepare_assets, verify_assets
 from .contracts import ContractError, Profile, validate_dataset_case, validate_request
-from .runtime import convert_model, doctor, run_cpu_check, run_npu, run_reference
+from .runtime import convert_model, doctor, run_cpu_check, run_npu, run_npu_control, run_reference
 from .storage import Run, open_run
 
 
@@ -83,6 +83,7 @@ def validate_project(root: Path) -> dict[str, Any]:
         raise ContractError("DATASET_TYPE_COUNT_MISMATCH", "devデータの型別件数が固定値と一致しません。")
     verified = verify_assets(root)
     return {"files_checked": len(required), "dev_cases": len(rows), "verified_artifacts": len(verified),
+            "verified_artifact_sha256": verified,
             "label_state": "ai_draft_unverified", "official_quality_status": "BLOCKED_UNTIL_HUMAN_LABEL_REVIEW"}
 
 
@@ -116,6 +117,21 @@ def _parser() -> argparse.ArgumentParser:
     cpu_check.add_argument("--run-id", required=True)
     npu = commands.add_parser("npu-run", help="G2合格後にNPUを明示指定して推論")
     npu.add_argument("--run-id", required=True)
+    npu.add_argument("--cache-from-run", help="同条件で成功したG3 Runのキャッシュを再利用")
+    probe = commands.add_parser("npu-probe", help="固定Shape対照モデルまたは保存済みLaya IRをNPU経路別に診断")
+    probe.add_argument("--kind", choices=("control", "laya"), required=True)
+    probe.add_argument("--compiler", choices=("default", "driver", "plugin"), required=True)
+    probe.add_argument("--source-run", help="G2 PASS済みのLaya Run。kind=layaで必須")
+    perf = commands.add_parser("perf-run", help="CPU 1/2スレッドまたはNPU PLUGINの固定入力予備測定")
+    perf.add_argument("--source-run", required=True)
+    perf.add_argument("--backend", choices=("cpu", "npu"), required=True)
+    perf.add_argument("--threads", type=int, choices=(1, 2))
+    perf.add_argument("--trial", type=int, choices=(1, 2, 3), required=True)
+    perf.add_argument("--cache-from-run", help="NPUのキャッシュ再利用元Run。CPUでは使用不可")
+    perf.add_argument("--idle-seconds", type=int, choices=(0, 300), default=0,
+                      help="測定後の待機観測秒数（0または300）")
+    review = commands.add_parser("review-html", help="60件の人手確認資料HTMLを生成")
+    review.add_argument("--output", default="QUALITY-REVIEW-JA-60.html")
     return parser
 
 
@@ -178,13 +194,49 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "cpu-check":
                 result = run_cpu_check(root, run)
             else:
-                result = run_npu(root, run, "3720")
+                result = run_npu(root, run, "3720", cache_from_run=args.cache_from_run)
             print(json.dumps({"run_id": run.run_id, **result}, ensure_ascii=False))
+            if args.command == "npu-run" and args.cache_from_run:
+                if result.get("cache_test", {}).get("status") != "PASS":
+                    return EXIT_INTEGRITY
             if result["status"] == "PASS" or result["status"] == "UNVERIFIED_LABEL_REFERENCE_ONLY":
                 return EXIT_OK
             if result["status"] == "BLOCKED":
                 return EXIT_ENVIRONMENT
             return EXIT_MODEL if result.get("code", "").startswith(("REFERENCE", "ONNX", "MODEL")) else EXIT_INTEGRITY
+        if args.command == "npu-probe":
+            if args.kind == "laya" and not args.source_run:
+                raise ContractError("SOURCE_RUN_REQUIRED", "kind=layaでは--source-runが必要です。")
+            if args.kind == "control" and args.source_run:
+                raise ContractError("SOURCE_RUN_NOT_ALLOWED", "kind=controlでは--source-runを指定しません。")
+            run = Run.create(root, "NPU_DIAGNOSTIC")
+            if args.kind == "control":
+                result = run_npu_control(root, run, args.compiler.upper(), "3720")
+            else:
+                source_run = open_run(root, args.source_run)
+                result = run_npu(root, run, "3720", compiler_type=args.compiler.upper(), source_run=source_run)
+            print(json.dumps({"run_id": run.run_id, **result}, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "PASS" else EXIT_ENVIRONMENT if result["status"] == "BLOCKED" else EXIT_MODEL
+        if args.command == "perf-run":
+            if args.backend == "cpu" and (args.threads not in (1, 2) or args.cache_from_run):
+                raise ContractError("PERFORMANCE_OPTIONS_INVALID", "CPUは--threads 1/2が必要で、--cache-from-runは使えません。")
+            if args.backend == "npu" and args.threads is not None:
+                raise ContractError("PERFORMANCE_OPTIONS_INVALID", "NPUでは--threadsを指定しません。")
+            from .performance import run_performance
+            source_run = open_run(root, args.source_run)
+            result = run_performance(root, source_run, args.backend, args.threads, args.trial,
+                                     args.cache_from_run, args.idle_seconds)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "PASS" else EXIT_RESOURCE
+        if args.command == "review-html":
+            from .review import build_review_html
+            destination = (root.parent / "docs" / args.output).resolve()
+            docs_dir = (root.parent / "docs").resolve()
+            if destination.parent != docs_dir or destination.suffix.lower() != ".html":
+                raise ContractError("REVIEW_OUTPUT_INVALID", "出力先はdocs直下のHTMLに限定します。")
+            output = build_review_html(root, destination)
+            print(json.dumps({"status": "PASS", "output": str(output)}, ensure_ascii=False))
+            return EXIT_OK
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT

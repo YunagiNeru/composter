@@ -31,6 +31,32 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(run.read_manifest()["stages"]["G3"]["status"], "BLOCKED")
             self.assertIn("ARCHITECTURE_MISMATCH", (run.path / "errors.jsonl").read_text(encoding="utf-8"))
 
+    def test_run_records_revision_worktree_and_configuration_hashes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for relative in (
+                "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
+                "datasets/manifest.json", "datasets/dev.jsonl",
+                "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+            ):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative, encoding="utf-8")
+            run = Run.create(root, "G3")
+
+            manifest = run.read_manifest()
+
+            self.assertIn("git_revision", manifest)
+            self.assertIn("source_tree_sha256", manifest)
+            self.assertIsNone(manifest["worktree_dirty"])
+            self.assertEqual(manifest["worktree_status"], "unavailable")
+            self.assertEqual(set(manifest["input_sha256"]), {
+                "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
+                "datasets/manifest.json", "datasets/dev.jsonl",
+                "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+            })
+            self.assertTrue(all(len(value) == 64 for value in manifest["input_sha256"].values()))
+
 
 if __name__ == "__main__":
     unittest.main()

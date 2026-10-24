@@ -15,6 +15,11 @@ from typing import Any
 
 _PATH = re.compile(r"(?i)(?:[a-z]:\\|\\\\)[^\s\"']+")
 _SECRET = re.compile(r"(?i)(?:hf_[a-z0-9]{20,}|sk-[a-z0-9]{20,}|gh[pousr]_[a-z0-9]{20,})")
+_PROVENANCE_FILES = (
+    "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
+    "datasets/manifest.json", "datasets/dev.jsonl",
+    "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+)
 
 
 def safe_message(message: str) -> str:
@@ -42,6 +47,18 @@ def _source_tree_digest(root: Path) -> str:
             digest.update(relative)
             digest.update(hashlib.sha256(path.read_bytes()).digest())
     return digest.hexdigest()
+
+
+def _provenance_files(root: Path) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for name in _PROVENANCE_FILES:
+        path = root / name
+        if not path.is_file():
+            result[name] = "MISSING"
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        result[name] = digest
+    return result
 
 
 class Run:
@@ -72,11 +89,13 @@ class Run:
         except (OSError, subprocess.SubprocessError):
             revision = "unavailable"
         try:
-            dirty = bool(subprocess.run(
+            status = subprocess.run(
                 ["git", "status", "--porcelain"], cwd=root, check=True, capture_output=True,
                 text=True, timeout=5
-            ).stdout.strip())
+            ).stdout
+            dirty = bool(status.strip())
         except (OSError, subprocess.SubprocessError):
+            status = None
             dirty = None
         _write_json(run.path / "manifest.json", {
             "run_id": run_id,
@@ -86,6 +105,11 @@ class Run:
             "git_revision": revision,
             "source_tree_sha256": _source_tree_digest(root),
             "worktree_dirty": dirty,
+            "worktree_status": "clean" if dirty is False else ("dirty" if dirty else "unavailable"),
+            "worktree_status_porcelain": status,
+            "input_sha256": _provenance_files(root),
+            "verified_model_artifact_sha256": {},
+            "converted_ir_sha256": {},
             "profile": "s256-k8",
             "stages": {},
         })
@@ -99,6 +123,17 @@ class Run:
 
     def stage(self, name: str, status: str, **fields: Any) -> None:
         manifest = self.read_manifest()
+        if name == "G0" and isinstance(fields.get("verified_artifact_sha256"), dict):
+            manifest["verified_model_artifact_sha256"] = fields["verified_artifact_sha256"]
+        conversion_path = self.path / "conversion.json"
+        if conversion_path.is_file():
+            conversion = json.loads(conversion_path.read_text(encoding="utf-8"))
+            manifest["converted_ir_sha256"] = {
+                key: conversion[key]
+                for key in ("source_model_sha256", "fp32_xml_sha256", "fp32_bin_sha256",
+                            "fp16_xml_sha256", "fp16_bin_sha256")
+                if key in conversion
+            }
         manifest["stages"][name] = {
             "status": status,
             "completed_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -108,8 +143,10 @@ class Run:
             manifest["status"] = "FAILED"
         elif status == "BLOCKED":
             manifest["status"] = "BLOCKED"
-        elif name == "G3":
+        elif name in {"G3", "NPU_DIAGNOSTIC"}:
             manifest["status"] = "COMPLETE"
+        elif manifest.get("status") in {"COMPLETE", "FAILED", "BLOCKED"}:
+            pass
         else:
             manifest["status"] = "RUNNING"
         _write_json(self.path / "manifest.json", manifest)
