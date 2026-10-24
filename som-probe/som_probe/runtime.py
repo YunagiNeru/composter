@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import shutil
 import sys
@@ -22,6 +23,35 @@ class RuntimeErrorRecord(RuntimeError):
     def __init__(self, code: str, message: str):
         super().__init__(message)
         self.code = code
+
+
+def _score_value(probabilities: list[float]) -> tuple[float, float]:
+    """Laya score: expected zero-based candidate index, returned rounded to 4 places."""
+    if not probabilities or any(not math.isfinite(float(value)) or float(value) < 0 for value in probabilities):
+        raise RuntimeErrorRecord("SCORE_PROBABILITIES_INVALID", "Score確率が空、非有限、または負数です。")
+    total = sum(float(value) for value in probabilities)
+    if not math.isclose(total, 1.0, rel_tol=0.0, abs_tol=1e-6):
+        raise RuntimeErrorRecord("SCORE_PROBABILITIES_UNNORMALIZED", "Score候補確率の合計が1ではありません。")
+    expected = float(sum(index * float(value) for index, value in enumerate(probabilities)))
+    return expected, round(expected, 4)
+
+
+def _score_return_contract(root: Path) -> dict[str, Any]:
+    lock = load_lock(root)
+    source = lock["sources"]["laya_code"]
+    return {
+        "repository": source["repository"],
+        "revision": source["commit"],
+        "file": "laya/agent.py",
+        "function": "Agent._decode_answers",
+        "source_lines": "1378-1382",
+        "formula": "round(sum(i * p[i] for i in range(k)), 4)",
+        "scale": "zero-based candidate index 0..k-1",
+        "valid_candidates": "logits[:candidate_count] only",
+        "temperature": "divide each valid logit by the selected Laya temperature once before softmax",
+        "normalization": "stable softmax over valid candidates; probability sum must be 1",
+        "rounding": "Python round(expected_value, 4)",
+    }
 
 
 def process_age_ms() -> float | None:
@@ -305,6 +335,7 @@ def _model_output(agent, input_rows: list[dict[str, Any]]) -> list[dict[str, Any
             probs = softmax(logits[index, :count].astype(float).tolist(), row["temperature"])
             decision_index = max(range(len(probs)), key=probs.__getitem__)
             decision = row["candidate_ids"][decision_index]
+            score_expected, returned_score = _score_value(probs) if row["question_type"] == "score" else (None, None)
             output_rows.append({"case_id": row["case_id"], "question_id": row["question_id"],
                                 "input_sha256": row["input_sha256"],
                                 "question_type": row["question_type"],
@@ -314,7 +345,12 @@ def _model_output(agent, input_rows: list[dict[str, Any]]) -> list[dict[str, Any
                                     for candidate_id, probability in zip(row["candidate_ids"], probs)
                                 ],
                                 "decision_slot": decision_index, "decision": decision,
-                                "returned_score": decision if row["question_type"] == "score" else None,
+                                "temperature": float(row["temperature"]),
+                                "probability_sum": float(sum(probs)),
+                                "score_scale": list(range(count)) if row["question_type"] == "score" else None,
+                                "score_expected_unrounded": score_expected,
+                                "returned_score": returned_score,
+                                "returned_score_rounding": "python_round_4" if row["question_type"] == "score" else None,
                                 "boolean_result": decision if row["question_type"] == "noul" else None,
                                 "true_probability": probs[1] if row["question_type"] == "noul" else None,
                                 "action_probabilities": actions[index].astype(float).tolist()})
@@ -331,6 +367,7 @@ def run_reference(root: Path, run: Run) -> dict[str, Any]:
         result = {"status": "UNVERIFIED_LABEL_REFERENCE_ONLY", "cases": len(rows),
                   "label_state": "ai_draft_unverified", "model_device": str(agent.device),
                   "input_hashes_recorded": True,
+                  "score_return_contract": _score_return_contract(root),
                   "question_type_counts": {
                       kind: sum(row["question_type"] == kind for row in rows)
                       for kind in ("choice", "score", "noul")
@@ -389,6 +426,7 @@ def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any
     probs = softmax(values, float(row["temperature"]))
     decision_index = max(range(len(probs)), key=probs.__getitem__)
     decision = row["candidate_ids"][decision_index]
+    score_expected, returned_score = _score_value(probs) if row["question_type"] == "score" else (None, None)
     return {"case_id": row["case_id"], "question_id": row["question_id"],
             "input_sha256": row["input_sha256"], "probabilities": probs,
             "question_type": row["question_type"], "candidate_ids": row["candidate_ids"],
@@ -397,7 +435,12 @@ def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any
                 for candidate_id, probability in zip(row["candidate_ids"], probs)
             ],
             "decision_slot": decision_index, "decision": decision,
-            "returned_score": decision if row["question_type"] == "score" else None,
+            "temperature": float(row["temperature"]),
+            "probability_sum": float(sum(probs)),
+            "score_scale": list(range(row["candidate_count"])) if row["question_type"] == "score" else None,
+            "score_expected_unrounded": score_expected,
+            "returned_score": returned_score,
+            "returned_score_rounding": "python_round_4" if row["question_type"] == "score" else None,
             "boolean_result": decision if row["question_type"] == "noul" else None,
             "true_probability": probs[1] if row["question_type"] == "noul" else None,
             "action_probabilities": softmax([float(value) for value in actions])}
@@ -434,7 +477,7 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
             "cases": 0, "candidate_probability_value_count": 0, "candidate_probability_abs_differences": [],
             "action_probability_value_count": 0, "action_probability_abs_differences": [],
             "decision_id_changes": [], "decision_slot_changes": 0,
-            "decision_id_matches": 0, "score_abs_differences": [],
+            "decision_id_matches": 0, "score_abs_differences": [], "score_expected_abs_differences": [],
             "true_probability_abs_differences": [],
         })
         item["cases"] += 1
@@ -459,8 +502,25 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
         else:
             item["decision_id_changes"].append(expected["case_id"])
         if kind == "score":
+            for output in (expected, actual):
+                raw_expected, rounded_expected = _score_value(output["probabilities"])
+                expected_scale = list(range(len(output["candidate_ids"])))
+                if (output.get("score_scale") != expected_scale
+                        or output["candidate_ids"] != expected_scale
+                        or not math.isclose(float(output.get("score_expected_unrounded")), raw_expected,
+                                            rel_tol=0.0, abs_tol=1e-12)
+                        or float(output.get("returned_score")) != rounded_expected
+                        or output.get("returned_score_rounding") != "python_round_4"
+                        or not math.isclose(float(output.get("probability_sum")), 1.0,
+                                            rel_tol=0.0, abs_tol=1e-6)):
+                    raise RuntimeErrorRecord("SCORE_OUTPUT_CONTRACT_MISMATCH",
+                                             "Scoreの尺度、期待値、丸め、または確率正規化がLaya契約と一致しません。")
             item["score_abs_differences"].append(
                 abs(float(expected["returned_score"]) - float(actual["returned_score"]))
+            )
+            item["score_expected_abs_differences"].append(
+                abs(float(expected["score_expected_unrounded"])
+                    - float(actual["score_expected_unrounded"]))
             )
         elif kind == "noul":
             item["true_probability_abs_differences"].append(
@@ -476,11 +536,13 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
             "action_probability_value_count": 0, "action_probability_abs_differences": [],
             "decision_id_changes": [], "decision_slot_changes": 0,
             "decision_id_matches": 0, "decision_slot_matches": 0,
-            "score_abs_differences": [], "true_probability_abs_differences": [],
+            "score_abs_differences": [], "score_expected_abs_differences": [],
+            "true_probability_abs_differences": [],
         })
         probs = item.pop("candidate_probability_abs_differences")
         actions = item.pop("action_probability_abs_differences")
         scores = item.pop("score_abs_differences")
+        expected_scores = item.pop("score_expected_abs_differences")
         true_probs = item.pop("true_probability_abs_differences")
         count = item["cases"]
         result["question_type_counts"][kind] = count
@@ -500,6 +562,12 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
             item["returned_score_mean_abs_difference"] = float(np.mean(scores)) if scores else 0.0
             item["returned_score_max_abs_difference"] = float(max(scores, default=0.0))
             item["returned_score_mean_denominator"] = len(scores)
+            item["score_expected_unrounded_value_count"] = len(expected_scores)
+            item["score_expected_unrounded_mean_abs_difference"] = (
+                float(np.mean(expected_scores)) if expected_scores else 0.0
+            )
+            item["score_expected_unrounded_max_abs_difference"] = max(expected_scores, default=0.0)
+            item["score_expected_unrounded_mean_denominator"] = len(expected_scores)
         if kind == "noul":
             item["true_probability_mean_abs_difference"] = float(np.mean(true_probs)) if true_probs else 0.0
             item["true_probability_mean_denominator"] = len(true_probs)
@@ -719,6 +787,7 @@ def run_cpu_check(root: Path, run: Run) -> dict[str, Any]:
                       "onnx_vs_openvino_cpu": _type_comparison(onnx, openvino),
                       "original_torch_vs_openvino_cpu": _type_comparison(reference, openvino),
                   },
+                  "score_return_contract": _score_return_contract(root),
                   "draft_label_reference": _draft_label_summary(root, reference),
                   "onnx_runtime": onnx_env, "openvino_cpu": ov_env,
                   "label_status": "ai_draft_unverified", "japanese_quality_status": "UNDETERMINED"}
@@ -953,6 +1022,7 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720",
                   "startup_timing": startup,
                   "checks": checks, "comparison_to_original_cpu": comparison,
                   "type_comparison_to_original_cpu": type_comparison,
+                  "score_return_contract": _score_return_contract(root),
                   "draft_label_reference": _draft_label_summary(root, reference),
                   "important_new_errors_definition": comparison["important_new_errors_definition"],
                   "label_status": "ai_draft_unverified", "human_label_errors": "UNDETERMINED",
