@@ -385,10 +385,12 @@ def _run_sokudan(root: Path, run: Run) -> dict[str, Any]:
     session = None
     records: dict[str, Any] = {}
     lock = None
+    environment = None
     verification = None
     with _ExclusiveModelLock():
         session = _SokudanSession(root, templates, canaries)
         lock = session._lock
+        environment = session._environment
         verification = session._verification
         try:
             for fixture in DIAGNOSTIC_CASES:
@@ -447,8 +449,8 @@ def _run_sokudan(root: Path, run: Run) -> dict[str, Any]:
             "backbone_revision": lock["backbone"]["revision"] if lock else None,
             "calibration_sha256": lock["execution"]["calibration_sha256"] if lock else None,
             "verification": ({"runtime_model": verification["runtime_model"],
-                              "artifact_lock_sha256": verification["artifact_lock_sha256"]}
-                             if verification else {}),
+                              "artifact_lock_sha256": environment["artifact_lock_sha256"]}
+                             if verification and environment else {}),
             "records": records}
 
 

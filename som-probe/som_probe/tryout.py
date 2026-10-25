@@ -622,7 +622,7 @@ class _LayaSession:
 class _SokudanSession:
     def __init__(self, root: Path, templates: dict[str, dict[str, Any]],
                  canaries: dict[str, dict[str, Any]]) -> None:
-        _, sokudan, lock, verification = _run_environment(root)
+        environment, sokudan, lock, verification = _run_environment(root)
         runtime_path = (root / verification["runtime_model"]["directory"]).resolve()
         try:
             agent = sokudan.load(runtime_path, backend="torch", device="cpu", dtype="float32")
@@ -641,6 +641,7 @@ class _SokudanSession:
         self._templates = templates
         self._canaries = canaries
         self._lock = lock
+        self._environment = environment
         self._verification = verification
         self.startup = "\n".join((
             "【試用するモデル】",
