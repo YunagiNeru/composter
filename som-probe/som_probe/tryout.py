@@ -40,9 +40,9 @@ _SOURCE_RUN_ID = "20261025-041751-58713e9e"
 _MUTEX_NAME = "Local\\som-probe-interactive-model"
 _DISPLAY_CHOICE = {"task": "未完了", "none": "対象外", "need_info": "確認待ち"}
 _DISPLAY_SCORE = (
-    "日時情報なし、または時期未確定・曖昧",
-    "日付・相対日付・曜日・期間だけ、または時計時刻だけ",
-    "日付または相対日付と時計時刻の両方が明記",
+    "記載なし、または時期が未確定・曖昧",
+    "日付・相対日付・曜日・期間だけ、または時刻だけ",
+    "日付（相対日付を含む）と時刻の両方",
 )
 
 
@@ -311,7 +311,12 @@ def _laya_input(tokenizer: _PinnedLayaTokenizer, config: dict[str, Any],
            "candidate_ids": candidate_ids, "candidate_count": size,
            "temperature": temperature, "input_sequence_length": 256,
            "required_total_tokens": required_tokens, "special_token_ids": special_ids,
-           "input_sha256": input_sha256, "inputs": inputs}
+           "state_truncated": False, "state_tokens_dropped": 0,
+           "input_sha256": input_sha256, "inputs": inputs,
+           "state_token_ids": state_ids, "active_sequence_ids": sequence,
+           "question_contract": raw_question,
+           "candidate_descriptions": _render_laya_options(question),
+           "question_text": question["ins"]}
     row["arrays"] = _input_arrays(row)
     return row
 
@@ -441,8 +446,11 @@ def _laya_temperature_bucket(question_type: str, candidate_count: int) -> str:
 
 class _LayaSession:
     def __init__(self, root: Path, source_run_id: str,
-                 templates: dict[str, dict[str, Any]], canaries: dict[str, dict[str, Any]]) -> None:
-        source_run, _, xml, _ = _validate_laya_source(root, source_run_id)
+                 templates: dict[str, dict[str, Any]], canaries: dict[str, dict[str, Any]], *,
+                 execution_device: str = "NPU", diagnostic_run_id: str | None = None) -> None:
+        if execution_device not in {"CPU", "NPU"}:
+            raise TryoutError("LAYA_DEVICE_INVALID")
+        source_run, conversion, _, _ = _validate_laya_source(root, source_run_id)
         lock = load_lock(root)
         source = lock["sources"]["laya_code"]
         source_dir = root / ".local" / "sources" / f"laya-pinned-{source['commit']}"
@@ -477,33 +485,54 @@ class _LayaSession:
         tokenizer = _PinnedLayaTokenizer(tokenizer_path / "tokenizer.json", tokenizer_config)
         _verify_laya_input_canaries(source_run, canaries, tokenizer, config)
 
-        device = inspect_device("NPU", "3720")
-        if device.get("status") != "PASS":
-            raise TryoutError("LAYA_NPU_3720_UNAVAILABLE")
+        xml_key = "fp16_xml" if execution_device == "NPU" else "fp32_xml"
+        hash_key = f"{xml_key}_sha256"
+        bin_hash_key = f"{xml_key.removesuffix('_xml')}_bin_sha256"
+        xml = (root / conversion[xml_key]).resolve()
+        if (not xml.is_file() or not xml.with_suffix(".bin").is_file()
+                or sha256_file(xml) != conversion[hash_key]
+                or sha256_file(xml.with_suffix(".bin")) != conversion[bin_hash_key]):
+            raise TryoutError("LAYA_SOURCE_IR_HASH_MISMATCH")
+        device: dict[str, Any] = {"status": "PASS", "device_properties": {}}
+        if execution_device == "NPU":
+            device = inspect_device("NPU", "3720")
+            if device.get("status") != "PASS":
+                raise TryoutError("LAYA_NPU_3720_UNAVAILABLE")
         try:
             core = ov.Core()
-            cache_dir = (root / ".local" / "tryout-cache" / "laya-s256-k8-plugin").resolve()
-            cache_dir.mkdir(parents=True, exist_ok=True)
             model = core.read_model(str(xml))
-            compiled = core.compile_model(
-                model, "NPU", {"CACHE_DIR": str(cache_dir), "NPU_COMPILER_TYPE": "PLUGIN"}
-            )
-            properties = {
-                key: compiled.get_property(key)
-                for key in ("EXECUTION_DEVICES", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION",
-                            "RUNTIME_REQUIREMENTS", "LOADED_FROM_CACHE")
-            }
+            cache_dir = None
+            if execution_device == "NPU":
+                cache_dir = (root / ".local" / "tryout-cache" / "laya-s256-k8-plugin"
+                             if diagnostic_run_id is None else
+                             root / ".local" / "tryout-cache" / f"diagnostic-{diagnostic_run_id}-laya-plugin").resolve()
+                cache_dir.mkdir(parents=True, exist_ok=True)
+                compiled = core.compile_model(
+                    model, "NPU", {"CACHE_DIR": str(cache_dir), "NPU_COMPILER_TYPE": "PLUGIN"}
+                )
+                properties = {
+                    key: compiled.get_property(key)
+                    for key in ("EXECUTION_DEVICES", "NPU_COMPILER_TYPE", "NPU_COMPILER_VERSION",
+                                "RUNTIME_REQUIREMENTS", "LOADED_FROM_CACHE")
+                }
+            else:
+                compiled = core.compile_model(model, "CPU")
+                properties = {"EXECUTION_DEVICES": compiled.get_property("EXECUTION_DEVICES")}
         except Exception:
-            raise TryoutError("LAYA_NPU_COMPILE_FAILED") from None
+            raise TryoutError("LAYA_NPU_COMPILE_FAILED" if execution_device == "NPU"
+                              else "LAYA_CPU_COMPILE_FAILED") from None
         execution_devices = _execution_device_names(properties["EXECUTION_DEVICES"])
-        if execution_devices != ["NPU"]:
+        if execution_devices != [execution_device]:
             raise TryoutError("LAYA_EXECUTION_DEVICE_MISMATCH")
-        compiler_type = str(properties["NPU_COMPILER_TYPE"])
-        if not compiler_type.upper().endswith("PLUGIN"):
-            raise TryoutError("LAYA_COMPILER_MISMATCH")
-        actual_arch = device.get("device_properties", {}).get("DEVICE_ARCHITECTURE")
-        if str(actual_arch) != "3720":
-            raise TryoutError("LAYA_ARCHITECTURE_MISMATCH")
+        compiler_type = "未適用"
+        actual_arch = "対象外"
+        if execution_device == "NPU":
+            compiler_type = str(properties["NPU_COMPILER_TYPE"])
+            if not compiler_type.upper().endswith("PLUGIN"):
+                raise TryoutError("LAYA_COMPILER_MISMATCH")
+            actual_arch = device.get("device_properties", {}).get("DEVICE_ARCHITECTURE")
+            if str(actual_arch) != "3720":
+                raise TryoutError("LAYA_ARCHITECTURE_MISMATCH")
 
         self._compiled = compiled
         self._core = core
@@ -511,13 +540,43 @@ class _LayaSession:
         self._config = config
         self._templates = templates
         self._canaries = canaries
+        self.execution_device = execution_device
+        self._cache_dir = cache_dir
+        self._properties = properties
+        self._execution_devices = execution_devices
+        self._actual_architecture = actual_arch
+        self._device_properties = device.get("device_properties", {})
         model_source = lock["sources"]["reference_checkpoint"]
-        self.startup = (f"Laya / FP16 / NPU / 3720 / {compiler_type} / "
-                        f"model={model_source['repository']}@{model_source['revision']} / "
-                        f"IR元Run={source_run_id} / s256-k8")
+        precision = "FP16" if execution_device == "NPU" else "FP32"
+        compiler_version = (str(properties.get("NPU_COMPILER_VERSION", "未取得"))
+                            if execution_device == "NPU" else "未適用")
+        startup_lines = [
+            "【試用するモデル】",
+            f"Laya｜{execution_device}で実行｜{precision}｜PID：{os.getpid()}",
+            "【実行情報】",
+            f"モデル：{model_source['repository']}@{model_source['revision']}",
+            f"バックエンド：OpenVINO {ov.__version__}",
+            f"要求デバイス：{execution_device}｜実デバイス：{', '.join(execution_devices)}",
+            f"NPUアーキテクチャ：要求3720／実値{actual_arch}｜コンパイラー：{compiler_type}｜版：{compiler_version}",
+            f"入力プロファイル：s256-k8｜質問定義：dev-v3",
+            f"固定IR取得元：{source_run_id}｜XML SHA-256：{conversion[hash_key]}｜BIN SHA-256：{conversion[bin_hash_key]}",
+            f"質問データ SHA-256：{sha256_file(root / 'datasets' / 'dev-v3.jsonl')}",
+        ]
+        if cache_dir is not None:
+            startup_lines.append(f"診断キャッシュ：{cache_dir}")
+        self.startup = "\n".join(startup_lines)
 
     def predict(self, state: str) -> dict[str, dict[str, Any]]:
+        return self.predict_with_trace(state)[0]
+
+    def display_context(self) -> dict[str, Any]:
+        return {kind: {"candidate_ids": _candidate_ids(self._templates[kind]),
+                       "candidate_descriptions": _candidate_descriptions(self._templates[kind])}
+                for kind in _TYPES}
+
+    def predict_with_trace(self, state: str) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         outputs: dict[str, dict[str, Any]] = {}
+        traces: dict[str, Any] = {}
         for kind in _TYPES:
             question_id = self._canaries[kind]["question_id"]
             question = self._templates[kind]
@@ -529,7 +588,29 @@ class _LayaSession:
             logits, actions = _select_outputs(named)
             outputs[kind] = decode_laya_output(row["question_type"], row["candidate_ids"],
                                                 row["temperature"], logits, actions)
-        return outputs
+            traces[kind] = {
+                "question_id": question_id, "question_type": row["question_type"],
+                "question_text": row["question_text"],
+                "question_contract": row["question_contract"],
+                "candidate_ids": row["candidate_ids"],
+                "candidate_descriptions": row["candidate_descriptions"],
+                "state_token_ids": row["state_token_ids"],
+                "active_sequence_ids": row["active_sequence_ids"],
+                "input_tensors": row["inputs"],
+                "special_token_ids": row["special_token_ids"],
+                "language_parameter": None,
+                "temperature_bucket": _laya_temperature_bucket(
+                    row["question_type"], len(row["candidate_ids"]),
+                ),
+                "temperature": row["temperature"],
+                "required_total_tokens": row["required_total_tokens"],
+                "state_truncated": row["state_truncated"],
+                "state_tokens_dropped": row["state_tokens_dropped"],
+                "input_sha256": row["input_sha256"],
+                "logits": [float(value) for value in logits[:row["candidate_count"]]],
+                "action_logits": [float(value) for value in actions],
+            }
+        return outputs, traces
 
     def close(self) -> None:
         self._compiled = None
@@ -552,22 +633,44 @@ class _SokudanSession:
                                    if parameter.is_floating_point()})
         if actual != ("torch", "cpu", "float32") or parameter_dtypes != ["torch.float32"]:
             raise TryoutError("SOKUDAN_EXECUTION_MISMATCH")
-        calibration = json.loads((runtime_path / "calibration.json").read_text(encoding="utf-8"))
+        calibration_path = runtime_path / "calibration.json"
+        calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
         self._expected_temperature = float(calibration["temperatures"]["bool/2"])
+        self._calibration_path = calibration_path
         self._agent = agent
         self._templates = templates
         self._canaries = canaries
-        self.startup = (f"Sokudan {lock['package']['version']} / torch / CPU / FP32 / "
-                        f"model={lock['model']['repository']}@{lock['model']['revision']}")
+        self._lock = lock
+        self._verification = verification
+        self.startup = "\n".join((
+            "【試用するモデル】",
+            f"Sokudan｜CPUで実行・NPU未対応｜FP32｜PID：{os.getpid()}",
+            "【実行情報】",
+            f"モデル：{lock['model']['repository']}@{lock['model']['revision']}",
+            f"パッケージ：sokudan {lock['package']['version']}｜ソース：{lock['package']['source_commit']}",
+            f"バックエンド：torch｜要求デバイス：CPU｜実デバイス：{self._agent.device}｜精度：{self._agent.dtype}",
+            "入力プロファイル：モデル既定（固定Shapeなし）｜質問定義：dev-v3",
+            f"校正 SHA-256：{sha256_file(calibration_path)}｜質問データ SHA-256：{sha256_file(root / 'datasets' / 'dev-v3.jsonl')}",
+        ))
 
     def predict(self, state: str) -> dict[str, dict[str, Any]]:
+        return self.predict_with_trace(state)[0]
+
+    def display_context(self) -> dict[str, Any]:
+        return {kind: {"candidate_ids": _candidate_ids(self._templates[kind]),
+                       "candidate_descriptions": _candidate_descriptions(self._templates[kind])}
+                for kind in _TYPES}
+
+    def predict_with_trace(self, state: str) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         questions = _questions_for_templates(self._templates, self._canaries)
         kinds = {self._canaries[kind]["question_id"]: kind for kind in _TYPES}
         counts = {qid: len(_candidate_ids(question)) for qid, question in questions.items()}
+        prepared_inputs: dict[str, Any] = {}
         for qid, question in questions.items():
-            prepared = _prepare_question_inputs(self._agent, state, {qid: question})[qid]
+            prepared = _prepare_question_inputs(self._agent, state, {qid: question}, include_tokens=True)[qid]
             if prepared["truncated"] or prepared["required_total_tokens"] > 1024:
                 raise TryoutError("INPUT_EXCEEDS_SOKUDAN_LIMIT", recoverable=True)
+            prepared_inputs[qid] = prepared
         before = _canonical(questions)
         try:
             official = self._agent.predict(state, questions, order_marginalize=False)
@@ -580,9 +683,13 @@ class _SokudanSession:
             raise TryoutError("SOKUDAN_OUTPUT_CONTRACT_FAILED")
         _validate_calibration(self._agent, official, list(questions), kinds, counts,
                               self._expected_temperature)
-        return {kind: adapt_official_answer(kind, official["answers"][qid],
-                                            _candidate_ids(questions[qid]))
-                for qid, kind in kinds.items()}
+        adapted = {kind: adapt_official_answer(kind, official["answers"][qid],
+                                               _candidate_ids(questions[qid]))
+                   for qid, kind in kinds.items()}
+        trace = {"questions": questions, "prepared_inputs": prepared_inputs,
+                 "official_output": official, "calibration_temperature": self._expected_temperature,
+                 "calibration_sha256": sha256_file(self._calibration_path)}
+        return adapted, trace
 
     def close(self) -> None:
         self._agent = None
@@ -609,13 +716,114 @@ def _questions_for_templates(templates: dict[str, dict[str, Any]],
     return questions
 
 
-def format_results(results: dict[str, dict[str, Any]]) -> str:
+def _candidate_descriptions(question: dict[str, Any]) -> dict[Any, str]:
+    kind = _question_kind(question)
+    criteria = question.get("criteria") or {}
+    if kind == "choice":
+        return {key: _render_laya_criterion(value) for key, value in criteria.items()}
+    if kind == "score":
+        return {index: _render_laya_criterion(value) for index, value in enumerate(criteria)}
+    labels = question.get("labels", {"false": "いいえ", "true": "はい"})
+    return {False: str(labels.get("false", "いいえ")), True: str(labels.get("true", "はい"))}
+
+
+def _candidate_rows(result: dict[str, Any]) -> tuple[list[tuple[Any, float]], str]:
+    raw = result.get("candidate_probabilities")
+    if isinstance(raw, list):
+        try:
+            rows = [(row["candidate_id"], float(row["probability"])) for row in raw]
+        except (KeyError, TypeError, ValueError):
+            raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID") from None
+        candidate_ids = result.get("candidate_ids")
+        if candidate_ids is not None and [candidate_id for candidate_id, _ in rows] != candidate_ids:
+            raise TryoutError("DISPLAY_CANDIDATE_ORDER_MISMATCH")
+        return rows, "モデル出力値"
+    values = result.get("api_display_probabilities")
+    candidate_ids = result.get("candidate_ids", [])
+    if isinstance(values, list) and isinstance(candidate_ids, list) and len(values) == len(candidate_ids):
+        try:
+            return list(zip(candidate_ids, (float(value) for value in values))), "公式API返却値（小数4桁）"
+        except (TypeError, ValueError):
+            raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID") from None
+    return [], "未取得"
+
+
+def _candidate_id_text(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+
+
+def _exact_number(value: Any) -> str:
+    if type(value) not in (int, float) or not math.isfinite(float(value)):
+        return "未取得"
+    return repr(value)
+
+
+def _display_candidate_label(kind: str, candidate_id: Any, context: dict[str, Any]) -> str:
+    labels = context.get("candidate_descriptions", {})
+    if candidate_id in labels:
+        return str(labels[candidate_id])
+    defaults = _DISPLAY_CHOICE if kind == "choice" else {}
+    if kind == "score" and type(candidate_id) is int and 0 <= candidate_id < len(_DISPLAY_SCORE):
+        return _DISPLAY_SCORE[candidate_id]
+    if kind == "noul" and type(candidate_id) is bool:
+        return "はい" if candidate_id else "いいえ"
+    return defaults.get(candidate_id, "説明未取得")
+
+
+def _format_candidate_detail(kind: str, result: dict[str, Any], context: dict[str, Any],
+                             selected: Any) -> tuple[list[str], list[str]]:
+    rows, origin = _candidate_rows(result)
+    expected_order = context.get("candidate_ids")
+    if expected_order is not None and [candidate_id for candidate_id, _ in rows] != expected_order:
+        raise TryoutError("DISPLAY_CANDIDATE_ORDER_MISMATCH")
+    detail: list[str] = []
+    numeric: list[str] = []
+    if rows:
+        detail.append(f"  候補確率（表示は小数2桁、取得元：{origin}）")
+        for candidate_id, probability in rows:
+            if not math.isfinite(probability) or not 0.0 <= probability <= 1.0:
+                raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID")
+            label = _display_candidate_label(kind, candidate_id, context)
+            mark = " ← 選択" if _candidate_id_text(candidate_id) == _candidate_id_text(selected) else ""
+            detail.append(f"    {_candidate_id_text(candidate_id)}：{label}　{probability * 100:.2f}%{mark}")
+        numeric.append(f"  候補確率取得値（{origin}）: " + ", ".join(
+            f"{_candidate_id_text(candidate_id)}={_exact_number(result_value)}"
+            for (candidate_id, _), result_value in zip(rows, _probability_source_values(result, rows))))
+        top = max(probability for _, probability in rows)
+        tied = [candidate_id for candidate_id, probability in rows if probability == top]
+        if len(tied) > 1:
+            detail.append("    同率候補あり（選択はAPI／モデルが返した候補を表示）")
+    else:
+        detail.append("  候補確率：未取得")
+    return detail, numeric
+
+
+def _probability_source_values(result: dict[str, Any], rows: list[tuple[Any, float]]) -> list[Any]:
+    raw = result.get("candidate_probabilities")
+    if isinstance(raw, list):
+        return [row.get("probability") for row in raw]
+    values = result.get("api_display_probabilities")
+    return list(values) if isinstance(values, list) and len(values) == len(rows) else []
+
+
+def format_results(results: dict[str, dict[str, Any]], context: dict[str, Any] | None = None) -> str:
+    context = context or {}
     choice = results["choice"]
     score = results["score"]
     noul = results["noul"]
-    choice_label = _DISPLAY_CHOICE.get(choice.get("decision"))
-    if choice_label is None:
+    choice_slot = choice.get("decision_slot")
+    choice_ids = choice.get("candidate_ids")
+    if choice.get("decision") is None and isinstance(choice_slot, int) and isinstance(choice_ids, list):
+        choice_decision = choice_ids[choice_slot] if 0 <= choice_slot < len(choice_ids) else None
+    else:
+        choice_decision = choice.get("decision")
+    if choice_decision not in _DISPLAY_CHOICE:
         raise TryoutError("CHOICE_OUTPUT_UNKNOWN")
+    if isinstance(choice_ids, list) and choice_decision not in choice_ids:
+        raise TryoutError("CHOICE_OUTPUT_CONTRACT_INVALID")
+    choice_context = context.get("choice", {})
+    choice_detail, choice_numeric = _format_candidate_detail(
+        "choice", choice, choice_context, choice_decision)
     stage = (score.get("decision_slot") if score.get("question_type") == "score"
              else score.get("stage_prediction"))
     if type(stage) is not int or not 0 <= stage <= 2:
@@ -623,36 +831,95 @@ def format_results(results: dict[str, dict[str, Any]]) -> str:
     boolean = noul.get("boolean_result", noul.get("evaluator_boolean"))
     if type(boolean) is not bool:
         raise TryoutError("NOUL_OUTPUT_UNKNOWN")
+    score_context = context.get("score", {})
+    score_id = score.get("decision", stage)
+    score_detail, score_numeric = _format_candidate_detail("score", score, score_context, score_id)
+    raw_expected = score.get("score_expected_unrounded")
+    returned_score = score.get("returned_score", score.get("api_returned_value"))
+    for value in (raw_expected, returned_score):
+        if value is not None and (type(value) not in (int, float) or not math.isfinite(float(value))):
+            raise TryoutError("SCORE_OUTPUT_CONTRACT_INVALID")
+    score_precision = "OpenVINO/内部計算の返却値" if "returned_score" in score else "公式API返却値"
+    noul_detail, noul_numeric = _format_candidate_detail(
+        "noul", noul, context.get("noul", {}), True if boolean else False)
+    raw_probability = noul.get("true_probability")
+    returned_probability = noul.get("returned_noul", noul.get("api_returned_value"))
+    for value in (raw_probability, returned_probability):
+        if value is not None and (type(value) not in (int, float)
+                                  or not math.isfinite(float(value)) or not 0.0 <= float(value) <= 1.0):
+            raise TryoutError("NOUL_OUTPUT_CONTRACT_INVALID")
+    boolean_matches_value = (returned_probability is None
+                             or boolean is (float(returned_probability) >= 0.5))
+    probability_is_api_rounded = "api_returned_value" in noul and "true_probability" not in noul
+    if raw_probability is not None:
+        notification_percent = f"P(true)の表示：{float(raw_probability) * 100:.2f}%（モデル出力値）"
+        raw_true = _exact_number(raw_probability)
+    elif returned_probability is not None:
+        probability_source = ("公式API返却値・小数4桁丸め済み" if probability_is_api_rounded
+                              else "モデル返却値")
+        notification_percent = (f"P(true)の表示：{float(returned_probability) * 100:.2f}%"
+                                f"（{probability_source}）")
+        raw_true = "未取得"
+    else:
+        notification_percent = "P(true)の表示：未取得"
+        raw_true = "未取得"
+    bool_rule = "判定に使うP(true)が0.5以上なら「はい」、未満なら「いいえ」"
+    if returned_probability is not None and float(returned_probability) == 0.5:
+        bool_rule += "（今回値は境界の0.5）"
 
     lines = [
-        f"作業の状態：{choice_label}",
+        "【モデルの判断】",
+        f"作業の状態：{_DISPLAY_CHOICE[choice_decision]}",
         f"日時の具体性：{stage} — {_DISPLAY_SCORE[stage]}",
-        f"通知候補：{'はい' if boolean else 'いいえ'}",
-        "数値（参考）:",
+        f"通知候補：{'はい' if boolean else 'いいえ'}"
+        + ("（返却値との真偽契約に不一致）" if not boolean_matches_value else ""),
+        "",
+        "【判断の内訳】",
+        f"作業（選択ID：{_candidate_id_text(choice_decision)}）",
+        *choice_detail,
+        f"日時（選択段階：argmaxで選択した段階 {stage}）",
+        *score_detail,
+        (f"  段階の平均値（確率期待値、表示は小数4桁）：{float(raw_expected):.4f}／2"
+         if raw_expected is not None else "  段階の平均値（確率期待値）：未取得"),
+        "通知",
+        *noul_detail,
+        f"  {notification_percent}",
+        (f"  判定に使う値：{'公式API返却値' if probability_is_api_rounded else 'モデル返却値'} "
+         f"{_exact_number(returned_probability)}"
+         if returned_probability is not None else "  判定に使う値：未取得"),
+        f"  判定規則：{bool_rule}",
+        *([] if boolean_matches_value else [
+            "  契約エラー：返却値から計算する真偽とモデルの真偽出力が一致しません。両方の値をそのまま表示しています。"
+        ]),
+        "",
+        "【数値照合用】",
+        *choice_numeric,
+        *score_numeric,
+        f"  Score選択段階（argmax）：{stage}",
+        f"  Score段階期待値（丸め前）：{_exact_number(raw_expected)}",
+        f"  Score API返却値（{score_precision}）：{_exact_number(returned_score)}",
+        f"  Noul P(true)（丸め前モデル値）：{raw_true}",
+        f"  Noul {'公式API返却値' if probability_is_api_rounded else 'モデル返却値'}："
+        f"{_exact_number(returned_probability)}",
+        f"  Noul評価器判定：{'true' if boolean else 'false'}（返却値が0.5以上）",
     ]
-    choice_names = {"task": "未完了", "none": "対象外", "need_info": "確認待ち"}
-    choice_probs = _probability_rows(choice)
-    if choice_probs:
-        lines.append("  Choice確率: " + "、".join(
-            f"{choice_names.get(key, key)}={value:.4f}" for key, value in choice_probs))
-    score_probs = _probability_rows(score)
-    if score_probs:
-        lines.append("  Score段階確率: " + "、".join(
-            f"{key}={value:.4f}" for key, value in score_probs))
-    returned_score = score.get("returned_score", score.get("api_returned_value"))
-    if returned_score is not None:
-        lines.append(f"  返却Score={returned_score!r}")
-    raw_expected = score.get("score_expected_unrounded")
-    if raw_expected is not None:
-        lines.append(f"  丸め前期待値={raw_expected!r}")
-    p_true = noul.get("true_probability", noul.get("api_returned_value"))
-    if p_true is not None:
-        lines.append(f"  P(true)={float(p_true):.8f}")
-    returned_noul = noul.get("returned_noul", noul.get("api_returned_value"))
-    if returned_noul is not None:
-        lines.append(f"  API返却P(true)={float(returned_noul):.4f}")
-    lines.append("  画面の確率表示は小数4桁です。モデルの返却値は変更していません。")
     return "\n".join(lines)
+
+
+def _tryout_error_text(exc: TryoutError) -> str:
+    descriptions = {
+        "INPUT_EXCEEDS_LAYA_SHAPE": "s256入力上限を超えたため拒否しました。文章は切り捨てていません。",
+        "INPUT_EXCEEDS_SOKUDAN_LIMIT": "Sokudanの入力上限を超えたため拒否しました。文章は切り捨てていません。",
+        "LAYA_CANDIDATE_LAYOUT_INVALID": "固定質問の候補位置または候補数が契約と一致しません。",
+        "SOKUDAN_OUTPUT_CONTRACT_FAILED": "公式APIの返却値または入力契約が一致しません。",
+        "DISPLAY_CANDIDATE_ORDER_MISMATCH": "画面用候補順とモデル出力の候補順が一致しません。",
+        "DISPLAY_PROBABILITY_CONTRACT_INVALID": "確率が契約外のため、結果を表示できません。",
+        "CHOICE_OUTPUT_CONTRACT_INVALID": "選択候補が返却された候補一覧にありません。",
+        "SCORE_OUTPUT_CONTRACT_INVALID": "Scoreの取得値が数値契約に合いません。",
+        "NOUL_OUTPUT_CONTRACT_INVALID": "通知候補の取得値が確率契約に合いません。",
+    }
+    detail = descriptions.get(exc.code, "固定実行契約に合わないため、結果を採用しません。")
+    return f"推論できませんでした（{exc.code}）：{detail}"
 
 
 def _interactive_loop(session: Any, input_fn: Callable[[str], str],
@@ -674,9 +941,11 @@ def _interactive_loop(session: Any, input_fn: Callable[[str], str],
             continue
         try:
             results = session.predict(state)
-            output_fn(format_results(results))
+            display_context = session.display_context() if hasattr(session, "display_context") else None
+            output_fn(f"入力：{state}")
+            output_fn(format_results(results, display_context))
         except TryoutError as exc:
-            output_fn(f"推論できませんでした（{exc.code}）。")
+            output_fn(_tryout_error_text(exc))
             if not exc.recoverable:
                 return
         except Exception:
@@ -714,8 +983,9 @@ def run_tryout(root: Path, model: str, source_run_id: str | None,
             raise TryoutError("MODEL_LOAD_FAILED") from None
         try:
             output_fn(f"ロード完了：{session.startup}")
-            output_fn(f"推論プロセス PID：{os.getpid()}")
-            output_fn("dev-v3の固定質問定義を使用。文章と結果は保存しません。")
+            output_fn("確率は正答率ではなく、各候補に対するモデル出力値です。")
+            output_fn("表示はモデル出力の要約です。正解や事実認定ではありません。")
+            output_fn("文章と結果は保存しません。理由はモデル出力に含まれないため生成しません。")
             output_fn("入力待ち（モデルを保持中。終了は :quit）")
             _interactive_loop(session, input_fn, output_fn)
         finally:

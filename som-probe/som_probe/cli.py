@@ -148,6 +148,7 @@ def _parser() -> argparse.ArgumentParser:
     tryout = commands.add_parser("tryout", help="文章を対話入力してモデル判断を試用")
     tryout.add_argument("--model", choices=("laya", "sokudan"), required=True)
     tryout.add_argument("--source-run", help="Layaの固定s256-k8 IR取得元Run。Sokudanでは使用不可")
+    commands.add_parser("diagnose-tryout", help="固定4入力で公式APIから対話表示までを照合")
     return parser
 
 
@@ -296,6 +297,11 @@ def main(argv: list[str] | None = None) -> int:
                 print("起動を中断しました。", file=sys.stderr)
                 return EXIT_OK
             return EXIT_OK
+        if args.command == "diagnose-tryout":
+            from .diagnostics import run_fixed_diagnostic
+            result = run_fixed_diagnostic(root)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "COMPLETE" else EXIT_MODEL
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT

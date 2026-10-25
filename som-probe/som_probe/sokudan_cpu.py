@@ -220,7 +220,8 @@ def _candidate_ids(question: dict[str, Any]) -> list[Any]:
 
 
 def _prepare_question_inputs(agent: Any, state: str,
-                             questions: dict[str, Any]) -> dict[str, dict[str, Any]]:
+                             questions: dict[str, Any], *,
+                             include_tokens: bool = False) -> dict[str, dict[str, Any]]:
     from sokudan.encoding.question import QuestionTooLongError, encode_joint
     from sokudan.schema.question import parse_questions
 
@@ -262,6 +263,15 @@ def _prepare_question_inputs(agent: Any, state: str,
             "candidate_count": len(question.labels),
             "input_tensor_sha256": input_tensor_sha256,
         }
+        if include_tokens:
+            results[question_id].update({
+                "input_ids": list(encoded.input_ids),
+                "attention_mask": list(encoded.attention_mask),
+                "marker_positions": list(encoded.marker_positions),
+                "candidate_ids": list(question.labels),
+                "state_token_ids": list(agent.tokenizer(state, add_special_tokens=False)["input_ids"]),
+                "ordered": bool(encoded.ordered),
+            })
     return results
 
 

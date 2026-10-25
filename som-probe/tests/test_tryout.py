@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import copy
 from pathlib import Path
 
 from som_probe.tryout import (
@@ -9,6 +10,7 @@ from som_probe.tryout import (
     _interactive_loop,
     _question_templates,
     _questions_for_templates,
+    _tryout_error_text,
     format_results,
     run_tryout,
 )
@@ -55,17 +57,65 @@ class TryoutFormattingTests(unittest.TestCase):
         self.assertIn("本文に明示された本人の行動", templates["choice"]["instructions"])
         self.assertNotIn("明日15時", templates["choice"]["instructions"])
 
-    def test_japanese_decisions_come_before_numeric_details(self):
-        lines = format_results(sample_results()).splitlines()
+    def test_all_three_sections_preserve_the_input_values(self):
+        results = sample_results()
+        before = copy.deepcopy(results)
 
-        self.assertEqual(lines[:3], [
-            "作業の状態：未完了",
-            "日時の具体性：2 — 日付または相対日付と時計時刻の両方が明記",
-            "通知候補：はい",
-        ])
-        self.assertEqual(lines[3], "数値（参考）:")
-        self.assertTrue(any("丸め前期待値=1.6" in line for line in lines))
-        self.assertFalse(any("理由" in line or "文章" in line for line in lines))
+        rendered = format_results(results)
+
+        self.assertIn("【モデルの判断】", rendered)
+        self.assertIn("作業の状態：未完了", rendered)
+        self.assertIn("日時の具体性：2 — 日付（相対日付を含む）と時刻の両方", rendered)
+        self.assertIn("通知候補：はい", rendered)
+        self.assertIn("【判断の内訳】", rendered)
+        self.assertIn("【数値照合用】", rendered)
+        self.assertIn("段階の平均値（確率期待値", rendered)
+        self.assertIn("Score選択段階（argmax）：2", rendered)
+        self.assertIn("Score段階期待値（丸め前）：1.6", rendered)
+        self.assertEqual(results, before)
+        self.assertFalse(any("理由" in line for line in rendered.splitlines()))
+
+    def test_score_argmax_is_not_replaced_by_probability_expectation(self):
+        results = sample_results()
+        results["score"].update({
+            "decision_slot": 1,
+            "candidate_probabilities": [
+                {"candidate_id": 0, "probability": 0.45},
+                {"candidate_id": 1, "probability": 0.50},
+                {"candidate_id": 2, "probability": 0.05},
+            ],
+            "score_expected_unrounded": 0.60,
+            "returned_score": 0.6,
+        })
+
+        rendered = format_results(results)
+
+        self.assertIn("日時の具体性：1 — 日付・相対日付・曜日・期間だけ、または時刻だけ", rendered)
+        self.assertIn("選択段階：argmaxで選択した段階 1", rendered)
+        self.assertIn("段階の平均値（確率期待値、表示は小数4桁）：0.6000／2", rendered)
+        self.assertIn("Score選択段階（argmax）：1", rendered)
+        self.assertIn("Score段階期待値（丸め前）：0.6", rendered)
+
+    def test_near_tie_keeps_the_returned_choice_and_marks_exact_ties(self):
+        results = sample_results()
+        results["choice"].update({
+            "decision": "none",
+            "candidate_probabilities": [
+                {"candidate_id": "task", "probability": 0.49996},
+                {"candidate_id": "none", "probability": 0.50000},
+                {"candidate_id": "need_info", "probability": 0.00004},
+            ],
+        })
+        rendered = format_results(results)
+        none_line = next(line for line in rendered.splitlines() if '"none"：対象外' in line)
+        self.assertIn("← 選択", none_line)
+        self.assertNotIn("確実", rendered)
+
+        results["choice"]["candidate_probabilities"][0]["probability"] = 0.5
+        results["choice"]["candidate_probabilities"][1]["probability"] = 0.5
+        rendered = format_results(results)
+        self.assertIn("同率候補あり（選択はAPI／モデルが返した候補を表示）", rendered)
+        self.assertIn('"none"：対象外　50.00% ← 選択', rendered)
 
     def test_sokudan_adapter_fields_render_without_rewriting_api_values(self):
         results = {
@@ -89,9 +139,57 @@ class TryoutFormattingTests(unittest.TestCase):
 
         self.assertIn("作業の状態：対象外", rendered)
         self.assertIn("通知候補：はい", rendered)
-        self.assertIn("返却Score=0.75", rendered)
-        self.assertIn("P(true)=0.50010000", rendered)
-        self.assertIn("API返却P(true)=0.5001", rendered)
+        self.assertIn("Score API返却値（公式API返却値）：0.75", rendered)
+        self.assertIn("P(true)の表示：50.01%（公式API返却値・小数4桁丸め済み）", rendered)
+        self.assertIn("Noul P(true)（丸め前モデル値）：未取得", rendered)
+        self.assertIn("Noul 公式API返却値：0.5001", rendered)
+        self.assertNotIn("0.50010000", rendered)
+
+    def test_noul_threshold_uses_api_return_value_and_explains_half_boundary(self):
+        results = sample_results()
+        results["noul"] = {
+            "question_type": "noul", "true_probability": 0.49999,
+            "returned_noul": 0.5, "boolean_result": True,
+        }
+
+        rendered = format_results(results)
+
+        self.assertIn("Noul P(true)（丸め前モデル値）：0.49999", rendered)
+        self.assertIn("Noul モデル返却値：0.5", rendered)
+        self.assertIn("今回値は境界の0.5", rendered)
+        self.assertIn("通知候補：はい", rendered)
+
+    def test_missing_raw_values_are_not_fabricated(self):
+        results = sample_results()
+        results["score"].pop("score_expected_unrounded")
+        results["noul"] = {"question_type": "noul", "api_returned_value": 0.5,
+                            "evaluator_boolean": True}
+
+        rendered = format_results(results)
+
+        self.assertIn("Score段階期待値（丸め前）：未取得", rendered)
+        self.assertIn("Noul P(true)（丸め前モデル値）：未取得", rendered)
+        self.assertIn("Noul 公式API返却値：0.5", rendered)
+        self.assertNotIn("0.5000（丸め前", rendered)
+
+    def test_boolean_and_returned_probability_mismatch_is_shown_without_replacement(self):
+        results = sample_results()
+        results["noul"] = {"question_type": "noul", "true_probability": 0.2,
+                            "returned_noul": 0.2, "boolean_result": True}
+
+        rendered = format_results(results)
+
+        self.assertIn("通知候補：はい（返却値との真偽契約に不一致）", rendered)
+        self.assertIn("契約エラー：返却値から計算する真偽", rendered)
+        self.assertIn("Noul モデル返却値：0.2", rendered)
+
+    def test_candidate_order_is_checked_and_contract_failure_has_a_plain_explanation(self):
+        results = sample_results()
+        results["choice"]["candidate_ids"] = ["none", "task", "need_info"]
+        with self.assertRaisesRegex(TryoutError, "DISPLAY_CANDIDATE_ORDER_MISMATCH"):
+            format_results(results, {"choice": {"candidate_ids": ["task", "none", "need_info"]}})
+        self.assertIn("候補順とモデル出力", _tryout_error_text(TryoutError("DISPLAY_CANDIDATE_ORDER_MISMATCH")))
+        self.assertIn("切り捨てていません", _tryout_error_text(TryoutError("INPUT_EXCEEDS_LAYA_SHAPE")))
 
     def test_sokudan_question_ids_remain_the_canonical_ids(self):
         templates = {kind: {"type": kind} for kind in ("choice", "score", "noul")}
@@ -127,7 +225,7 @@ class TryoutLifecycleTests(unittest.TestCase):
         marker = "この入力はどのファイルにも保存されない"
 
         class FakeSession:
-            startup = "fake model / CPU"
+            startup = f"fake model / CPU / PID：{os.getpid()}"
 
             def __init__(self):
                 self.inputs = []
@@ -150,8 +248,8 @@ class TryoutLifecycleTests(unittest.TestCase):
 
             self.assertEqual(first.inputs, [marker])
             self.assertTrue(first.closed)
-            self.assertTrue(any(line.startswith("推論プロセス PID：") for line in output))
-            self.assertNotIn(marker, "\n".join(output))
+            self.assertTrue(any(f"PID：{os.getpid()}" in line for line in output))
+            self.assertIn(f"入力：{marker}", "\n".join(output))
             self.assertEqual(list(root.iterdir()), [])
 
             second = FakeSession()
