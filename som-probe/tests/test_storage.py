@@ -50,7 +50,7 @@ class StorageTests(unittest.TestCase):
             intermediate.stage("G2-cpu-check", "PASS")
             self.assertEqual(intermediate.read_manifest()["status"], "RUNNING")
 
-            for stage_name in ("PERFORMANCE", "MEMORY", "TRYOUT_COMPARISON", "TRYOUT_MEMORY"):
+            for stage_name in ("PERFORMANCE", "MEMORY", "TRYOUT_COMPARISON", "TRYOUT_MEMORY", "ZERO_SHOT_CPU"):
                 measurement = Run.create(root, stage_name)
                 measurement.stage(stage_name, "PASS", result_file="result.json")
                 self.assertEqual(measurement.read_manifest()["stages"][stage_name]["status"], "PASS")

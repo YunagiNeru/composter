@@ -153,6 +153,12 @@ def _parser() -> argparse.ArgumentParser:
     tryout_memory = commands.add_parser("tryout-memory", help="現行tryoutの3時点メモリを固定文で採取")
     tryout_memory.add_argument("--model", choices=("laya", "sokudan"), required=True)
     tryout_memory.add_argument("--source-run", help="Layaの固定s256-k8 IR取得元Run")
+    zero_shot = commands.add_parser("zero-shot-cpu", help="固定候補AをCPUでdev-v3比較し、候補BはBLOCKEDとして記録")
+    zero_shot.add_argument("--condition", choices=("english", "japanese", "all"), default="all")
+    zero_shot.add_argument("--trials", type=int, choices=(3,), default=3)
+    zero_shot.add_argument("--trial", type=int, choices=(1, 2, 3), help=argparse.SUPPRESS)
+    zero_shot.add_argument("--run-id", help=argparse.SUPPRESS)
+    zero_shot.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
@@ -316,6 +322,21 @@ def main(argv: list[str] | None = None) -> int:
             result = run_tryout_memory(root, args.model, args.source_run)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result.get("status") == "PASS" else EXIT_RESOURCE
+        if args.command == "zero-shot-cpu":
+            from .zero_shot import LANGUAGE_CONDITIONS
+            from .zero_shot_eval import run_all_trials, run_child
+            if args.child:
+                if not args.run_id or args.trial is None or args.condition == "all":
+                    raise ContractError("CHILD_TRIAL_ARGUMENTS_INVALID", "内部試験の引数が不足しています。")
+                result = run_child(root, args.run_id, args.condition, args.trial)
+                print(json.dumps(result, ensure_ascii=False))
+                return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
+            if args.run_id or args.trial is not None:
+                raise ContractError("PUBLIC_TRIAL_ARGUMENTS_INVALID", "試験ごとのrun識別子は内部起動でのみ使います。")
+            conditions = list(LANGUAGE_CONDITIONS) if args.condition == "all" else [args.condition]
+            result = run_all_trials(root, conditions, args.trials)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT
