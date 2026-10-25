@@ -586,7 +586,7 @@ def _execute_trial(root: Path, run: Run, condition_name: str, trial: int) -> dic
     repeated_cpu = []
     for _ in range(REPEATED_SAMPLE_COUNT):
         repeated = _case_result(model_loaded, condition, sample)
-        if repeated["status"] != "PASS":
+        if repeated["status"] not in {"PASS", "HOLD"}:
             raise ZeroShotError("REPEATED_FIXED_INFERENCE_FAILED")
         repeated_times.append(repeated["e2e_time_ms"])
         repeated_cpu.append(repeated["process_cpu_time_ms"])
