@@ -1,6 +1,8 @@
+import io
 import unittest
 import sys
 from pathlib import Path
+from contextlib import redirect_stdout
 from unittest.mock import Mock, patch
 
 from som_probe.diagnostics import (
@@ -14,6 +16,7 @@ from som_probe.diagnostics import (
     _normalise_sokudan_official_answer,
     _run_child,
     _sokudan_outputs_match,
+    main as diagnostic_main,
 )
 
 
@@ -148,6 +151,18 @@ class FixedTryoutDiagnosticTests(unittest.TestCase):
                         "--run-id", "20261025-000000-00000000"],
             "exit_code": 17, "stdout": "", "stderr": "fixed diagnostic failure",
         })
+
+    def test_failed_stage_saves_exception_trace_to_its_local_run(self):
+        run = Mock()
+        with patch("som_probe.diagnostics.open_run", return_value=run), \
+             patch("som_probe.diagnostics._run_stage", side_effect=ValueError("fixed stage failure")), \
+             redirect_stdout(io.StringIO()):
+            result = diagnostic_main(["--stage", "sokudan", "--run-id", "20261025-000000-00000000"])
+
+        self.assertEqual(result, 2)
+        args = run.write_json.call_args.args
+        self.assertEqual(args[0], "sokudan-failure.json")
+        self.assertIn("ValueError: fixed stage failure", args[1]["traceback"])
 
 
 if __name__ == "__main__":

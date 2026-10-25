@@ -10,6 +10,7 @@ import math
 import os
 import subprocess
 import sys
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -1034,6 +1035,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     except Exception as exc:
         code = getattr(exc, "code", "DIAGNOSTIC_STAGE_FAILED")
+        try:
+            open_run(root, args.run_id).write_json(f"{args.stage}-failure.json", {
+                "code": code, "error_type": type(exc).__name__,
+                "traceback": traceback.format_exc(),
+            })
+        except Exception:
+            pass
         print(f"DIAGNOSTIC_FAILURE:{code}")
         return 2
 
