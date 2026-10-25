@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .contracts import Profile, profile_from_mapping, profile_mapping
+from .dataset import DATASET_FILES, dataset_identity
 
 
 _PATH = re.compile(r"(?i)(?:[a-z]:\\|\\\\)[^\s\"']+")
@@ -52,7 +53,7 @@ def _source_tree_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
-def _provenance_files(root: Path) -> dict[str, str]:
+def _provenance_files(root: Path, dataset_version: str = "dev-v1") -> dict[str, str]:
     result: dict[str, str] = {}
     for name in _PROVENANCE_FILES:
         path = root / name
@@ -61,6 +62,11 @@ def _provenance_files(root: Path) -> dict[str, str]:
             continue
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         result[name] = digest
+    selected = DATASET_FILES[dataset_version]
+    for name in (selected["manifest"], selected["data"], selected["contract"], selected["revisions"]):
+        if name is not None and name not in result:
+            path = root / name
+            result[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "MISSING"
     return result
 
 
@@ -76,8 +82,10 @@ class Run:
 
     @classmethod
     def create(cls, root: Path, purpose: str, profile: dict[str, Any] | None = None,
-               compare_input_run_id: str | None = None) -> "Run":
+               compare_input_run_id: str | None = None,
+               dataset_version: str = "dev-v1") -> "Run":
         profile = profile_mapping(Profile()) if profile is None else profile_mapping(profile_from_mapping(profile))
+        identity = dataset_identity(root, dataset_version)
         if compare_input_run_id is not None and not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{8}", compare_input_run_id):
             raise ValueError("入力比較元Run IDの形式が不正です。")
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -114,7 +122,8 @@ class Run:
             "worktree_dirty": dirty,
             "worktree_status": "clean" if dirty is False else ("dirty" if dirty else "unavailable"),
             "worktree_status_porcelain": status,
-            "input_sha256": _provenance_files(root),
+            "input_sha256": _provenance_files(root, dataset_version),
+            "dataset": identity,
             "verified_model_artifact_sha256": {},
             "converted_ir_sha256": {},
             "profile": profile["name"],
@@ -140,6 +149,18 @@ class Run:
         if manifest.get("profile") != profile["name"]:
             raise ValueError("Run manifestのプロファイル名と設定が一致しません。")
         return profile
+
+    @property
+    def dataset_version(self) -> str:
+        return self.read_manifest().get("dataset", {}).get("dataset_version", "dev-v1")
+
+    @property
+    def dataset_identity(self) -> dict[str, Any]:
+        manifest = self.read_manifest()
+        selected = manifest.get("dataset")
+        if selected is None:
+            return dataset_identity(self.root, "dev-v1")
+        return selected
 
     def stage(self, name: str, status: str, **fields: Any) -> None:
         manifest = self.read_manifest()

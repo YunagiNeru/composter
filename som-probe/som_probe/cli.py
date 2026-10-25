@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from .assets import AssetError, prepare_assets, verify_assets
-from .contracts import (ContractError, Profile, profile_from_mapping, profile_mapping,
-                        validate_dataset_case, validate_request)
+from .contracts import ContractError, Profile, profile_from_mapping, profile_mapping, validate_request
+from .dataset import dataset_identity, load_dataset
 from .runtime import convert_model, doctor, run_cpu_check, run_npu, run_npu_control, run_reference
 from .storage import Run, open_run
 
@@ -51,11 +51,15 @@ def _profile_for(root: Path, selected: str | None = None) -> dict[str, Any]:
     return profiles[name]
 
 
-def validate_project(root: Path, selected_profile: str = "s256-k8") -> dict[str, Any]:
+def validate_project(root: Path, selected_profile: str = "s256-k8",
+                     dataset_version: str = "dev-v1") -> dict[str, Any]:
     required = [
         "configs/probe.json", "configs/models.lock.json", "configs/gates.json",
         "datasets/manifest.json", "datasets/dev.jsonl",
     ]
+    if dataset_version == "dev-v2":
+        required.extend(("datasets/manifest-v2.json", "datasets/dev-v2.jsonl",
+                         "datasets/dev-v2-revisions.json", "configs/evaluation-contract-v2.json"))
     missing = [name for name in required if not (root / name).is_file()]
     if missing:
         raise ContractError("REQUIRED_FILES_MISSING", "必須ファイルがありません: " + ", ".join(missing))
@@ -64,44 +68,19 @@ def validate_project(root: Path, selected_profile: str = "s256-k8") -> dict[str,
     profile = profile_from_mapping(profile_spec)
     lock = _json(root / "configs/models.lock.json")
     gates = _json(root / "configs/gates.json")
-    dataset_manifest = _json(root / "datasets/manifest.json")
     if lock.get("schema_version") != 1 or not lock.get("sources") or not lock.get("downloads"):
         raise ContractError("MODEL_LOCK_INVALID", "モデル固定情報が不正です。")
     if gates.get("schema_version") != 1 or not {"G0", "G1", "G2", "G3", "G4", "G5"}.issubset(gates.get("stages", {})):
         raise ContractError("GATES_INVALID", "段階別ゲートが不足しています。")
-    rows = []
-    with (root / "datasets/dev.jsonl").open(encoding="utf-8") as stream:
-        for line_number, line in enumerate(stream, 1):
-            if not line.strip():
-                continue
-            try:
-                case = json.loads(line)
-                validate_dataset_case(case, profile)
-            except (json.JSONDecodeError, ContractError) as exc:
-                raise ContractError("DATASET_INVALID", f"dev.jsonl の {line_number} 行目が不正です。") from exc
-            rows.append(case)
-    dev = dataset_manifest.get("splits", {}).get("dev", {})
-    if len(rows) != 60 or dev.get("cases") != 60:
-        raise ContractError("DATASET_COUNT_MISMATCH", "G1用devデータは60件でなければなりません。")
-    import hashlib
-    dataset_hash = hashlib.sha256((root / "datasets/dev.jsonl").read_bytes()).hexdigest()
-    if dataset_hash != dev.get("sha256"):
-        raise ContractError("DATASET_HASH_MISMATCH", "G1用devデータのSHA-256が固定値と一致しません。")
-    labels = {item["verification_status"] for case in rows for item in case["expected"].values()}
-    if labels != {"ai_draft_unverified"}:
-        raise ContractError("LABEL_STATE_MISMATCH", "未確認ラベルの状態が一致しません。")
-    type_counts: dict[str, int] = {}
-    for case in rows:
-        for question in case["questions"].values():
-            kind = question["type"]
-            type_counts[kind] = type_counts.get(kind, 0) + 1
-    if type_counts != dev.get("question_types"):
-        raise ContractError("DATASET_TYPE_COUNT_MISMATCH", "devデータの型別件数が固定値と一致しません。")
+    snapshot = load_dataset(root, dataset_version, profile)
+    rows = snapshot["cases"]
     verified = verify_assets(root)
     return {"files_checked": len(required), "profile": profile_spec,
             "dev_cases": len(rows), "verified_artifacts": len(verified),
             "verified_artifact_sha256": verified,
-            "label_state": "ai_draft_unverified", "official_quality_status": "BLOCKED_UNTIL_HUMAN_LABEL_REVIEW"}
+            "dataset_identity": snapshot["identity"],
+            "question_type_counts": snapshot["manifest"]["splits"]["dev"]["question_types"],
+            "label_state": "ai_draft_unverified", "official_quality_status": "UNDETERMINED"}
 
 
 def _request_json(path: Path) -> Any:
@@ -117,9 +96,11 @@ def _parser() -> argparse.ArgumentParser:
     init = commands.add_parser("run-init", help="新しいローカルrunを作成")
     init.add_argument("--purpose", choices=("G0", "G1", "G2", "G3"), default="G0")
     init.add_argument("--profile", choices=("s256-k8", "s128-k8"), default=None)
+    init.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"), default="dev-v1")
     init.add_argument("--compare-input-run", help="s128-k8入力を照合するs256-k8の元入力Run")
     validate = commands.add_parser("validate", help="設定、固定情報、60件の入力契約を検査")
     validate.add_argument("--run-id")
+    validate.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"))
     request = commands.add_parser("validate-request", help="1件の入力JSONを検査")
     request.add_argument("--input", required=True)
     doctor = commands.add_parser("doctor", help="OpenVINOデバイスと実行時プロパティを記録")
@@ -158,11 +139,13 @@ def _parser() -> argparse.ArgumentParser:
     memory.add_argument("--cache-from-run", help="NPUキャッシュ再利用元Run。CPUでは使用不可")
     review = commands.add_parser("review-html", help="60件の人手確認資料HTMLを生成")
     review.add_argument("--output", default="QUALITY-REVIEW-JA-60.html")
+    review.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"), default="dev-v1")
     return parser
 
 
-def _run_for(root: Path, run_id: str | None, purpose: str) -> Run:
-    return open_run(root, run_id) if run_id else Run.create(root, purpose)
+def _run_for(root: Path, run_id: str | None, purpose: str,
+             dataset_version: str = "dev-v1") -> Run:
+    return open_run(root, run_id) if run_id else Run.create(root, purpose, dataset_version=dataset_version)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -177,7 +160,11 @@ def main(argv: list[str] | None = None) -> int:
                 baseline = open_run(root, args.compare_input_run)
                 if baseline.profile_config["name"] != "s256-k8":
                     raise ContractError("PROFILE_COMPARISON_INVALID", "比較元はs256-k8でなければなりません。")
-            run = Run.create(root, args.purpose, profile, args.compare_input_run)
+                selected_identity = dataset_identity(root, args.dataset_version)
+                if (baseline.dataset_version != args.dataset_version
+                        or baseline.dataset_identity != selected_identity):
+                    raise ContractError("PROFILE_DATASET_MISMATCH", "形状比較元とデータ版が一致しません。")
+            run = Run.create(root, args.purpose, profile, args.compare_input_run, args.dataset_version)
             print(json.dumps({"status": "RUNNING", "run_id": run.run_id}, ensure_ascii=False))
             return EXIT_OK
         if args.command == "validate-request":
@@ -185,9 +172,11 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": "PASS", "code": "INPUT_VALID"}, ensure_ascii=False))
             return EXIT_OK
         if args.command == "validate":
-            run = _run_for(root, args.run_id, "G0")
+            run = _run_for(root, args.run_id, "G0", args.dataset_version or "dev-v1")
             try:
-                result = validate_project(root, run.profile_config["name"])
+                if args.dataset_version and run.dataset_version != args.dataset_version:
+                    raise ContractError("DATASET_VERSION_MISMATCH", "指定版とRun manifestのデータ版が一致しません。")
+                result = validate_project(root, run.profile_config["name"], run.dataset_version)
                 run.stage("G0", "PASS", **result)
                 print(json.dumps({"status": "PASS", "run_id": run.run_id, **result}, ensure_ascii=False))
                 return EXIT_OK
@@ -247,7 +236,8 @@ def main(argv: list[str] | None = None) -> int:
                 result = run_npu_control(root, run, args.compiler.upper(), "3720")
             else:
                 source_run = open_run(root, args.source_run)
-                run = Run.create(root, "NPU_DIAGNOSTIC", source_run.profile_config)
+                run = Run.create(root, "NPU_DIAGNOSTIC", source_run.profile_config,
+                                 dataset_version=source_run.dataset_version)
                 result = run_npu(root, run, "3720", compiler_type=args.compiler.upper(), source_run=source_run)
             print(json.dumps({"run_id": run.run_id, **result}, ensure_ascii=False))
             return EXIT_OK if result["status"] == "PASS" else EXIT_ENVIRONMENT if result["status"] == "BLOCKED" else EXIT_MODEL
@@ -279,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
             docs_dir = (root.parent / "docs").resolve()
             if destination.parent != docs_dir or destination.suffix.lower() != ".html":
                 raise ContractError("REVIEW_OUTPUT_INVALID", "出力先はdocs直下のHTMLに限定します。")
-            output = build_review_html(root, destination)
+            output = build_review_html(root, destination, args.dataset_version)
             print(json.dumps({"status": "PASS", "output": str(output)}, ensure_ascii=False))
             return EXIT_OK
     except ContractError as exc:

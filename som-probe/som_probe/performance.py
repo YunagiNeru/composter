@@ -790,7 +790,7 @@ def run_performance(root: Path, source_run: Run, backend: str, threads: int | No
                            "npu_cache": _tree_size(cache_dir) if cache_dir else {"status": "not_applicable", "bytes": 0}},
             "output_comparison_to_reference": output_comparison,
             "type_output_comparison_to_reference": type_comparison,
-            "draft_label_reference": _draft_label_summary(root, references),
+            "draft_label_reference": _draft_label_summary(root, references, source_run),
             "quality_status": "UNDETERMINED",
             "low_resource_status": "NOT_ASSESSED_ON_THIS_HOST",
         }

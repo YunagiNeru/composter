@@ -140,7 +140,7 @@ def validate_request(value: Any, profile: Profile = Profile()) -> dict[str, Any]
     return value
 
 
-def validate_dataset_case(case: Any, profile: Profile = Profile()) -> None:
+def validate_dataset_case(case: Any, profile: Profile = Profile(), dataset_version: str = "dev-v1") -> None:
     if not isinstance(case, dict) or set(case) != {"case_id", "state", "questions", "expected"}:
         raise ContractError("INVALID_CASE", "評価ケースの項目構成が不正です。")
     _check_id(case["case_id"], "case_id")
@@ -156,7 +156,11 @@ def validate_dataset_case(case: Any, profile: Profile = Profile()) -> None:
     if not isinstance(expected, dict) or set(expected) != set(case["questions"]):
         raise ContractError("INVALID_EXPECTED", f"ケース {case['case_id']} の期待判断が質問と一致しません。")
     for question_id, label in expected.items():
-        required = {"allowed_answers", "rationale", "target_errors", "verification_status"}
+        required = {"allowed_answers", "rationale", "verification_status"}
+        if dataset_version == "dev-v1":
+            required.add("target_errors")
+        elif dataset_version != "dev-v2":
+            raise ContractError("DATASET_VERSION_UNKNOWN", "未対応の評価データ版です。")
         if not isinstance(label, dict) or set(label) != required:
             raise ContractError("INVALID_LABEL", f"ケース {case['case_id']} / {question_id} のラベル項目が不正です。")
         if not isinstance(label["allowed_answers"], list) or not label["allowed_answers"]:
@@ -181,7 +185,9 @@ def validate_dataset_case(case: Any, profile: Profile = Profile()) -> None:
             raise ContractError("LABEL_ANSWER_OUT_OF_RANGE", f"ケース {case['case_id']} / {question_id} の許容解が選択肢にありません。")
         if not isinstance(label["rationale"], str) or not label["rationale"].strip():
             raise ContractError("EMPTY_RATIONALE", f"ケース {case['case_id']} / {question_id} の理由が空です。")
-        if not isinstance(label["target_errors"], list) or not label["target_errors"]:
+        if dataset_version == "dev-v1" and (
+            not isinstance(label["target_errors"], list) or not label["target_errors"]
+        ):
             raise ContractError("EMPTY_TARGET_ERRORS", f"ケース {case['case_id']} / {question_id} の対象誤りが空です。")
         if label["verification_status"] != "ai_draft_unverified":
             raise ContractError("INVALID_VERIFICATION_STATE", "初期データはai_draft_unverifiedでなければなりません。")
