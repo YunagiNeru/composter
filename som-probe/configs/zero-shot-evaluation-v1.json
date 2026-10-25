@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "evaluation_version": "zero-shot-evaluation-v1",
+  "dataset_version": "dev-v3",
+  "scoring_contract_version": "evaluation-v2",
+  "label_state": "ai_draft_unverified",
+  "purpose": "model-selection development comparison only; not a formal quality pass",
+  "official_primary_condition": "english",
+  "conditions": {
+    "english": {
+      "template_language": "English",
+      "template": "The text indicates that {}.",
+      "dimensions": {
+        "choice": [
+          {"id": "task", "label": "the speaker has an unfinished action to do"},
+          {"id": "none", "label": "the speaker has no unfinished action to do"},
+          {"id": "need_info", "label": "the speaker may have an action to do but has not committed to it"}
+        ],
+        "date_info": [
+          {"id": "yes", "label": "a date, weekday, or relative time period is explicitly mentioned"},
+          {"id": "no", "label": "no date, weekday, or relative time period is explicitly mentioned"}
+        ],
+        "clock_time": [
+          {"id": "yes", "label": "a clock time is explicitly mentioned"},
+          {"id": "no", "label": "no clock time is explicitly mentioned"}
+        ],
+        "noul_deadline": [
+          {"id": "yes", "label": "the text is a deadline-based notification candidate"},
+          {"id": "no", "label": "the text is not a deadline-based notification candidate"}
+        ],
+        "notification_preference_diagnostic": [
+          {"id": "yes", "label": "the speaker wants a notification"},
+          {"id": "no", "label": "the speaker does not want a notification"}
+        ]
+      }
+    },
+    "japanese": {
+      "template_language": "Japanese",
+      "template": "本文は「{}」という内容を示している。",
+      "dimensions": {
+        "choice": [
+          {"id": "task", "label": "本人が今後行う未完了の行動がある"},
+          {"id": "none", "label": "本人に未完了の行動はない"},
+          {"id": "need_info", "label": "本人の行動候補はあるが実行意思や引受けが不明である"}
+        ],
+        "date_info": [
+          {"id": "yes", "label": "日付、曜日、または相対的な時期が明記されている"},
+          {"id": "no", "label": "日付、曜日、または相対的な時期は明記されていない"}
+        ],
+        "clock_time": [
+          {"id": "yes", "label": "時計の時刻が明記されている"},
+          {"id": "no", "label": "時計の時刻は明記されていない"}
+        ],
+        "noul_deadline": [
+          {"id": "yes", "label": "期限に関する通知候補に該当する"},
+          {"id": "no", "label": "期限に関する通知候補に該当しない"}
+        ],
+        "notification_preference_diagnostic": [
+          {"id": "yes", "label": "通知を希望している"},
+          {"id": "no", "label": "通知を希望していない"}
+        ]
+      }
+    }
+  },
+  "official_pipeline_semantics": {
+    "pipeline": "zero-shot-classification",
+    "multi_label": false,
+    "candidate_probability": "softmax over entailment logits across the fixed candidate labels",
+    "candidate_probability_is_calibrated": false,
+    "common_abstention": "Only return the official top label when it is the unique top score and its pair argmax is entailment; otherwise HOLD. This is a separate adapter policy and does not modify raw pipeline output.",
+    "score": "Run date_info and clock_time as separate binary candidate classifications; derive stage as date_info + clock_time. The expectation is the sum of the two official yes-class scores and is not a model API score.",
+    "noul": "Use dev-v3 deadline-notification-candidate meaning. Notification-preference controls are a separately reported diagnostic."
+  },
+  "input_policy": {
+    "truncation": "forbidden",
+    "maximum_pair_tokens": 8192,
+    "above_1024_tokens": "record as outside the model card's reported fine-tuning length; do not truncate",
+    "overflow": "record LENGTH_EXCEEDED and exclude only from execution metrics while preserving the full denominator"
+  },
+  "fixed_controls_file": "datasets/zero-shot-controls-v1.json"
+}

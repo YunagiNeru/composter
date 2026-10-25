@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "fixture_version": "zero-shot-controls-v1",
+  "created_before_candidate_a_inference": true,
+  "verification_status": "ai_draft_unverified",
+  "purpose": "fixed synthetic capability controls, reported separately from dev-v3",
+  "cases": [
+    {
+      "case_id": "domain-choice-none-event",
+      "dimension": "choice",
+      "state": "海岸にウミガメが上陸していた。",
+      "allowed_answers": ["none"],
+      "rationale": "出来事の記録であり、本人に未完了行動が残っていない。",
+      "target_errors": ["event mistaken for speaker task"]
+    },
+    {
+      "case_id": "domain-choice-task",
+      "dimension": "choice",
+      "state": "登山の前に、靴のサイズを確かめておく必要がある。",
+      "allowed_answers": ["task"],
+      "rationale": "本人が必要と認識する未完了行動がある。",
+      "target_errors": ["explicit need missed"]
+    },
+    {
+      "case_id": "domain-choice-need-info",
+      "dimension": "choice",
+      "state": "家族から宿を取ってほしいと頼まれた。まだ引き受けていない。",
+      "allowed_answers": ["need_info"],
+      "rationale": "行動候補はあるが、本人はまだ引き受けていない。",
+      "target_errors": ["unaccepted request treated as commitment"]
+    },
+    {
+      "case_id": "domain-score-date-only",
+      "dimension": "score",
+      "state": "博物館は火曜から土曜まで開館している。",
+      "allowed_answers": [1],
+      "expected_components": {"date_info": true, "clock_time": false},
+      "rationale": "曜日・期間があり、時計時刻はない。",
+      "target_errors": ["date-only misread as no date", "date-only misread as date plus time"]
+    },
+    {
+      "case_id": "domain-score-time-only",
+      "dimension": "score",
+      "state": "公演は19時30分に始まる。",
+      "allowed_answers": [1],
+      "expected_components": {"date_info": false, "clock_time": true},
+      "rationale": "時計時刻があり、日付・時期はない。",
+      "target_errors": ["time-only misread as no time", "time-only misread as date plus time"]
+    },
+    {
+      "case_id": "domain-score-date-and-time",
+      "dimension": "score",
+      "state": "花火大会は8月3日20時から始まる。",
+      "allowed_answers": [2],
+      "expected_components": {"date_info": true, "clock_time": true},
+      "rationale": "日付と時計時刻の両方が明記されている。",
+      "target_errors": ["date-time combination reduced to one component"]
+    },
+    {
+      "case_id": "domain-noul-deadline",
+      "dimension": "noul_deadline",
+      "state": "水曜までに使った機材を返却することになっている。",
+      "allowed_answers": [true],
+      "rationale": "期限がある未完了行動が定まっている。",
+      "target_errors": ["deadline notification candidate missed"]
+    },
+    {
+      "case_id": "domain-noul-no-deadline",
+      "dimension": "noul_deadline",
+      "state": "駅前の工事は先週終わった。",
+      "allowed_answers": [false],
+      "rationale": "完了済みの出来事で、通知候補となる未完了行動がない。",
+      "target_errors": ["completed event mistaken for notification candidate"]
+    }
+  ]
+}
