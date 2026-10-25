@@ -1,0 +1,612 @@
+{
+  "schema_version": 1,
+  "revision_id": "dev-v2",
+  "review_type": "AI review proposal",
+  "human_review_status": "pending_for_all_60_cases",
+  "rules": {
+    "R-CHOICE-01": "本文に明示された行動と状態。実行意思・約束・本人が必要と認識する未完了行動をtaskにし、詳細不足と意図不明を分ける。",
+    "R-SCORE-01": "文章に記載された日時粒度を採点。絶対日時への解決可能性は対象外。時刻だけは段階1。",
+    "R-NOUL-01": "期限通知候補への該当性だけを判定し、操作実行・日時解決は評価しない。",
+    "R-OBS-01": "出力から機械判定できない自由記述target_errorsを削除。誤出力集合は許容解の補集合から導出。"
+  },
+  "cases": {
+    "task-001": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-002": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 明日15時の送付が不要という対象行動だけをnoneとして抽出対象外にする。送付全体の取消や別日時の作業は推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-003": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-004": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.allowed_answers",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 引用文とは分け、本文に明記された「例を記録する」という行動をtaskとして扱う。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-005": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-006": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-007": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-008": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-009": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-010": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 他者から依頼が届いたことは明示されるが、本人が引き受けたかは本文から判断できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-011": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-012": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-013": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 買い物リストへの追加は完了した記録更新として扱い、購入などの将来行動を推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-014": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 本人が必要と認識する未完了行動が明示されているためtaskを維持し、細部不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-015": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-016": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 会議予定の変更完了だけを判定し、参加や連絡など本文にない将来行動を補わない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-017": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.allowed_answers",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 確認してから承認する本人の未完了行動と実行意思をtaskとして扱い、期限不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-018": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-019": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-020": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 旅行への希望は示されるが、予約や準備などの実行意思・約束は本文から確定できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-001": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-002": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-003": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-004": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-005": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-006": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-007": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-008": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-009": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-010": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-011": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-012": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-013": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-014": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-015": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-016": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-017": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-018": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-019": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-020": {
+      "changed_fields": [
+        "questions.instructions",
+        "expected.target_errors"
+      ],
+      "reason": "R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-001": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-002": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-003": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-004": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-005": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-006": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-007": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-008": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-009": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-010": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-011": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.allowed_answers",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 段階ラベルを更新: [2] → [1]。日付と時計時刻が両方そろう場合だけ段階2とする。 ケース固有の理由: 日付は明記されるが時計時刻はないため段階1。絶対日付への解決可能性は採点しない。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-012": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-013": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 ケース固有の理由: 曜日を示す相対日付はあるが時計時刻はないため段階1。基準日からの絶対日付解決は対象外。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-014": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-015": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-016": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 ケース固有の理由: 月末という期間は明記されるが時計時刻はないため段階1。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-017": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.allowed_answers",
+        "expected.rationale",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 段階ラベルを更新: [2] → [1]。日付と時計時刻が両方そろう場合だけ段階2とする。 ケース固有の理由: 日付は明記されるが時計時刻はないため段階1。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-018": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-019": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-020": {
+      "changed_fields": [
+        "questions.instructions",
+        "questions.criteria",
+        "expected.target_errors"
+      ],
+      "reason": "R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    }
+  }
+}

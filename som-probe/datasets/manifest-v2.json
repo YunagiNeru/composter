@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "dataset_version": "dev-v2",
+  "based_on_dataset_version": "dev-v1",
+  "purpose": "development_provisional_evaluation_only",
+  "label_verification_status": "ai_draft_unverified",
+  "human_review_status": "pending_for_all_60_cases",
+  "official_japanese_quality_status": "UNDETERMINED",
+  "splits": {
+    "dev": {
+      "path": "datasets/dev-v2.jsonl",
+      "cases": 60,
+      "sha256": "ab98482280a290fbfeda75c4ce755d072cae84fc2cd2552dbb24fc2a97102380",
+      "question_types": {
+        "choice": 20,
+        "score": 20,
+        "bool": 20
+      },
+      "label_types": {
+        "choice": 20,
+        "score": 20,
+        "noul": 20
+      },
+      "verification_status": "ai_draft_unverified"
+    }
+  },
+  "scoring_contract": {
+    "path": "configs/evaluation-contract-v2.json",
+    "version": "evaluation-v2",
+    "sha256": "8dfaa7b1aa53d261d9d5bdc30441dc407c8add4dc74ae96a90cd69cc07725c5c"
+  },
+  "revision_ledger": {
+    "path": "datasets/dev-v2-revisions.json",
+    "case_entries": 60,
+    "sha256": "03bb87a526393e39b9d2c925821196b3870d76f2257baa2ec04e57b1e8f3a2e6"
+  }
+}

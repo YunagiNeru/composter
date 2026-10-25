@@ -1,0 +1,971 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="description" content="架空の日本語60件について、人が正解候補を確認するための資料。"><title>日本語ケース確認資料</title><style>:root {
+  color-scheme: light;
+  --font-display: "Bahnschrift", "Arial Narrow", ui-sans-serif, sans-serif;
+  --font-body: "Aptos", "Segoe UI", "Yu Gothic UI", "Yu Gothic", ui-sans-serif, sans-serif;
+  --font-mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+
+  --color-paper: oklch(97.5% 0.009 258);
+  --color-paper-raised: oklch(99% 0.006 258);
+  --color-paper-subtle: oklch(94.5% 0.014 258);
+  --color-ink: oklch(19% 0.025 258);
+  --color-ink-soft: oklch(37% 0.028 258);
+  --color-muted: oklch(49% 0.025 258);
+  --color-rule: oklch(82% 0.022 258);
+  --color-rule-strong: oklch(67% 0.035 258);
+  --color-accent: oklch(52% 0.19 258);
+  --color-accent-strong: oklch(42% 0.18 258);
+  --color-accent-soft: oklch(92% 0.045 258);
+  --color-focus: oklch(56% 0.2 258);
+  --color-positive: oklch(42% 0.11 151);
+  --color-positive-soft: oklch(93% 0.035 151);
+  --color-warning: oklch(47% 0.105 76);
+  --color-warning-soft: oklch(94% 0.045 76);
+  --color-danger: oklch(44% 0.16 28);
+  --color-danger-soft: oklch(93% 0.045 28);
+  --color-shadow: oklch(19% 0.025 258 / 0.09);
+
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.953rem;
+  --text-2xl: 2.441rem;
+  --text-3xl: 3.052rem;
+  --text-display: clamp(2.45rem, 5vw + 0.5rem, 5.25rem);
+
+  --leading-display: 1.08;
+  --leading-heading: 1.2;
+  --leading-body: 1.65;
+  --measure: 72ch;
+  --page-max: 96rem;
+  --rail-width: 12rem;
+
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --border-hairline: 0.0625rem;
+  --border-strong: 0.125rem;
+  --shadow-whisper: 0 0.125rem 0.5rem var(--color-shadow);
+}
+
+/* Hallmark · macrostructure: Map / Diagram · genre: modern-minimal · theme: adapted Cobalt · nav: N3 · footer: Ft2 */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  text-rendering: optimizeLegibility;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--color-accent-strong); text-decoration-thickness: var(--border-hairline); text-underline-offset: var(--space-2xs); }
+a:hover { color: var(--color-accent); }
+a:focus-visible, summary:focus-visible { outline: var(--border-strong) solid var(--color-focus); outline-offset: var(--space-2xs); }
+code, kbd, samp { font-family: var(--font-mono); font-size: .92em; font-variant-numeric: tabular-nums; }
+code { padding: var(--space-3xs) var(--space-2xs); background: var(--color-paper-subtle); border-radius: var(--radius-xs); }
+pre { margin: 0; padding: var(--space-lg); overflow: auto; background: var(--color-ink); color: var(--color-paper-raised); border-radius: var(--radius-sm); font: var(--text-sm)/1.6 var(--font-mono); tab-size: 2; }
+h1, h2, h3, h4 { margin: 0; min-width: 0; font-family: var(--font-display); font-style: normal; line-height: var(--leading-heading); letter-spacing: -.025em; overflow-wrap: anywhere; }
+h1 { max-width: 13ch; font-size: var(--text-display); line-height: var(--leading-display); }
+h2 { max-width: 26ch; font-size: clamp(var(--text-xl), 4vw, var(--text-3xl)); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-md); }
+p, ul, ol, dl { margin: 0; }
+ul, ol { padding-inline-start: var(--space-lg); }
+li + li { margin-block-start: var(--space-xs); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+caption { padding-block-end: var(--space-sm); color: var(--color-ink-soft); font-weight: 700; text-align: start; }
+th, td { padding: var(--space-sm) var(--space-md); border-block-end: var(--border-hairline) solid var(--color-rule); text-align: start; vertical-align: top; }
+th { background: var(--color-paper-subtle); font-weight: 700; }
+tbody tr:last-child > * { border-block-end: 0; }
+
+.skip-link { position: fixed; inset: var(--space-xs) auto auto var(--space-xs); z-index: 100; transform: translateY(-180%); padding: var(--space-sm) var(--space-md); background: var(--color-ink); color: var(--color-paper-raised); border-radius: var(--radius-sm); }
+.skip-link:focus { transform: none; }
+.document { width: min(100%, var(--page-max)); margin-inline: auto; }
+.rail { display: none; }
+.mobile-index { margin: var(--space-md); padding: var(--space-md); background: var(--color-paper-raised); border: var(--border-hairline) solid var(--color-rule); border-radius: var(--radius-sm); }
+.mobile-index summary { cursor: pointer; font-weight: 700; }
+.mobile-index ol { margin-block-start: var(--space-md); }
+.page { min-width: 0; }
+
+.hero { padding: var(--space-2xl) clamp(var(--space-md), 5vw, var(--space-3xl)) var(--space-3xl); border-block-end: var(--border-hairline) solid var(--color-rule); }
+.eyebrow { margin-block-end: var(--space-lg); color: var(--color-accent-strong); font: 700 var(--text-xs)/1.2 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.lede { max-width: 58ch; margin-block-start: var(--space-lg); color: var(--color-ink-soft); font-size: var(--text-md); }
+.document-contract { display: grid; gap: var(--space-md) var(--space-lg); margin-block-start: var(--space-xl); }
+.document-contract div { padding-block-start: var(--space-sm); border-block-start: var(--border-hairline) solid var(--color-rule); }
+.document-contract dt { color: var(--color-muted); font: 700 var(--text-xs)/1.2 var(--font-mono); letter-spacing: .04em; }
+.document-contract dd { margin: var(--space-2xs) 0 0; font-weight: 650; }
+
+.section { max-width: var(--measure); margin-inline: auto; padding: var(--space-2xl) clamp(var(--space-md), 5vw, var(--space-3xl)); scroll-margin-block-start: var(--space-lg); }
+.section + .section { border-block-start: var(--border-hairline) solid var(--color-rule); }
+.section--wide { max-width: 78rem; }
+.section > * + *, .section__body > * + * { margin-block-start: var(--space-lg); }
+.section__header { display: flex; flex-direction: column; gap: var(--space-sm); margin-block-end: var(--space-xl); }
+.section__label { color: var(--color-accent-strong); font: 700 var(--text-xs)/1.2 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.section__lede { max-width: 58ch; color: var(--color-ink-soft); font-size: var(--text-md); }
+
+.record-strip { display: grid; gap: var(--space-md); margin-block-start: var(--space-xl); }
+.record { padding: var(--space-lg); background: var(--color-paper-raised); border: var(--border-hairline) solid var(--color-rule); border-radius: var(--radius-sm); }
+.record:target { outline: var(--border-strong) solid var(--color-focus); outline-offset: var(--space-2xs); }
+.record__header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.record__id { color: var(--color-accent-strong); font: 700 var(--text-xs)/1.2 var(--font-mono); }
+.record__title { font-size: var(--text-md); }
+.record__meta { display: grid; gap: var(--space-xs) var(--space-md); margin-block-start: var(--space-md); }
+.record__meta div { display: grid; grid-template-columns: minmax(6rem, auto) minmax(0, 1fr); gap: var(--space-sm); padding-block: var(--space-xs); border-block-start: var(--border-hairline) solid var(--color-rule); }
+.record__meta dt { color: var(--color-muted); font: 700 var(--text-xs)/1.4 var(--font-mono); }
+.record__meta dd { margin: 0; }
+.record__statement { margin-block-start: var(--space-lg); font-size: var(--text-md); font-weight: 700; line-height: 1.5; }
+.record details { margin-block-start: var(--space-lg); padding-block-start: var(--space-md); border-block-start: var(--border-hairline) solid var(--color-rule); }
+.record summary { cursor: pointer; color: var(--color-accent-strong); font-weight: 700; }
+.record details > * + * { margin-block-start: var(--space-md); }
+
+.status { display: inline-flex; align-items: center; min-height: 1.75rem; padding: var(--space-2xs) var(--space-sm); border: var(--border-hairline) solid currentColor; border-radius: var(--radius-sm); font: 700 var(--text-xs)/1 var(--font-mono); white-space: nowrap; }
+.status--approved { color: var(--color-positive); background: var(--color-positive-soft); }
+.status--open { color: var(--color-warning); background: var(--color-warning-soft); }
+.status--prohibited { color: var(--color-danger); background: var(--color-danger-soft); }
+
+.diagram { margin: 0; padding: var(--space-lg); background: var(--color-paper-raised); border: var(--border-hairline) solid var(--color-rule); border-radius: var(--radius-sm); }
+.diagram svg { width: 100%; height: auto; }
+.diagram figcaption { margin-block-start: var(--space-md); color: var(--color-ink-soft); }
+.diagram .node { fill: var(--color-paper-raised); stroke: var(--color-rule-strong); stroke-width: 1.5; }
+.diagram .node--focus { fill: var(--color-accent-soft); stroke: var(--color-accent); }
+.diagram .edge { fill: none; stroke: var(--color-rule-strong); stroke-width: 1.5; }
+.diagram text { fill: var(--color-ink); font-family: var(--font-body); font-size: 14px; }
+
+.table-wrap { overflow-x: auto; border-block: var(--border-hairline) solid var(--color-rule-strong); }
+.steps { padding: 0; list-style: none; counter-reset: stage; }
+.steps li { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-md); padding-block: var(--space-lg); border-block-end: var(--border-hairline) solid var(--color-rule); counter-increment: stage; }
+.steps li::before { content: counter(stage, decimal-leading-zero); color: var(--color-accent-strong); font: 700 var(--text-sm)/1.3 var(--font-mono); }
+.steps li > div > * + * { margin-block-start: var(--space-sm); }
+.callout { padding: var(--space-lg); background: var(--color-accent-soft); border: var(--border-hairline) solid var(--color-rule); border-radius: var(--radius-sm); }
+.callout--warning { background: var(--color-warning-soft); }
+.callout--danger { background: var(--color-danger-soft); }
+
+.foot { padding: var(--space-lg) clamp(var(--space-md), 5vw, var(--space-3xl)); border-block-start: var(--border-hairline) solid var(--color-rule); color: var(--color-muted); font-size: var(--text-sm); }
+
+@media (min-width: 44rem) {
+  .document-contract { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .record-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .record-strip .record--wide { grid-column: 1 / -1; }
+}
+@media (min-width: 64rem) {
+  .rail { position: fixed; inset: 0 auto 0 0; z-index: 20; display: flex; width: var(--rail-width); flex-direction: column; gap: var(--space-xl); padding: var(--space-lg); background: var(--color-paper-raised); border-inline-end: var(--border-hairline) solid var(--color-rule); }
+  .rail__title { font-family: var(--font-display); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+  .rail ol { padding: 0; list-style: none; }
+  .rail li + li { margin-block-start: var(--space-sm); }
+  .rail a { color: var(--color-ink-soft); font-size: var(--text-sm); text-decoration: none; }
+  .rail a:hover { color: var(--color-accent); text-decoration: underline; }
+  .mobile-index { display: none; }
+  .page, .foot { margin-inline-start: var(--rail-width); }
+  .document-contract { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media print {
+  .rail, .mobile-index, .skip-link { display: none; }
+  .page, .foot { margin: 0; }
+  body { background: var(--color-paper-raised); color: var(--color-ink); }
+  .section, .record, .diagram { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  a { color: inherit; }
+}
+
+
+html{scroll-behavior:auto} h1{max-width:22ch;font-size:clamp(2.1rem,4vw,3.7rem)} h2{max-width:none;font-size:clamp(1.6rem,2.8vw,2.3rem)} .section{max-width:78rem} .hero{padding-bottom:var(--space-xl)} .rail{overflow-y:auto} pre code{background:transparent;color:inherit;padding:0;font-size:inherit} .section p{overflow-wrap:anywhere} .section h3{margin-top:var(--space-xl)} .record h3{margin-top:0} .record p+p{margin-top:var(--space-md)} .compact{font-size:var(--text-sm)} td code{overflow-wrap:anywhere} .anchor-index a{white-space:normal} .run-step{border-top:var(--border-hairline) solid var(--color-rule);padding-top:var(--space-lg)} .run-step>*+*{margin-top:var(--space-md)} .run-step dl{display:grid;gap:var(--space-xs)} .run-step dt{font-weight:700} .run-step dd{margin:0} @media print{.section{break-inside:auto} pre{white-space:pre-wrap;overflow-wrap:anywhere} .table-wrap{overflow:visible}}
+
+.review-fields{display:grid;gap:1rem;margin:1.5rem 0 0}.review-fields>div{border-top:1px solid var(--color-rule);padding-top:.75rem}.review-fields dt{font-weight:700;margin-bottom:.35rem}.review-fields dd{margin:0;overflow-wrap:anywhere}.review-options{width:100%;border-collapse:collapse}.review-options th,.review-options td{padding:.45rem .6rem;border-bottom:1px solid var(--color-rule);text-align:left}.review-options th:first-child{width:8rem}.review-case{padding:var(--space-lg);margin-block:var(--space-lg);background:var(--color-paper-raised);border:var(--border-hairline) solid var(--color-rule);border-radius:var(--radius-sm);scroll-margin-top:1rem}.review-index{columns:2;gap:2rem}.review-index li{break-inside:avoid;margin:.25rem 0}@media(min-width:900px){.review-index{columns:3}}@media print{.review-index{columns:4}.review-case{break-inside:avoid}}
+</style></head><body><a class="skip-link" href="#main">本文へ移動</a><div class="document"><aside class="rail" aria-label="資料索引"><p class="rail__title">日本語<br>ケース確認</p><nav aria-label="ケース一覧"><ol><li><a href="#task-001">task-001</a></li><li><a href="#task-002">task-002</a></li><li><a href="#task-003">task-003</a></li><li><a href="#task-004">task-004</a></li><li><a href="#task-005">task-005</a></li><li><a href="#task-006">task-006</a></li><li><a href="#task-007">task-007</a></li><li><a href="#task-008">task-008</a></li><li><a href="#task-009">task-009</a></li><li><a href="#task-010">task-010</a></li><li><a href="#task-011">task-011</a></li><li><a href="#task-012">task-012</a></li><li><a href="#task-013">task-013</a></li><li><a href="#task-014">task-014</a></li><li><a href="#task-015">task-015</a></li><li><a href="#task-016">task-016</a></li><li><a href="#task-017">task-017</a></li><li><a href="#task-018">task-018</a></li><li><a href="#task-019">task-019</a></li><li><a href="#task-020">task-020</a></li><li><a href="#notify-001">notify-001</a></li><li><a href="#notify-002">notify-002</a></li><li><a href="#notify-003">notify-003</a></li><li><a href="#notify-004">notify-004</a></li><li><a href="#notify-005">notify-005</a></li><li><a href="#notify-006">notify-006</a></li><li><a href="#notify-007">notify-007</a></li><li><a href="#notify-008">notify-008</a></li><li><a href="#notify-009">notify-009</a></li><li><a href="#notify-010">notify-010</a></li><li><a href="#notify-011">notify-011</a></li><li><a href="#notify-012">notify-012</a></li><li><a href="#notify-013">notify-013</a></li><li><a href="#notify-014">notify-014</a></li><li><a href="#notify-015">notify-015</a></li><li><a href="#notify-016">notify-016</a></li><li><a href="#notify-017">notify-017</a></li><li><a href="#notify-018">notify-018</a></li><li><a href="#notify-019">notify-019</a></li><li><a href="#notify-020">notify-020</a></li><li><a href="#time-001">time-001</a></li><li><a href="#time-002">time-002</a></li><li><a href="#time-003">time-003</a></li><li><a href="#time-004">time-004</a></li><li><a href="#time-005">time-005</a></li><li><a href="#time-006">time-006</a></li><li><a href="#time-007">time-007</a></li><li><a href="#time-008">time-008</a></li><li><a href="#time-009">time-009</a></li><li><a href="#time-010">time-010</a></li><li><a href="#time-011">time-011</a></li><li><a href="#time-012">time-012</a></li><li><a href="#time-013">time-013</a></li><li><a href="#time-014">time-014</a></li><li><a href="#time-015">time-015</a></li><li><a href="#time-016">time-016</a></li><li><a href="#time-017">time-017</a></li><li><a href="#time-018">time-018</a></li><li><a href="#time-019">time-019</a></li><li><a href="#time-020">time-020</a></li></ol></nav></aside><details class="mobile-index"><summary>ケース一覧</summary><nav aria-label="モバイルケース一覧"><ol><li><a href="#task-001">task-001</a></li><li><a href="#task-002">task-002</a></li><li><a href="#task-003">task-003</a></li><li><a href="#task-004">task-004</a></li><li><a href="#task-005">task-005</a></li><li><a href="#task-006">task-006</a></li><li><a href="#task-007">task-007</a></li><li><a href="#task-008">task-008</a></li><li><a href="#task-009">task-009</a></li><li><a href="#task-010">task-010</a></li><li><a href="#task-011">task-011</a></li><li><a href="#task-012">task-012</a></li><li><a href="#task-013">task-013</a></li><li><a href="#task-014">task-014</a></li><li><a href="#task-015">task-015</a></li><li><a href="#task-016">task-016</a></li><li><a href="#task-017">task-017</a></li><li><a href="#task-018">task-018</a></li><li><a href="#task-019">task-019</a></li><li><a href="#task-020">task-020</a></li><li><a href="#notify-001">notify-001</a></li><li><a href="#notify-002">notify-002</a></li><li><a href="#notify-003">notify-003</a></li><li><a href="#notify-004">notify-004</a></li><li><a href="#notify-005">notify-005</a></li><li><a href="#notify-006">notify-006</a></li><li><a href="#notify-007">notify-007</a></li><li><a href="#notify-008">notify-008</a></li><li><a href="#notify-009">notify-009</a></li><li><a href="#notify-010">notify-010</a></li><li><a href="#notify-011">notify-011</a></li><li><a href="#notify-012">notify-012</a></li><li><a href="#notify-013">notify-013</a></li><li><a href="#notify-014">notify-014</a></li><li><a href="#notify-015">notify-015</a></li><li><a href="#notify-016">notify-016</a></li><li><a href="#notify-017">notify-017</a></li><li><a href="#notify-018">notify-018</a></li><li><a href="#notify-019">notify-019</a></li><li><a href="#notify-020">notify-020</a></li><li><a href="#time-001">time-001</a></li><li><a href="#time-002">time-002</a></li><li><a href="#time-003">time-003</a></li><li><a href="#time-004">time-004</a></li><li><a href="#time-005">time-005</a></li><li><a href="#time-006">time-006</a></li><li><a href="#time-007">time-007</a></li><li><a href="#time-008">time-008</a></li><li><a href="#time-009">time-009</a></li><li><a href="#time-010">time-010</a></li><li><a href="#time-011">time-011</a></li><li><a href="#time-012">time-012</a></li><li><a href="#time-013">time-013</a></li><li><a href="#time-014">time-014</a></li><li><a href="#time-015">time-015</a></li><li><a href="#time-016">time-016</a></li><li><a href="#time-017">time-017</a></li><li><a href="#time-018">time-018</a></li><li><a href="#time-019">time-019</a></li><li><a href="#time-020">time-020</a></li></ol></nav></details><main class="page" id="main"><header class="hero"><p class="eyebrow">人による正解確認</p><h1>日本語60件<br>正解候補の確認</h1><p class="lede">開発用の架空ケースに付けたAIドラフト正解を、人が確認する資料です。</p><dl class="document-contract"><div><dt>総数</dt><dd>60件</dd></div><div><dt>Choice</dt><dd>20件</dd></div><div><dt>Score</dt><dd>20件</dd></div><div><dt>Noul</dt><dd>20件</dd></div><div><dt>人手状態</dt><dd>全件未確認</dd></div></dl></header>
+<section class="section section--wide"><header class="section__header"><h2>確認前提</h2></header><p>原文、質問、全候補、AI作成の正解候補、理由、許容解をケースごとに示します。全ラベルは <code>ai_draft_unverified</code> で、人の確認済みとして扱っていません。対象誤りは許容解の補集合から表示しています。</p><p>この資料にはモデル予測を含めません。予測出力と参照差分は、別Runのローカル記録で確認してください。確認後にこの開発用集合を調整へ使った場合、同じ集合を最終品質の証明に再利用せず、人確認済みの独立評価集合を用意してください。</p><p>データ版: <code>dev-v2</code>　データSHA-256: <code>ab98482280a290fbfeda75c4ce755d072cae84fc2cd2552dbb24fc2a97102380</code></p><nav aria-label="ケース索引"><ol class="review-index"><li><a href="#task-001">task-001</a></li><li><a href="#task-002">task-002</a></li><li><a href="#task-003">task-003</a></li><li><a href="#task-004">task-004</a></li><li><a href="#task-005">task-005</a></li><li><a href="#task-006">task-006</a></li><li><a href="#task-007">task-007</a></li><li><a href="#task-008">task-008</a></li><li><a href="#task-009">task-009</a></li><li><a href="#task-010">task-010</a></li><li><a href="#task-011">task-011</a></li><li><a href="#task-012">task-012</a></li><li><a href="#task-013">task-013</a></li><li><a href="#task-014">task-014</a></li><li><a href="#task-015">task-015</a></li><li><a href="#task-016">task-016</a></li><li><a href="#task-017">task-017</a></li><li><a href="#task-018">task-018</a></li><li><a href="#task-019">task-019</a></li><li><a href="#task-020">task-020</a></li><li><a href="#notify-001">notify-001</a></li><li><a href="#notify-002">notify-002</a></li><li><a href="#notify-003">notify-003</a></li><li><a href="#notify-004">notify-004</a></li><li><a href="#notify-005">notify-005</a></li><li><a href="#notify-006">notify-006</a></li><li><a href="#notify-007">notify-007</a></li><li><a href="#notify-008">notify-008</a></li><li><a href="#notify-009">notify-009</a></li><li><a href="#notify-010">notify-010</a></li><li><a href="#notify-011">notify-011</a></li><li><a href="#notify-012">notify-012</a></li><li><a href="#notify-013">notify-013</a></li><li><a href="#notify-014">notify-014</a></li><li><a href="#notify-015">notify-015</a></li><li><a href="#notify-016">notify-016</a></li><li><a href="#notify-017">notify-017</a></li><li><a href="#notify-018">notify-018</a></li><li><a href="#notify-019">notify-019</a></li><li><a href="#notify-020">notify-020</a></li><li><a href="#time-001">time-001</a></li><li><a href="#time-002">time-002</a></li><li><a href="#time-003">time-003</a></li><li><a href="#time-004">time-004</a></li><li><a href="#time-005">time-005</a></li><li><a href="#time-006">time-006</a></li><li><a href="#time-007">time-007</a></li><li><a href="#time-008">time-008</a></li><li><a href="#time-009">time-009</a></li><li><a href="#time-010">time-010</a></li><li><a href="#time-011">time-011</a></li><li><a href="#time-012">time-012</a></li><li><a href="#time-013">time-013</a></li><li><a href="#time-014">time-014</a></li><li><a href="#time-015">time-015</a></li><li><a href="#time-016">time-016</a></li><li><a href="#time-017">time-017</a></li><li><a href="#time-018">time-018</a></li><li><a href="#time-019">time-019</a></li><li><a href="#time-020">time-020</a></li></ol></nav></section>
+<section class="section section--wide"><header class="section__header"><h2>確認ケース</h2></header><article class="review-case" id="task-001">
+<header class="record__header"><span class="record__id">task-001</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日15時までに請求書を送る。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>期限付きの本人タスクが明示されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-002">
+<header class="record__header"><span class="record__id">task-002</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日15時に送る必要はない。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>明日15時の送付が不要と述べられているため、その対象行動をタスクとして抽出しない。送付全体の取消や、別日時の作業の有無は評価しない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 明日15時の送付が不要という対象行動だけをnoneとして抽出対象外にする。送付全体の取消や別日時の作業は推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-003">
+<header class="record__header"><span class="record__id">task-003</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>請求書はすでに送付済み。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>作業が完了している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-004">
+<header class="record__header"><span class="record__id">task-004</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>「明日送って」と言われた例を記録する。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>引用文の内容ではなく、本文に明示された「例を記録する」という本人の未完了行動を判定する。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 引用文とは分け、本文に明記された「例を記録する」という行動をtaskとして扱う。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-005">
+<header class="record__header"><span class="record__id">task-005</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>近いうちに資料を整理したい。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>need_info — 未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</dd></div>
+<div><dt>理由</dt><dd>「整理したい」は希望表現であり、実行意思・約束は確定できない。期限の不足を理由にしない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>none</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-006">
+<header class="record__header"><span class="record__id">task-006</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>金曜ではなく月曜に提出する。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>提出タスクがあり、期限が月曜へ訂正されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-007">
+<header class="record__header"><span class="record__id">task-007</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>会議の議事録を今日中に共有する。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>期限と実行内容が明確である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-008">
+<header class="record__header"><span class="record__id">task-008</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>先週の確認事項はすべて対応した。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>過去の作業が完了している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-009">
+<header class="record__header"><span class="record__id">task-009</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>もし時間があれば机を片付けたい。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>need_info — 未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</dd></div>
+<div><dt>理由</dt><dd>条件付きの希望で、実行決定がない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>none</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-010">
+<header class="record__header"><span class="record__id">task-010</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>担当者から「明日までに返事を」と連絡が来た。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>need_info — 未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</dd></div>
+<div><dt>理由</dt><dd>他者から依頼が届いたことは明示されるが、本人が引き受けたかは本文から判断できない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 他者から依頼が届いたことは明示されるが、本人が引き受けたかは本文から判断できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>none</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-011">
+<header class="record__header"><span class="record__id">task-011</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日までに返すと約束した。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>本人が期限付きの約束をしている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-012">
+<header class="record__header"><span class="record__id">task-012</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日までに返す約束は取り消した。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>約束が明示的に取り消されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-013">
+<header class="record__header"><span class="record__id">task-013</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>買い物リストに牛乳を追加した。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>買い物リストへの追加は完了した記録更新として記述されている。購入など本文にない将来行動は推測しない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 買い物リストへの追加は完了した記録更新として扱い、購入などの将来行動を推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-014">
+<header class="record__header"><span class="record__id">task-014</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>来週、病院へ電話する必要がある。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>本人が行う必要のある未完了行動が明記されている。日時や対象の細部不足は分類条件にしない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 本人が必要と認識する未完了行動が明示されているためtaskを維持し、細部不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-015">
+<header class="record__header"><span class="record__id">task-015</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>できれば今月中に本棚を整理したい。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>need_info — 未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</dd></div>
+<div><dt>理由</dt><dd>「整理したい」は願望表現で、実行意思・約束は確定できない。期限の不足を理由にしない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>none</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-016">
+<header class="record__header"><span class="record__id">task-016</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>月曜の会議を火曜へ変更した。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>会議予定の変更が完了した記録として記述されている。参加や連絡など本文にない将来行動は補わない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 会議予定の変更完了だけを判定し、参加や連絡など本文にない将来行動を補わない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-017">
+<header class="record__header"><span class="record__id">task-017</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>資料を確認してから承認する。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>「確認してから承認する」という本人の未完了行動と実行意思が明記されている。期限や資料の細部不足は分類条件にしない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 確認してから承認する本人の未完了行動と実行意思をtaskとして扱い、期限不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-018">
+<header class="record__header"><span class="record__id">task-018</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>この申請は承認済みなので提出しなくてよい。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>none — 判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</dd></div>
+<div><dt>理由</dt><dd>提出不要と明示されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-019">
+<header class="record__header"><span class="record__id">task-019</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>子どもの迎えを18時に行く。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>task — 本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</dd></div>
+<div><dt>理由</dt><dd>時刻のある本人の実行予定である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>none</li><li>need_info</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="task-020">
+<header class="record__header"><span class="record__id">task-020</span><h3 class="record__title">Choice / intent</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>choice</dd></div><div><dt>モデル型</dt><dd>choice</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>週末に旅行できたらいいな。</dd></div>
+<div><dt>質問</dt><dd>本文に明示された本人の行動と状態だけを分類する。実行意思・約束、または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。行動候補があっても本人の実行意思・必要性が本文から判断できない場合はneed_infoとする。完了・取消・不要の対象行動はnoneとし、本文にない将来行動を補わない。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">task</th><td>本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。</td></tr><tr><th scope="row">none</th><td>判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。</td></tr><tr><th scope="row">need_info</th><td>未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>need_info — 未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。</dd></div>
+<div><dt>理由</dt><dd>旅行への希望は示されるが、予約や準備などの実行意思・約束は本文から確定できない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 旅行への希望は示されるが、予約や準備などの実行意思・約束は本文から確定できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>task</li><li>none</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-001">
+<header class="record__header"><span class="record__id">notify-001</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日10時に会議資料を提出する。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>明確な期限付き作業が未完了である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-002">
+<header class="record__header"><span class="record__id">notify-002</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>資料は提出済みなので、通知はいらない。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>完了済みで通知不要と明記されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-003">
+<header class="record__header"><span class="record__id">notify-003</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日の提出は不要になった。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>期限付き作業が取り消されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-004">
+<header class="record__header"><span class="record__id">notify-004</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>金曜までに申込書を送る。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>期限と実行内容が具体的である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-005">
+<header class="record__header"><span class="record__id">notify-005</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>『金曜までに送って』という文面を翻訳して。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>引用文の翻訳依頼であり、実行依頼ではない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-006">
+<header class="record__header"><span class="record__id">notify-006</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>その件は先ほど対応した。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>作業がすでに完了している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-007">
+<header class="record__header"><span class="record__id">notify-007</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>月末までに報告書を提出することになった。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>期限付きの提出義務が成立している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-008">
+<header class="record__header"><span class="record__id">notify-008</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>来週あたりに連絡できればと思う。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>期限が特定されず、確定した作業でもない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-009">
+<header class="record__header"><span class="record__id">notify-009</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>予約を水曜から木曜の14時へ変更した。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>新しい日時が確定している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-010">
+<header class="record__header"><span class="record__id">notify-010</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>予約はキャンセルした。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>予定が取り消されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-011">
+<header class="record__header"><span class="record__id">notify-011</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日の作業は延期し、日付はまだ決めていない。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>旧期限が無効で、新期限も未確定である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-012">
+<header class="record__header"><span class="record__id">notify-012</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>月曜までに鍵を返却する。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>期限付きの返却作業が明確である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-013">
+<header class="record__header"><span class="record__id">notify-013</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>『鍵を返して』と書かれた過去ログを保存する。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>過去ログの保存で、現在の依頼ではない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-014">
+<header class="record__header"><span class="record__id">notify-014</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>支払いは完了した。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>支払いが完了している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-015">
+<header class="record__header"><span class="record__id">notify-015</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>今夜までに薬を受け取る。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>期限と受取作業が明示されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-016">
+<header class="record__header"><span class="record__id">notify-016</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>薬を受け取る必要はなくなった。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>作業が不要になった。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-017">
+<header class="record__header"><span class="record__id">notify-017</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>会議の開始時刻は15時に変更された。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>確定した新しい時刻がある。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-018">
+<header class="record__header"><span class="record__id">notify-018</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>会議の時間を後で決める。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>日時がまだ確定していない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-019">
+<header class="record__header"><span class="record__id">notify-019</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日までに返答すると相手に伝えた。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>true — はい。文が成立する</dd></div>
+<div><dt>理由</dt><dd>本人が期限付きの返答を約束している。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>false</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="notify-020">
+<header class="record__header"><span class="record__id">notify-020</span><h3 class="record__title">Noul / notify</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>bool</dd></div><div><dt>モデル型</dt><dd>noul</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日までに返答すると言ったが、先ほど送信した。</dd></div>
+<div><dt>質問</dt><dd>この内容は期限通知の候補に該当するかだけを判定する。新規登録・更新・取消の実行や、絶対日時への解決は判定しない。本文に明示された現在の候補だけを扱う。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">false</th><td>いいえ。文が成立しない</td></tr><tr><th scope="row">true</th><td>はい。文が成立する</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>false — いいえ。文が成立しない</dd></div>
+<div><dt>理由</dt><dd>返答が完了済みである。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-NOUL-01: 期限通知候補に該当するかだけを分類する。新規登録・更新・取消・日時解決・通知実行はこの正解の対象外。 自由記述target_errorsはモデル出力で直接検査できないため削除し、誤出力は許容解の補集合から導出する。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>true</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-001">
+<header class="record__header"><span class="record__id">time-001</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>提出は明日15時。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>2 — 日付または相対日付と、時計時刻の両方が文章に明記されている。</dd></div>
+<div><dt>理由</dt><dd>期限が日付と時刻で明確である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>1</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-002">
+<header class="record__header"><span class="record__id">time-002</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>そのうち提出する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>日付や時刻が示されていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-003">
+<header class="record__header"><span class="record__id">time-003</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>来週までに提出する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>週は示されるが、曜日と時刻が特定されない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-004">
+<header class="record__header"><span class="record__id">time-004</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>会議は4月3日9時に始まる。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>2 — 日付または相対日付と、時計時刻の両方が文章に明記されている。</dd></div>
+<div><dt>理由</dt><dd>日付と時刻が具体的である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>1</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-005">
+<header class="record__header"><span class="record__id">time-005</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>近いうちに電話する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>時期が特定されていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-006">
+<header class="record__header"><span class="record__id">time-006</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>金曜までに提出する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>曜日はあるが、時刻は示されていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-007">
+<header class="record__header"><span class="record__id">time-007</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>本日中に申請する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>期限は今日だが、締切時刻は不明である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-008">
+<header class="record__header"><span class="record__id">time-008</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>2026年11月2日18時に迎えに行く。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>2 — 日付または相対日付と、時計時刻の両方が文章に明記されている。</dd></div>
+<div><dt>理由</dt><dd>日付と時刻の両方がある。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>1</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-009">
+<header class="record__header"><span class="record__id">time-009</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>できるだけ早めに確認する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>期限が定まっていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-010">
+<header class="record__header"><span class="record__id">time-010</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>今週のどこかで資料を読む。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>対象週はあるが、実施日と時刻は不明である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-011">
+<header class="record__header"><span class="record__id">time-011</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>12月1日までに返却する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>日付は明記されるが時計時刻はないため段階1。絶対日付への解決可能性は採点しない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 段階ラベルを更新: [2] → [1]。日付と時計時刻が両方そろう場合だけ段階2とする。 ケース固有の理由: 日付は明記されるが時計時刻はないため段階1。絶対日付への解決可能性は採点しない。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-012">
+<header class="record__header"><span class="record__id">time-012</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>返却期限を後で決める。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>期限がまだ決まっていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-013">
+<header class="record__header"><span class="record__id">time-013</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>次の火曜に返答する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>曜日を示す相対日付はあるが時計時刻はないため段階1。基準日からの絶対日付解決は対象外。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 ケース固有の理由: 曜日を示す相対日付はあるが時計時刻はないため段階1。基準日からの絶対日付解決は対象外。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-014">
+<header class="record__header"><span class="record__id">time-014</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>明日の正午に集合する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>2 — 日付または相対日付と、時計時刻の両方が文章に明記されている。</dd></div>
+<div><dt>理由</dt><dd>相対日付と時刻が示されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>1</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-015">
+<header class="record__header"><span class="record__id">time-015</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>時間ができたら片付ける。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>実施時期が示されていない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-016">
+<header class="record__header"><span class="record__id">time-016</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>月末までに精算する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>月末という期間は明記されるが時計時刻はないため段階1。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 ケース固有の理由: 月末という期間は明記されるが時計時刻はないため段階1。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-017">
+<header class="record__header"><span class="record__id">time-017</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>2026年12月24日までに発送する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>日付は明記されるが時計時刻はないため段階1。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 段階ラベルを更新: [2] → [1]。日付と時計時刻が両方そろう場合だけ段階2とする。 ケース固有の理由: 日付は明記されるが時計時刻はないため段階1。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-018">
+<header class="record__header"><span class="record__id">time-018</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>いつか新しい本を買いたい。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>0 — 日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</dd></div>
+<div><dt>理由</dt><dd>希望だけで期限がない。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>1</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-019">
+<header class="record__header"><span class="record__id">time-019</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>今月中に契約書を確認する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>1 — 日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</dd></div>
+<div><dt>理由</dt><dd>月は指定されるが、日付と時刻は不明である。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>2</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article>
+<article class="review-case" id="time-020">
+<header class="record__header"><span class="record__id">time-020</span><h3 class="record__title">Score / specificity</h3><span class="status status--open">人未確認</span></header>
+<dl class="record__meta"><div><dt>データ型</dt><dd>score</dd></div><div><dt>モデル型</dt><dd>score</dd></div><div><dt>確認状態</dt><dd>ai_draft_unverified</dd></div></dl>
+<dl class="review-fields">
+<div><dt>原文</dt><dd>11月5日17時までに返信する。</dd></div>
+<div><dt>質問</dt><dd>文章に記載された日時情報の粒度だけを評価する。絶対日時の解決や現在日からの換算は評価しない。日付・相対日付と時計時刻が両方あれば段階2、どちらか一方または期間だけなら段階1、日時情報がない・未確定なら段階0とする。</dd></div>
+<div><dt>全選択肢</dt><dd><table class="review-options"><caption>候補IDと候補文</caption><thead><tr><th scope="col">ID</th><th scope="col">候補</th></tr></thead><tbody><tr><th scope="row">0</th><td>日付・時計時刻を示す情報がない、または時期が未確定・「そのうち」のように曖昧である。</td></tr><tr><th scope="row">1</th><td>日付・相対日付・曜日・期間だけ、または時計時刻だけが記載されている。日付と時計時刻の両方が揃わない。</td></tr><tr><th scope="row">2</th><td>日付または相対日付と、時計時刻の両方が文章に明記されている。</td></tr></tbody></table></dd></div>
+<div><dt>AI作成の正解候補・許容解</dt><dd>2 — 日付または相対日付と、時計時刻の両方が文章に明記されている。</dd></div>
+<div><dt>理由</dt><dd>日付と締切時刻が示されている。</dd></div>
+<div><dt>旧版からの改訂理由</dt><dd>R-SCORE-01: 絶対日時への解決可能性を除外し、文章に明記された日時情報の粒度だけを採点する。 許容段階は離散ラベル評価に使い、返却Scoreは連続値として最寄り許容段階との差を測る。</dd></div>
+<div><dt>許容解から評価器が導出する誤出力</dt><dd><ul><li>0</li><li>1</li></ul></dd></div>
+<div><dt>人手確認</dt><dd>未実施　□ 候補を確認　□ 修正が必要<br>修正メモ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</dd></div>
+</dl></article></section></main><footer class="foot"><p>ラベル状態: 人手未確認 · 60件は開発用 · 正式な日本語品質は未判定</p></footer></div></body></html>

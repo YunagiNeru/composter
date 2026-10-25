@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "contract_version": "evaluation-v2",
+  "dataset_version": "dev-v2",
+  "status": "AI改訂案・人手未確認",
+  "choice": {
+    "outputs": [
+      "task",
+      "none",
+      "need_info"
+    ],
+    "definitions": {
+      "task": "本人が行う意思・約束を示した、または本人が必要と認識している未完了行動が本文に明示されている。日時・対象の細部不足だけでは判定を変えない。",
+      "none": "判定対象として本文に明示された行動が完了・取消・不要などの状態で、現在のタスクとして抽出しない。引用・記録内の行動は本人の実行意思とみなさず、本文にない別の将来行動も推測しない。",
+      "need_info": "未完了行動の候補はあるが、本人の実行意思・約束または必要性を本文から判断できず、タスクの存在を確定できない。日時や対象の細部不足だけでは使わない。"
+    },
+    "scope": "本文に明示された行動とその状態を判定する。本文にない行動は補完しない。"
+  },
+  "score": {
+    "scale": {
+      "0": "日時情報なし、または時期未確定・曖昧",
+      "1": "日付・相対日付・曜日・期間だけ、または時計時刻だけ",
+      "2": "日付または相対日付と時計時刻の両方が明記"
+    },
+    "absolute_datetime_resolution": "採点対象外",
+    "returned_value": {
+      "scale": "候補段階番号の連続期待値 0..2",
+      "stage_metric": "decision_slotと許容解の段階一致",
+      "continuous_metric": "返却値と最も近い許容段階値の絶対誤差",
+      "returned_score": "Laya互換の小数点以下4桁返却値",
+      "raw_expected": "丸め前期待値を診断値として別記",
+      "integrality_required": false
+    },
+    "boundary_examples": [
+      {
+        "id": "clock_time_only",
+        "text": "15時に連絡する。",
+        "expected_stage": 1,
+        "in_dev_dataset": false,
+        "purpose": "時刻のみの境界。既存20件に該当例なし。"
+      }
+    ]
+  },
+  "noul": {
+    "label_scope": "期限通知候補への該当性",
+    "excluded_capabilities": [
+      "新規登録の実行",
+      "更新の実行",
+      "取消の実行",
+      "絶対日時への解決",
+      "通知配信の実行"
+    ],
+    "quality_metric": "評価器のboolean_resultと未確認ドラフト許容解の一致",
+    "api_compatibility": "返却値round(P(true),4)、評価器booleanは返却値>=0.5。true_probabilityとargmax判定は別記。",
+    "execution_errors_separate": true
+  },
+  "observable_wrong_outputs": "各ケースの質問型に対し、評価器が出力候補集合からallowed_answersの補集合として導出する。JSONLには重複保存しない。",
+  "quality_metrics": {
+    "choice": "decision/candidate IDの許容解一致率",
+    "score": "decision_slotの段階一致率と、返却連続値から許容段階値へのMAEを別計上",
+    "noul": "通知候補boolean一致率。API互換性と通知操作は別評価。",
+    "majority_baseline": "改訂60件の未確認ラベルから型別多数派回答を導出し同じ集合で比較する。インサンプル参考値であり、独立評価用に事前固定したbaselineではない。",
+    "quality_status": "人が全件確認するまでUNDETERMINED"
+  },
+  "output_contract_errors": [
+    "型違反",
+    "未知候補",
+    "確率形状不一致",
+    "NaN/Inf",
+    "確率和不正",
+    "候補ID順不一致",
+    "入力/契約フィンガープリント不一致"
+  ],
+  "label_verification_status": "ai_draft_unverified"
+}
