@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_version": "dev-v3",
+  "based_on_dataset_version": "dev-v2",
+  "purpose": "development_provisional_evaluation_only",
+  "label_verification_status": "ai_draft_unverified",
+  "human_review_status": "pending_for_all_60_cases",
+  "official_japanese_quality_status": "UNDETERMINED",
+  "splits": {
+    "dev": {
+      "path": "datasets/dev-v3.jsonl",
+      "cases": 60,
+      "sha256": "8bc720289b99cb8041acf6fc012169cdcb5461a7882e919620d1d9dbc31ec4fb",
+      "question_types": {
+        "choice": 20,
+        "score": 20,
+        "bool": 20
+      },
+      "label_types": {
+        "choice": 20,
+        "score": 20,
+        "noul": 20
+      },
+      "verification_status": "ai_draft_unverified"
+    }
+  },
+  "scoring_contract": {
+    "path": "configs/evaluation-contract-v2.json",
+    "version": "evaluation-v2",
+    "sha256": "8dfaa7b1aa53d261d9d5bdc30441dc407c8add4dc74ae96a90cd69cc07725c5c"
+  },
+  "revision_ledger": {
+    "path": "datasets/dev-v3-revisions.json",
+    "case_entries": 60,
+    "sha256": "53ea14a8e808e0eac3e87813346dc5765cce1befb804236b8aaf70ba82fc3507"
+  },
+  "dataset_revision": 1,
+  "previous_revision": {
+    "dataset_version": "dev-v2",
+    "dataset_sha256": "ab98482280a290fbfeda75c4ce755d072cae84fc2cd2552dbb24fc2a97102380",
+    "reason": "Choice判定契約の承認済み修正と、固定Layaの候補・質問ヘッダー長制約への適合。採点契約はdev-v2を継承。"
+  }
+}

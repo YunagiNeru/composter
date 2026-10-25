@@ -159,7 +159,7 @@ def validate_dataset_case(case: Any, profile: Profile = Profile(), dataset_versi
         required = {"allowed_answers", "rationale", "verification_status"}
         if dataset_version == "dev-v1":
             required.add("target_errors")
-        elif dataset_version != "dev-v2":
+        elif dataset_version not in {"dev-v2", "dev-v3"}:
             raise ContractError("DATASET_VERSION_UNKNOWN", "未対応の評価データ版です。")
         if not isinstance(label, dict) or set(label) != required:
             raise ContractError("INVALID_LABEL", f"ケース {case['case_id']} / {question_id} のラベル項目が不正です。")

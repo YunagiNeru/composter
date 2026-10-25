@@ -10,7 +10,7 @@ from typing import Any
 
 from .assets import AssetError, prepare_assets, verify_assets
 from .contracts import ContractError, Profile, profile_from_mapping, profile_mapping, validate_request
-from .dataset import dataset_identity, load_dataset
+from .dataset import DATASET_FILES, dataset_identity, load_dataset
 from .runtime import convert_model, doctor, run_cpu_check, run_npu, run_npu_control, run_reference
 from .storage import Run, open_run
 
@@ -57,9 +57,11 @@ def validate_project(root: Path, selected_profile: str = "s256-k8",
         "configs/probe.json", "configs/models.lock.json", "configs/gates.json",
         "datasets/manifest.json", "datasets/dev.jsonl",
     ]
-    if dataset_version == "dev-v2":
-        required.extend(("datasets/manifest-v2.json", "datasets/dev-v2.jsonl",
-                         "datasets/dev-v2-revisions.json", "configs/evaluation-contract-v2.json"))
+    if dataset_version != "dev-v1":
+        files = DATASET_FILES[dataset_version]
+        required.extend(path for path in (
+            files["manifest"], files["data"], files["revisions"], files["contract"]
+        ) if path is not None)
     missing = [name for name in required if not (root / name).is_file()]
     if missing:
         raise ContractError("REQUIRED_FILES_MISSING", "必須ファイルがありません: " + ", ".join(missing))
@@ -96,11 +98,11 @@ def _parser() -> argparse.ArgumentParser:
     init = commands.add_parser("run-init", help="新しいローカルrunを作成")
     init.add_argument("--purpose", choices=("G0", "G1", "G2", "G3"), default="G0")
     init.add_argument("--profile", choices=("s256-k8", "s128-k8"), default=None)
-    init.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"), default="dev-v1")
+    init.add_argument("--dataset-version", choices=("dev-v1", "dev-v2", "dev-v3"), default="dev-v1")
     init.add_argument("--compare-input-run", help="s128-k8入力を照合するs256-k8の元入力Run")
     validate = commands.add_parser("validate", help="設定、固定情報、60件の入力契約を検査")
     validate.add_argument("--run-id")
-    validate.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"))
+    validate.add_argument("--dataset-version", choices=("dev-v1", "dev-v2", "dev-v3"))
     request = commands.add_parser("validate-request", help="1件の入力JSONを検査")
     request.add_argument("--input", required=True)
     doctor = commands.add_parser("doctor", help="OpenVINOデバイスと実行時プロパティを記録")
@@ -139,7 +141,7 @@ def _parser() -> argparse.ArgumentParser:
     memory.add_argument("--cache-from-run", help="NPUキャッシュ再利用元Run。CPUでは使用不可")
     review = commands.add_parser("review-html", help="60件の人手確認資料HTMLを生成")
     review.add_argument("--output", default="QUALITY-REVIEW-JA-60.html")
-    review.add_argument("--dataset-version", choices=("dev-v1", "dev-v2"), default="dev-v1")
+    review.add_argument("--dataset-version", choices=("dev-v1", "dev-v2", "dev-v3"), default="dev-v1")
     return parser
 
 

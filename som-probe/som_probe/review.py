@@ -85,8 +85,9 @@ def build_review_html(root: Path, destination: Path, dataset_version: str = "dev
         raise ValueError("確認資料は60件のデータに限ります。")
     dataset_sha256 = snapshot["identity"]["dataset_sha256"]
     revisions = {}
-    if dataset_version == "dev-v2":
-        revisions = json.loads((root / "datasets/dev-v2-revisions.json").read_text(encoding="utf-8"))["cases"]
+    revision_path = snapshot["identity"]["revision_ledger_path"]
+    if revision_path:
+        revisions = json.loads((root / revision_path).read_text(encoding="utf-8"))["cases"]
     styles = (root.parent / "docs" / "PLAN.html").read_text(encoding="utf-8")
     match = re.search(r"<style>(.*?)</style>", styles, flags=re.DOTALL)
     if not match:

@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "revision_id": "dev-v3",
+  "based_on_dataset_version": "dev-v2",
+  "based_on_dataset_sha256": "ab98482280a290fbfeda75c4ce755d072cae84fc2cd2552dbb24fc2a97102380",
+  "dataset_sha256": "8bc720289b99cb8041acf6fc012169cdcb5461a7882e919620d1d9dbc31ec4fb",
+  "human_review_status": "pending_for_all_60_cases",
+  "cases": {
+    "task-001": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-002": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 明日15時の送付が不要という対象行動だけをnoneとして抽出対象外にする。送付全体の取消や別日時の作業は推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-003": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-004": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 引用文とは分け、本文に明記された「例を記録する」という行動をtaskとして扱う。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-005": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-006": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-007": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-008": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-009": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-010": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 他者から依頼が届いたことは明示されるが、本人が引き受けたかは本文から判断できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-011": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-012": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-013": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 買い物リストへの追加は完了した記録更新として扱い、購入などの将来行動を推測しない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-014": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 本人が必要と認識する未完了行動が明示されているためtaskを維持し、細部不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-015": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 「整理したい」は願望表現であり、実行意思・約束が確定しないことをneed_infoの理由にする。期限不足は理由にしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-016": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 会議予定の変更完了だけを判定し、参加や連絡など本文にない将来行動を補わない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-017": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 確認してから承認する本人の未完了行動と実行意思をtaskとして扱い、期限不足でneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-018": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-019": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "task-020": {
+      "changed_fields": [
+        "questions.intent.criteria.need_info",
+        "questions.intent.criteria.none",
+        "questions.intent.criteria.task",
+        "questions.intent.instructions"
+      ],
+      "reason": "dev-v2からの変更: questions.intent.criteria.need_info, questions.intent.criteria.none, questions.intent.criteria.task, questions.intent.instructions. R-CHOICE-01: 本文に明示された行動と状態を分類し、実行意思・約束または本人が必要と認識する未完了行動をtaskとする。日時や対象の細部不足だけではneed_infoにしない。 ケース固有の理由を更新: 旅行への希望は示されるが、予約や準備などの実行意思・約束は本文から確定できない。 自由記述target_errorsはモデル出力で検査できないため削除し、誤出力候補は許容解の補集合から評価器で導出する。 Choice入力文の候補長を固定上限内へ短縮し、分類定義は質問文に保持。初回Runの超過条件を修正するための入力改訂で、ラベル確認状態は変えない。 固定Layaの48トークン候補上限と192トークン質問ヘッダー予算に適合するようChoice説明を短縮。許容解と意味上の判定対象は維持。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-001": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-002": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-003": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-004": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-005": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-006": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-007": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-008": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-009": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-010": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-011": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-012": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-013": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-014": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-015": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-016": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-017": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-018": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-019": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "notify-020": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-001": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-002": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-003": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-004": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-005": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-006": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-007": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-008": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-009": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-010": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-011": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-012": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-013": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-014": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-015": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-016": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-017": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-018": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-019": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    },
+    "time-020": {
+      "changed_fields": [],
+      "reason": "dev-v2から本文、質問、許容解、採点対象に差分なし。新しいデータ版として識別し、未確認状態を継承。",
+      "verification_status": "ai_draft_unverified",
+      "human_review": "未実施"
+    }
+  }
+}

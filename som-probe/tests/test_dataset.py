@@ -58,6 +58,36 @@ class DatasetVersionTests(unittest.TestCase):
                             and isinstance(entry["changed_fields"], list)
                             for entry in ledger["cases"].values()))
 
+    def test_dev_v3_preserves_dev_v2_and_records_choice_revisions(self):
+        prior = load_dataset(ROOT, "dev-v2")
+        revised = load_dataset(ROOT, "dev-v3")
+        ledger = json.loads((ROOT / "datasets/dev-v3-revisions.json").read_text(encoding="utf-8"))
+        prior_cases = {case["case_id"]: case for case in prior["cases"]}
+        revised_cases = {case["case_id"]: case for case in revised["cases"]}
+
+        self.assertEqual(prior["identity"]["dataset_sha256"],
+                         "ab98482280a290fbfeda75c4ce755d072cae84fc2cd2552dbb24fc2a97102380")
+        self.assertEqual(revised["manifest"]["based_on_dataset_version"], "dev-v2")
+        self.assertEqual(revised["manifest"]["previous_revision"]["dataset_sha256"],
+                         prior["identity"]["dataset_sha256"])
+        self.assertEqual(revised["identity"]["scoring_contract_sha256"],
+                         prior["identity"]["scoring_contract_sha256"])
+        self.assertNotEqual(revised["identity"]["dataset_sha256"],
+                            prior["identity"]["dataset_sha256"])
+        self.assertEqual(set(ledger["cases"]), set(revised_cases))
+        changed_ids = {case_id for case_id, entry in ledger["cases"].items()
+                       if entry["changed_fields"]}
+        self.assertEqual(changed_ids, {f"task-{index:03}" for index in range(1, 21)})
+        self.assertTrue(all(entry["reason"] and entry["verification_status"] == "ai_draft_unverified"
+                            and entry["human_review"] == "未実施"
+                            for entry in ledger["cases"].values()))
+        for case_id in revised_cases:
+            self.assertEqual(revised_cases[case_id]["state"], prior_cases[case_id]["state"])
+        self.assertEqual(revised_cases["task-014"]["expected"]["intent"]["allowed_answers"], ["task"])
+        self.assertEqual(revised_cases["task-017"]["expected"]["intent"]["allowed_answers"], ["task"])
+        self.assertTrue(all(label["verification_status"] == "ai_draft_unverified"
+                            for case in revised_cases.values() for label in case["expected"].values()))
+
 
 if __name__ == "__main__":
     unittest.main()

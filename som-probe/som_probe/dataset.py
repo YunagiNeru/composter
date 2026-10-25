@@ -25,6 +25,13 @@ DATASET_FILES = {
         "revisions": "datasets/dev-v2-revisions.json",
         "contract_version": "evaluation-v2",
     },
+    "dev-v3": {
+        "manifest": "datasets/manifest-v3.json",
+        "data": "datasets/dev-v3.jsonl",
+        "contract": "configs/evaluation-contract-v2.json",
+        "revisions": "datasets/dev-v3-revisions.json",
+        "contract_version": "evaluation-v2",
+    },
 }
 
 
@@ -94,7 +101,7 @@ def load_dataset(
     if (data_spec.get("path") != identity["dataset_path"]
             or data_spec.get("sha256") != identity["dataset_sha256"]):
         raise ContractError("DATASET_HASH_MISMATCH", "評価データmanifestと原本のハッシュが一致しません。")
-    if version == "dev-v2" and (
+    if version != "dev-v1" and (
         manifest.get("dataset_version") != version
         or manifest.get("scoring_contract", {}).get("version") != identity["scoring_contract_version"]
         or manifest.get("scoring_contract", {}).get("path") != identity["scoring_contract_path"]
@@ -142,8 +149,9 @@ def load_dataset(
         except (OSError, ValueError) as exc:
             raise ContractError("SCORING_CONTRACT_INVALID", "採点契約または改訂台帳を読み取れません。") from exc
         revision_spec = manifest.get("revision_ledger", {})
+        compatible_contract_datasets = {version, manifest.get("based_on_dataset_version")}
         if (contract.get("contract_version") != identity["scoring_contract_version"]
-                or contract.get("dataset_version") != version
+                or contract.get("dataset_version") not in compatible_contract_datasets
                 or revision_spec.get("path") != identity["revision_ledger_path"]
                 or revision_spec.get("sha256") != identity["revision_ledger_sha256"]
                 or revision_spec.get("case_entries") != len(ledger.get("cases", {}))
