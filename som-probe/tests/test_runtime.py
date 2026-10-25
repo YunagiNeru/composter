@@ -3,7 +3,7 @@ import unittest
 from som_probe.runtime import (
     RuntimeErrorRecord, _compare_profile_inputs, _comparison, _execution_device_names,
     _npu_error_code, _row_output,
-    _score_value, _type_comparison,
+    _noul_return_value, _score_value, _type_comparison,
 )
 
 
@@ -76,6 +76,36 @@ class RuntimeFailureTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeErrorRecord, "確率の合計"):
             _score_value([0.2, 0.2])
 
+    def test_noul_evaluator_threshold_uses_rounded_return_value(self):
+        for raw, returned, judged in (
+            (0.4999, 0.4999, False),
+            (0.5, 0.5, True),
+            (0.5001, 0.5001, True),
+            (0.49996, 0.5, True),
+        ):
+            with self.subTest(raw=raw):
+                actual_returned, actual_judged = _noul_return_value(raw)
+                self.assertEqual(actual_returned, returned)
+                self.assertIs(actual_judged, judged)
+
+    def test_noul_output_keeps_raw_rounded_evaluator_and_argmax_values_separate(self):
+        import math
+        import numpy as np
+
+        row = {"case_id": "noul-1", "question_id": "enabled", "input_sha256": "fixed",
+               "question_type": "noul", "candidate_ids": [False, True], "candidate_count": 2,
+               "temperature": 1.0}
+        target_probability = 0.49996
+        logits = np.asarray([0.0, math.log(target_probability / (1.0 - target_probability))], dtype=np.float64)
+        output = _row_output(row, logits, np.asarray([0.0, 1.0], dtype=np.float64))
+
+        self.assertAlmostEqual(output["true_probability"], target_probability, places=12)
+        self.assertEqual(output["returned_noul"], 0.5)
+        self.assertEqual(output["returned_noul_rounding"], "python_round_4")
+        self.assertIs(output["boolean_result"], True)
+        self.assertIs(output["argmax_boolean_result"], False)
+        self.assertIs(output["decision"], False)
+
     def test_keeps_ambiguous_operator_error_ambiguous(self):
         message = "Node 0 doesn't respect Custom Operator format or is an unrecognized operator"
         self.assertEqual(
@@ -120,7 +150,8 @@ class RuntimeFailureTests(unittest.TestCase):
              "returned_score_rounding": "python_round_4"},
             {**common, "question_type": "noul", "candidate_ids": [False, True],
              "probabilities": [0.3, 0.7], "decision_slot": 1, "decision": True,
-             "boolean_result": True, "true_probability": 0.7},
+             "boolean_result": True, "argmax_boolean_result": True, "true_probability": 0.7,
+             "returned_noul": 0.7, "returned_noul_rounding": "python_round_4"},
         ]
         candidate = [
             {**common, "question_type": "choice", "candidate_ids": ["b", "a"],
@@ -132,7 +163,8 @@ class RuntimeFailureTests(unittest.TestCase):
              "returned_score_rounding": "python_round_4"},
             {**common, "question_type": "noul", "candidate_ids": [False, True],
              "probabilities": [0.6, 0.4], "decision_slot": 0, "decision": False,
-             "boolean_result": False, "true_probability": 0.4},
+             "boolean_result": False, "argmax_boolean_result": False, "true_probability": 0.4,
+             "returned_noul": 0.4, "returned_noul_rounding": "python_round_4"},
         ]
 
         result = _type_comparison(reference, candidate)
@@ -148,6 +180,7 @@ class RuntimeFailureTests(unittest.TestCase):
         self.assertAlmostEqual(by_type["score"]["score_expected_unrounded_mean_abs_difference"], 0.3)
         self.assertEqual(by_type["noul"]["boolean_result_changes"], 1)
         self.assertEqual(by_type["noul"]["true_probability_mean_denominator"], 1)
+        self.assertEqual(by_type["noul"]["returned_noul_mean_denominator"], 1)
 
 
 if __name__ == "__main__":

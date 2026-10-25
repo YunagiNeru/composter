@@ -54,6 +54,36 @@ def _score_return_contract(root: Path) -> dict[str, Any]:
     }
 
 
+def _noul_return_value(true_probability: float) -> tuple[float, bool]:
+    """Apply Laya's rounded Noul API field, then its evaluator threshold."""
+    probability = float(true_probability)
+    if not math.isfinite(probability) or not 0.0 <= probability <= 1.0:
+        raise RuntimeErrorRecord("NOUL_PROBABILITY_INVALID", "NoulのP(true)が確率範囲外です。")
+    returned = round(probability, 4)
+    return returned, returned >= 0.5
+
+
+def _noul_return_contract(root: Path) -> dict[str, Any]:
+    source = load_lock(root)["sources"]["laya_code"]
+    return {
+        "repository": source["repository"],
+        "revision": source["commit"],
+        "model_return_file": "laya/agent.py",
+        "model_return_function": "Agent._decode_answers",
+        "model_return_source_lines": "1398-1401",
+        "returned_field": "noul",
+        "returned_value": "round(float(P(true)), 4)",
+        "candidate_order": [False, True],
+        "raw_probability_field": "true_probability",
+        "temperature_and_normalization": "softmax is applied to the valid False/True logits once using the configured temperature before return rounding",
+        "evaluator_file": "laya/evals.py",
+        "evaluator_source_lines": "421-424",
+        "evaluator_boolean": "bool(returned_noul >= 0.5)",
+        "rounding": "Python round(value, 4)",
+        "argmax_is_recorded_separately": True,
+    }
+
+
 def process_age_ms() -> float | None:
     """現在プロセスの開始からの経過時間をWindowsで取得する。"""
     if os.name != "nt":
@@ -409,6 +439,9 @@ def _model_output(agent, input_rows: list[dict[str, Any]]) -> list[dict[str, Any
             decision_index = max(range(len(probs)), key=probs.__getitem__)
             decision = row["candidate_ids"][decision_index]
             score_expected, returned_score = _score_value(probs) if row["question_type"] == "score" else (None, None)
+            noul_returned, noul_boolean = (
+                _noul_return_value(probs[1]) if row["question_type"] == "noul" else (None, None)
+            )
             output_rows.append({"case_id": row["case_id"], "question_id": row["question_id"],
                                 "input_sha256": row["input_sha256"],
                                 "question_type": row["question_type"],
@@ -424,8 +457,11 @@ def _model_output(agent, input_rows: list[dict[str, Any]]) -> list[dict[str, Any
                                 "score_expected_unrounded": score_expected,
                                 "returned_score": returned_score,
                                 "returned_score_rounding": "python_round_4" if row["question_type"] == "score" else None,
-                                "boolean_result": decision if row["question_type"] == "noul" else None,
+                                "boolean_result": noul_boolean,
+                                "argmax_boolean_result": bool(decision_index) if row["question_type"] == "noul" else None,
                                 "true_probability": probs[1] if row["question_type"] == "noul" else None,
+                                "returned_noul": noul_returned,
+                                "returned_noul_rounding": "python_round_4" if row["question_type"] == "noul" else None,
                                 "action_probabilities": actions[index].astype(float).tolist()})
     return output_rows
 
@@ -461,6 +497,7 @@ def run_reference(root: Path, run: Run) -> dict[str, Any]:
                   "label_state": "ai_draft_unverified", "model_device": str(agent.device),
                   "input_hashes_recorded": True,
                   "score_return_contract": _score_return_contract(root),
+                  "noul_return_contract": _noul_return_contract(root),
                   "profile_input_equivalence": profile_equivalence,
                   "question_type_counts": {
                       kind: sum(row["question_type"] == kind for row in rows)
@@ -524,6 +561,9 @@ def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any
     decision_index = max(range(len(probs)), key=probs.__getitem__)
     decision = row["candidate_ids"][decision_index]
     score_expected, returned_score = _score_value(probs) if row["question_type"] == "score" else (None, None)
+    noul_returned, noul_boolean = (
+        _noul_return_value(probs[1]) if row["question_type"] == "noul" else (None, None)
+    )
     return {"case_id": row["case_id"], "question_id": row["question_id"],
             "input_sha256": row["input_sha256"], "probabilities": probs,
             "question_type": row["question_type"], "candidate_ids": row["candidate_ids"],
@@ -538,8 +578,11 @@ def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any
             "score_expected_unrounded": score_expected,
             "returned_score": returned_score,
             "returned_score_rounding": "python_round_4" if row["question_type"] == "score" else None,
-            "boolean_result": decision if row["question_type"] == "noul" else None,
+            "boolean_result": noul_boolean,
+            "argmax_boolean_result": bool(decision_index) if row["question_type"] == "noul" else None,
             "true_probability": probs[1] if row["question_type"] == "noul" else None,
+            "returned_noul": noul_returned,
+            "returned_noul_rounding": "python_round_4" if row["question_type"] == "noul" else None,
             "action_probabilities": softmax([float(value) for value in actions])}
 
 
@@ -575,7 +618,7 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
             "action_probability_value_count": 0, "action_probability_abs_differences": [],
             "decision_id_changes": [], "decision_slot_changes": 0,
             "decision_id_matches": 0, "score_abs_differences": [], "score_expected_abs_differences": [],
-            "true_probability_abs_differences": [],
+            "true_probability_abs_differences": [], "returned_noul_abs_differences": [],
         })
         item["cases"] += 1
         item["candidate_probability_value_count"] += len(expected_map)
@@ -620,11 +663,33 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
                     - float(actual["score_expected_unrounded"]))
             )
         elif kind == "noul":
+            for output in (expected, actual):
+                probabilities = output["probabilities"]
+                if output["candidate_ids"] != [False, True] or len(probabilities) != 2:
+                    raise RuntimeErrorRecord("NOUL_CANDIDATE_ORDER_MISMATCH",
+                                             "Noul候補は[False, True]の順でなければなりません。")
+                raw_probability = float(output.get("true_probability"))
+                returned_probability, evaluator_boolean = _noul_return_value(raw_probability)
+                if (not math.isclose(raw_probability, float(probabilities[1]), rel_tol=0.0, abs_tol=1e-12)
+                        or float(output.get("returned_noul")) != returned_probability
+                        or output.get("returned_noul_rounding") != "python_round_4"
+                        or output.get("boolean_result") is not evaluator_boolean
+                        or output.get("argmax_boolean_result") is not (output.get("decision_slot") == 1)
+                        or output.get("decision") is not output.get("argmax_boolean_result")):
+                    raise RuntimeErrorRecord("NOUL_OUTPUT_CONTRACT_MISMATCH",
+                                             "Noulの生確率、返却丸め値、評価器判定、argmaxが一致しません。")
             item["true_probability_abs_differences"].append(
                 abs(float(expected["true_probability"]) - float(actual["true_probability"]))
             )
+            item["returned_noul_abs_differences"].append(
+                abs(float(expected["returned_noul"]) - float(actual["returned_noul"]))
+            )
             item["boolean_result_matches"] = item.get("boolean_result_matches", 0) + int(
                 _identity_key(expected.get("boolean_result")) == _identity_key(actual.get("boolean_result"))
+            )
+            item["argmax_boolean_result_matches"] = item.get("argmax_boolean_result_matches", 0) + int(
+                _identity_key(expected.get("argmax_boolean_result"))
+                == _identity_key(actual.get("argmax_boolean_result"))
             )
     result: dict[str, Any] = {"question_type_counts": {}, "by_question_type": {}}
     for kind in ("choice", "score", "noul"):
@@ -634,13 +699,14 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
             "decision_id_changes": [], "decision_slot_changes": 0,
             "decision_id_matches": 0, "decision_slot_matches": 0,
             "score_abs_differences": [], "score_expected_abs_differences": [],
-            "true_probability_abs_differences": [],
+            "true_probability_abs_differences": [], "returned_noul_abs_differences": [],
         })
         probs = item.pop("candidate_probability_abs_differences")
         actions = item.pop("action_probability_abs_differences")
         scores = item.pop("score_abs_differences")
         expected_scores = item.pop("score_expected_abs_differences")
         true_probs = item.pop("true_probability_abs_differences")
+        noul_returns = item.pop("returned_noul_abs_differences")
         count = item["cases"]
         result["question_type_counts"][kind] = count
         item.update({
@@ -668,8 +734,14 @@ def _type_comparison(reference: list[dict[str, Any]], candidate: list[dict[str, 
         if kind == "noul":
             item["true_probability_mean_abs_difference"] = float(np.mean(true_probs)) if true_probs else 0.0
             item["true_probability_mean_denominator"] = len(true_probs)
+            item["returned_noul_value_count"] = len(noul_returns)
+            item["returned_noul_mean_abs_difference"] = float(np.mean(noul_returns)) if noul_returns else 0.0
+            item["returned_noul_max_abs_difference"] = float(max(noul_returns, default=0.0))
+            item["returned_noul_mean_denominator"] = len(noul_returns)
             item["boolean_result_changes"] = count - item.get("boolean_result_matches", 0)
             item["boolean_result_match_ratio"] = item.get("boolean_result_matches", 0) / max(1, count)
+            item["argmax_boolean_result_changes"] = count - item.get("argmax_boolean_result_matches", 0)
+            item["argmax_boolean_result_match_ratio"] = item.get("argmax_boolean_result_matches", 0) / max(1, count)
         result["by_question_type"][kind] = item
     return result
 
@@ -684,7 +756,8 @@ def _draft_label_summary(root: Path, outputs: list[dict[str, Any]]) -> dict[str,
         kind = "noul" if question["type"] == "bool" else question["type"]
         item = by_type.setdefault(kind, {"cases": 0, "allowed_answer_matches": 0})
         item["cases"] += 1
-        if any(_identity_key(output["decision"]) == _identity_key(answer)
+        judged_value = output["boolean_result"] if kind == "noul" else output["decision"]
+        if any(_identity_key(judged_value) == _identity_key(answer)
                for answer in expected["allowed_answers"]):
             item["allowed_answer_matches"] += 1
     for values in by_type.values():
@@ -913,6 +986,7 @@ def run_cpu_check(root: Path, run: Run) -> dict[str, Any]:
                       "original_torch_vs_openvino_cpu": _type_comparison(reference, openvino),
                   },
                   "score_return_contract": _score_return_contract(root),
+                  "noul_return_contract": _noul_return_contract(root),
                   "draft_label_reference": _draft_label_summary(root, reference),
                   "onnx_runtime": onnx_env, "openvino_cpu": ov_env,
                   "label_status": "ai_draft_unverified", "japanese_quality_status": "UNDETERMINED"}
@@ -1156,6 +1230,7 @@ def run_npu(root: Path, run: Run, expected_arch: str = "3720",
                   "checks": checks, "comparison_to_original_cpu": comparison,
                   "type_comparison_to_original_cpu": type_comparison,
                   "score_return_contract": _score_return_contract(root),
+                  "noul_return_contract": _noul_return_contract(root),
                   "draft_label_reference": _draft_label_summary(root, reference),
                   "important_new_errors_definition": comparison["important_new_errors_definition"],
                   "label_status": "ai_draft_unverified", "human_label_errors": "UNDETERMINED",
