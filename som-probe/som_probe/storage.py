@@ -22,6 +22,7 @@ _PROVENANCE_FILES = (
     "datasets/manifest.json", "datasets/dev.jsonl",
     "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
 )
+_SUCCESS_TERMINAL_STAGES = frozenset({"G3", "NPU_DIAGNOSTIC", "PERFORMANCE", "MEMORY"})
 
 
 def safe_message(message: str) -> str:
@@ -162,7 +163,7 @@ class Run:
             manifest["status"] = "FAILED"
         elif status == "BLOCKED":
             manifest["status"] = "BLOCKED"
-        elif name in {"G3", "NPU_DIAGNOSTIC"}:
+        elif status == "PASS" and name in _SUCCESS_TERMINAL_STAGES:
             manifest["status"] = "COMPLETE"
         elif manifest.get("status") in {"COMPLETE", "FAILED", "BLOCKED"}:
             pass

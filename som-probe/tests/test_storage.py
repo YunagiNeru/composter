@@ -43,6 +43,19 @@ class StorageTests(unittest.TestCase):
             self.assertEqual(run.read_manifest()["stages"]["G3"]["status"], "BLOCKED")
             self.assertIn("ARCHITECTURE_MISMATCH", (run.path / "errors.jsonl").read_text(encoding="utf-8"))
 
+    def test_measurement_pass_completes_the_run_while_intermediate_pass_does_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            intermediate = Run.create(root, "G3")
+            intermediate.stage("G2-cpu-check", "PASS")
+            self.assertEqual(intermediate.read_manifest()["status"], "RUNNING")
+
+            for stage_name in ("PERFORMANCE", "MEMORY"):
+                measurement = Run.create(root, stage_name)
+                measurement.stage(stage_name, "PASS", result_file="result.json")
+                self.assertEqual(measurement.read_manifest()["stages"][stage_name]["status"], "PASS")
+                self.assertEqual(measurement.read_manifest()["status"], "COMPLETE")
+
     def test_run_records_revision_worktree_and_configuration_hashes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
