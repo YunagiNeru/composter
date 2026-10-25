@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "candidate_a": {
+    "status": "PINNED_FOR_CPU_EVALUATION",
+    "repository": "Horizon-Labs/multilingual-zeroshot-small",
+    "revision": "3fe1f0c48b589cf6220fd21a628a1dd56d3d41f8",
+    "model_card": {
+      "license_label": "Apache-2.0",
+      "commercial_training_data_statement": "Publisher says the model was trained only on data allowing commercial use; this is a publisher statement, not an independent legal review.",
+      "training_data_as_listed": [
+        "MultiNLI (including OANC and CC-BY-SA-3.0 portions)",
+        "SNLI (CC-BY-SA-4.0)",
+        "WANLI (CC-BY-4.0)",
+        "machine-translated MultiNLI/WANLI pairs",
+        "synthetic classification data described in the model card"
+      ],
+      "official_usage": "Transformers zero-shot-classification, multi_label=false; English candidate labels and hypothesis template for multilingual input.",
+      "sources": [
+        "https://huggingface.co/Horizon-Labs/multilingual-zeroshot-small",
+        "https://huggingface.co/Horizon-Labs/multilingual-zeroshot-small/resolve/3fe1f0c48b589cf6220fd21a628a1dd56d3d41f8/config.json"
+      ]
+    },
+    "architecture": "ModernBertForSequenceClassification",
+    "id2label": {
+      "0": "not_entailment",
+      "1": "entailment"
+    },
+    "dtype": "float32",
+    "max_position_embeddings": 8192,
+    "files": {
+      "README.md": {
+        "size": 13879,
+        "sha256": "2e4782758173f5b8caa9fd6e5b7dcab9227442e25ca248392684bb93ec7a0cd1"
+      },
+      "config.json": {
+        "size": 2053,
+        "sha256": "3e5f7eebf8ddee141f092672ca5865b7741e64df974fbc68223c91da6cd74222"
+      },
+      "model.safetensors": {
+        "size": 562583392,
+        "sha256": "f3e91112cd414261f85c423866749ccc0a0a23f593a8b22ee078a9592518d9dc"
+      },
+      "special_tokens_map.json": {
+        "size": 636,
+        "sha256": "baec30ea10906f16adb8c18af7a34023002c1746542612b8b41c9f09e1351351"
+      },
+      "tokenizer.json": {
+        "size": 34363287,
+        "sha256": "aebee76d0312011b0d73b08a255d4d11d25c83e9639324870c7b916ea102e13e"
+      },
+      "tokenizer_config.json": {
+        "size": 46440,
+        "sha256": "ea349495764b24570b4560fe2e4a557e5c0a47e6bce782c2409b1d6445cf8633"
+      }
+    }
+  },
+  "candidate_b": {
+    "status": "BLOCKED",
+    "repository": "MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli",
+    "revision": "0a71e92a985b6e1ad1828cf67ce9c459639c1dca",
+    "displayed_model_license": "MIT",
+    "training_data_includes": ["XNLI", "MNLI"],
+    "reason": "商用利用条件を確認できていないため採用審査を保留。商用利用禁止が法的に確定したという判断ではない。",
+    "artifacts_acquired": false,
+    "inference_performed": false,
+    "sources": [
+      "https://huggingface.co/MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli",
+      "https://github.com/facebookresearch/XNLI/blob/main/LICENSE"
+    ]
+  }
+}

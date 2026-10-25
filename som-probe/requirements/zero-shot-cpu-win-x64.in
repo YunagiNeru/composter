@@ -1,0 +1,7 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+# Candidate-A CPU evaluation. Versions are compiled into the adjacent hash lock.
+torch==2.9.1+cpu
+transformers==5.17.0
+huggingface_hub==1.33.0
