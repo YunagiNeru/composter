@@ -924,9 +924,13 @@ def _run_child(root: Path, run_id: str, phase: str, python: Path) -> None:
         raise DiagnosticError(f"PYTHON_ENVIRONMENT_MISSING_{phase.upper()}")
     command = [str(python), "-m", "som_probe.diagnostics", "--stage", phase, "--run-id", run_id]
     result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=3600)
+    open_run(root, run_id).write_json(f"{phase}-process.json", {
+        "phase": phase, "command": command, "exit_code": result.returncode,
+        "stdout": result.stdout, "stderr": result.stderr,
+    })
     if result.returncode != 0:
         failure_code = next((line.split(":", 1)[1] for line in result.stdout.splitlines()
-                             if line.startswith("DIAGNOSTIC_FAILURE:")), "CHILD_PROCESS_FAILED")
+                             if line.startswith("DIAGNOSTIC_FAILURE:")), f"CHILD_EXIT_{result.returncode}")
         raise DiagnosticError(f"{phase.upper()}_{failure_code.strip()}")
 
 

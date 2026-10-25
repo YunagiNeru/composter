@@ -1,13 +1,18 @@
 import unittest
+import sys
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 from som_probe.diagnostics import (
     CONTRAST_FIXTURES,
+    DiagnosticError,
     SOURCE_RUN_ID,
     _compare_laya_input,
     _compare_laya_outputs,
     _compare_laya_custom_outputs,
     _normalise_laya_answer,
     _normalise_sokudan_official_answer,
+    _run_child,
     _sokudan_outputs_match,
 )
 
@@ -127,6 +132,22 @@ class FixedTryoutDiagnosticTests(unittest.TestCase):
         )
         self.assertEqual(noul["returned_noul"], 0.5)
         self.assertIs(noul["boolean_result"], True)
+
+    def test_failed_child_process_saves_exit_code_and_diagnostics_in_the_run(self):
+        process = Mock(returncode=17, stdout="", stderr="fixed diagnostic failure")
+        run = Mock()
+
+        with patch("som_probe.diagnostics.subprocess.run", return_value=process), \
+             patch("som_probe.diagnostics.open_run", return_value=run):
+            with self.assertRaisesRegex(DiagnosticError, "SOKUDAN_CHILD_EXIT_17"):
+                _run_child(Path.cwd(), "20261025-000000-00000000", "sokudan", Path(sys.executable))
+
+        run.write_json.assert_called_once_with("sokudan-process.json", {
+            "phase": "sokudan",
+            "command": [sys.executable, "-m", "som_probe.diagnostics", "--stage", "sokudan",
+                        "--run-id", "20261025-000000-00000000"],
+            "exit_code": 17, "stdout": "", "stderr": "fixed diagnostic failure",
+        })
 
 
 if __name__ == "__main__":
