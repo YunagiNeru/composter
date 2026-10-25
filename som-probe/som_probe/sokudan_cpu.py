@@ -583,6 +583,85 @@ def _pairwise_metrics(cases: list[dict[str, Any]], sokudan: dict[tuple[str, str]
     return result
 
 
+def _case_diagnostics(cases: list[dict[str, Any]], case_records: list[dict[str, Any]],
+                      laya_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    sok_by_key: dict[tuple[str, str], dict[str, Any]] = {}
+    for case_record in case_records:
+        for row in case_record["questions"]:
+            sok_by_key[(case_record["case_id"], row.get("question_id"))] = row
+    laya_by_key = {(row["case_id"], row["question_id"]): row for row in laya_rows}
+    results = []
+    for case in cases:
+        qid, question = next(iter(case["questions"].items()))
+        key = (case["case_id"], qid)
+        kind = _question_kind(question)
+        allowed = case["expected"][qid]["allowed_answers"]
+        sok_row = sok_by_key.get(key, {})
+        sok_norm = _normalised_sokudan(sok_row) if sok_row.get("status") == "PASS" else None
+        laya_raw = laya_by_key.get(key)
+        laya_norm = _laya_prediction(laya_raw) if laya_raw is not None else None
+        item: dict[str, Any] = {
+            "case_id": case["case_id"],
+            "question_id": qid,
+            "question_type": kind,
+            "label_state": "ai_draft_unverified",
+            "draft_allowed_answers": allowed,
+            "sokudan_status": sok_row.get("status", "HELD"),
+            "sokudan_error_code": sok_row.get("error_code"),
+            "saved_laya_available": laya_norm is not None,
+        }
+        if sok_norm is not None:
+            predicted = sok_norm["decision"]
+            item["sokudan"] = {
+                "prediction": predicted,
+                "stage_prediction": sok_norm["stage_prediction"],
+                "continuous_score": sok_norm["continuous_score"],
+                "returned_P_true": sok_norm["true_probability"],
+                "display_probabilities": sok_norm["display_probabilities"],
+                "candidate_ids": sok_norm["candidate_ids"],
+            }
+            item["sokudan_match_to_unverified_draft"] = any(
+                _key(predicted) == _key(answer) for answer in allowed
+            )
+        else:
+            item["sokudan"] = None
+            item["sokudan_match_to_unverified_draft"] = None
+        if laya_norm is not None:
+            item["saved_laya"] = {
+                "prediction": laya_norm["decision"],
+                "stage_prediction": laya_norm["stage_prediction"],
+                "continuous_score": laya_norm["continuous_score"],
+                "returned_P_true": laya_norm["true_probability"],
+                "display_probabilities": laya_norm["display_probabilities"],
+                "candidate_ids": laya_norm["candidate_ids"],
+            }
+            item["sokudan_matches_saved_laya"] = (
+                sok_norm["decision"] == laya_norm["decision"] if sok_norm is not None else None
+            )
+        else:
+            item["saved_laya"] = None
+            item["sokudan_matches_saved_laya"] = None
+        if kind == "score":
+            item["score_stage_match_to_unverified_draft"] = (
+                any(_key(sok_norm["stage_prediction"]) == _key(answer) for answer in allowed)
+                if sok_norm is not None else None
+            )
+            item["score_continuous_abs_error_to_unverified_draft"] = (
+                min(abs(float(sok_norm["continuous_score"]) - float(answer)) for answer in allowed)
+                if sok_norm is not None else None
+            )
+        if kind == "noul":
+            predicted = sok_norm["decision"] if sok_norm is not None else None
+            item["notification_out_of_scope_false_positive_against_draft"] = (
+                predicted is True and False in allowed if predicted is not None else None
+            )
+            item["notification_candidate_miss_against_draft"] = (
+                predicted is False and True in allowed if predicted is not None else None
+            )
+        results.append(item)
+    return results
+
+
 def _validate_reference_run(root: Path, dataset: dict[str, Any], run_id: str) -> tuple[Run, list[dict[str, Any]]]:
     reference_run = open_run(root, run_id)
     manifest = reference_run.read_manifest()
@@ -851,6 +930,7 @@ def _metrics(cases: list[dict[str, Any]], case_records: list[dict[str, Any]],
         "coverage": coverage,
         "models": models,
         "sokudan_vs_saved_laya": pairwise,
+        "case_diagnostics": _case_diagnostics(cases, case_records, laya_rows),
         "laya_reference_run_id": laya_run_id,
         "metrics_are_preliminary_not_model_acceptance": True,
     }
@@ -911,6 +991,8 @@ def run_sokudan_cpu(root: Path, laya_reference_run_id: str) -> dict[str, Any]:
         wrote_cases = True
         metrics = _metrics(dataset["cases"], case_records, reference_rows,
                            laya_reference_run_id, dataset["identity"])
+        case_diagnostics = metrics.pop("case_diagnostics")
+        run.write_jsonl("sokudan-case-diagnostics.jsonl", case_diagnostics)
         run.write_json("sokudan-comparison.json", metrics)
 
         successful = all(row["status"] == "PASS" for row in case_records)
@@ -979,6 +1061,7 @@ def run_sokudan_cpu(root: Path, laya_reference_run_id: str) -> dict[str, Any]:
         run.stage("SOKUDAN_CPU", stage_status, **{
             "summary_file": "sokudan-run-summary.json",
             "cases_file": "sokudan-cases.jsonl",
+            "case_diagnostics_file": "sokudan-case-diagnostics.jsonl",
             "comparison_file": "sokudan-comparison.json",
             "requested_cases": len(dataset["cases"]),
             "valid_outputs": result["valid_outputs"],

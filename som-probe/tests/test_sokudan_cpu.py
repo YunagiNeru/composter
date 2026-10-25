@@ -1,6 +1,10 @@
 import unittest
 
-from som_probe.sokudan_cpu import SokudanComparisonError, adapt_official_answer
+from som_probe.sokudan_cpu import (
+    SokudanComparisonError,
+    _case_diagnostics,
+    adapt_official_answer,
+)
 
 
 class SokudanAdapterTests(unittest.TestCase):
@@ -52,6 +56,46 @@ class SokudanAdapterTests(unittest.TestCase):
                 self.assertIs(result["evaluator_boolean"], expected)
                 self.assertEqual(result["evaluator_boolean_source"],
                                  "returned_P_true_greater_than_or_equal_to_0.5")
+
+    def test_case_diagnostic_separates_draft_false_positive_from_laya_prediction(self):
+        cases = [{
+            "case_id": "notify-001",
+            "questions": {"notify": {"type": "bool"}},
+            "expected": {"notify": {"allowed_answers": [False]}},
+        }]
+        case_records = [{
+            "case_id": "notify-001",
+            "questions": [{
+                "question_id": "notify",
+                "question_type": "noul",
+                "status": "PASS",
+                "adapter": {
+                    "question_type": "noul",
+                    "candidate_ids": [False, True],
+                    "evaluator_boolean": True,
+                    "stage_prediction": None,
+                    "api_returned_value": 0.8,
+                    "api_display_probabilities": None,
+                },
+            }],
+        }]
+        laya_rows = [{
+            "case_id": "notify-001",
+            "question_id": "notify",
+            "question_type": "noul",
+            "candidate_ids": [False, True],
+            "probabilities": [0.6, 0.4],
+            "returned_noul": 0.4,
+            "boolean_result": False,
+        }]
+
+        result = _case_diagnostics(cases, case_records, laya_rows)[0]
+
+        self.assertEqual(result["sokudan"]["returned_P_true"], 0.8)
+        self.assertIs(result["sokudan_match_to_unverified_draft"], False)
+        self.assertIs(result["notification_out_of_scope_false_positive_against_draft"], True)
+        self.assertIs(result["saved_laya"]["prediction"], False)
+        self.assertIs(result["sokudan_matches_saved_laya"], False)
 
 
 if __name__ == "__main__":
