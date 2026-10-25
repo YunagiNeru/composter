@@ -11,6 +11,7 @@ from som_probe.tryout import (
     _question_templates,
     _questions_for_templates,
     _tryout_error_text,
+    _load_sokudan_session_without_progress,
     format_results,
     run_tryout,
 )
@@ -294,6 +295,25 @@ class TryoutLifecycleTests(unittest.TestCase):
 
             self.assertTrue(second.closed)
             self.assertEqual(list(root.iterdir()), [])
+
+    def test_sokudan_loading_progress_is_disabled_only_while_loading(self):
+        from transformers.utils import logging as transformers_logging
+
+        previous = transformers_logging.is_progress_bar_enabled()
+        transformers_logging.enable_progress_bar()
+        observed = []
+        try:
+            result = _load_sokudan_session_without_progress(
+                lambda: observed.append(transformers_logging.is_progress_bar_enabled()) or "ready"
+            )
+        finally:
+            if previous:
+                transformers_logging.enable_progress_bar()
+            else:
+                transformers_logging.disable_progress_bar()
+        self.assertEqual(result, "ready")
+        self.assertEqual(observed, [False])
+        self.assertEqual(transformers_logging.is_progress_bar_enabled(), previous)
 
 
 class TryoutInputWaitTests(unittest.TestCase):

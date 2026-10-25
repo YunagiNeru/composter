@@ -978,8 +978,14 @@ def run_tryout(root: Path, model: str, source_run_id: str | None,
                 session_factory = lambda: _LayaSession(root, source_run_id, templates, canaries)
             else:
                 session_factory = lambda: _SokudanSession(root, templates, canaries)
+        loading_status = {
+            "laya": "Layaを読み込み中（NPU／FP16）…",
+            "sokudan": "Sokudanを読み込み中（CPU／FP32）…",
+        }
+        output_fn(loading_status[model])
         try:
-            session = session_factory()
+            session = (_load_sokudan_session_without_progress(session_factory)
+                       if model == "sokudan" else session_factory())
         except TryoutError:
             raise
         except Exception:
@@ -996,3 +1002,16 @@ def run_tryout(root: Path, model: str, source_run_id: str | None,
                 session.close()
             except Exception:
                 pass
+
+
+def _load_sokudan_session_without_progress(session_factory: Callable[[], Any]) -> Any:
+    from transformers.utils import logging as transformers_logging
+
+    progress_was_enabled = transformers_logging.is_progress_bar_enabled()
+    if progress_was_enabled:
+        transformers_logging.disable_progress_bar()
+    try:
+        return session_factory()
+    finally:
+        if progress_was_enabled:
+            transformers_logging.enable_progress_bar()
