@@ -211,10 +211,16 @@ def _load_official_laya(root: Path, run: Run):
         from laya.agent import Agent
     except Exception:
         raise DiagnosticError("PINNED_LAYA_API_IMPORT_FAILED") from None
-    checkpoint = make_execution_checkpoint(root, run.run_id)
+    checkpoint = run.path / "reference-model"
+    expected_hashes = _checkpoint_hashes(lock)
+    if checkpoint.exists():
+        if not _checkpoint_matches(checkpoint, expected_hashes):
+            raise DiagnosticError("PINNED_LAYA_CHECKPOINT_MISMATCH")
+    else:
+        checkpoint = make_execution_checkpoint(root, run.run_id)
     try:
         agent = Agent(str(checkpoint), device="cpu", compile=False, fast=False,
-                      expected_sha256=_checkpoint_hashes(lock))
+                      expected_sha256=expected_hashes)
     except Exception:
         raise DiagnosticError("PINNED_LAYA_API_LOAD_FAILED") from None
     if str(agent.device) != "cpu":
@@ -224,6 +230,14 @@ def _load_official_laya(root: Path, run: Run):
     if parameter_dtypes != ["torch.float32"]:
         raise DiagnosticError("PINNED_LAYA_API_PRECISION_MISMATCH")
     return agent, lock, parameter_dtypes
+
+
+def _checkpoint_matches(checkpoint: Path, expected_hashes: dict[str, str]) -> bool:
+    return bool(expected_hashes) and all(
+        (path := checkpoint / relative).is_file()
+        and hashlib.sha256(path.read_bytes()).hexdigest() == digest
+        for relative, digest in expected_hashes.items()
+    )
 
 
 def _run_laya_direct(root: Path, run: Run) -> dict[str, Any]:

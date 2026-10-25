@@ -1,6 +1,8 @@
+import hashlib
 import io
 import unittest
 import sys
+import tempfile
 from pathlib import Path
 from contextlib import redirect_stdout
 from unittest.mock import Mock, patch
@@ -13,6 +15,7 @@ from som_probe.diagnostics import (
     _compare_laya_input,
     _compare_laya_outputs,
     _compare_laya_custom_outputs,
+    _checkpoint_matches,
     _normalise_adapter_answer,
     _normalise_laya_answer,
     _normalise_sokudan_official_answer,
@@ -24,6 +27,21 @@ from som_probe.diagnostics import (
 
 
 class FixedTryoutDiagnosticTests(unittest.TestCase):
+    def test_reused_reference_checkpoint_must_match_every_locked_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checkpoint = Path(directory)
+            weights = checkpoint / "model.safetensors"
+            tokenizer = checkpoint / "tokenizer.json"
+            weights.write_bytes(b"fixed model bytes")
+            tokenizer.write_bytes(b"fixed tokenizer bytes")
+            expected = {
+                "model.safetensors": hashlib.sha256(weights.read_bytes()).hexdigest(),
+                "tokenizer.json": hashlib.sha256(tokenizer.read_bytes()).hexdigest(),
+            }
+            self.assertTrue(_checkpoint_matches(checkpoint, expected))
+            tokenizer.write_bytes(b"different tokenizer bytes")
+            self.assertFalse(_checkpoint_matches(checkpoint, expected))
+
     def test_contrast_questions_and_one_paraphrase_are_fixed(self):
         self.assertEqual([fixture["type"] for fixture in CONTRAST_FIXTURES], ["A", "B", "C"])
         self.assertEqual(len({fixture["question"] for fixture in CONTRAST_FIXTURES}), 3)
