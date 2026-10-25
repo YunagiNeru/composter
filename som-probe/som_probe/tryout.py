@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import tarfile
 from pathlib import Path
 from typing import Any, Callable
@@ -961,13 +962,17 @@ def _interactive_loop(session: Any, input_fn: Callable[[str], str],
 def run_tryout(root: Path, model: str, source_run_id: str | None,
                input_fn: Callable[[str], str] | None = None,
                output_fn: Callable[[str], None] | None = None,
-               session_factory: Callable[[], Any] | None = None) -> None:
+               session_factory: Callable[[], Any] | None = None,
+               diagnostic_run_id: str | None = None) -> None:
     if model not in {"laya", "sokudan"}:
         raise TryoutError("MODEL_CHOICE_INVALID")
     if model == "laya" and not source_run_id:
         raise TryoutError("LAYA_SOURCE_RUN_REQUIRED")
     if model == "sokudan" and source_run_id:
         raise TryoutError("SOKUDAN_SOURCE_RUN_NOT_ALLOWED")
+    if (diagnostic_run_id is not None
+            and (model != "laya" or not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{8}", diagnostic_run_id))):
+        raise TryoutError("DIAGNOSTIC_CACHE_RUN_ID_INVALID")
     input_fn = input if input_fn is None else input_fn
     output_fn = print if output_fn is None else output_fn
 
@@ -975,7 +980,9 @@ def run_tryout(root: Path, model: str, source_run_id: str | None,
         if session_factory is None:
             templates, canaries = _question_templates(root)
             if model == "laya":
-                session_factory = lambda: _LayaSession(root, source_run_id, templates, canaries)
+                session_factory = lambda: _LayaSession(
+                    root, source_run_id, templates, canaries, diagnostic_run_id=diagnostic_run_id,
+                )
             else:
                 session_factory = lambda: _SokudanSession(root, templates, canaries)
         loading_status = {

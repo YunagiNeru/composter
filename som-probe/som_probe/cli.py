@@ -149,6 +149,10 @@ def _parser() -> argparse.ArgumentParser:
     tryout.add_argument("--model", choices=("laya", "sokudan"), required=True)
     tryout.add_argument("--source-run", help="Layaの固定s256-k8 IR取得元Run。Sokudanでは使用不可")
     commands.add_parser("diagnose-tryout", help="固定4入力で公式APIから対話表示までを照合")
+    commands.add_parser("compare-tryout-questions", help="dev-v3現行質問と固定分解質問を両モデルCPUで比較")
+    tryout_memory = commands.add_parser("tryout-memory", help="現行tryoutの3時点メモリを固定文で採取")
+    tryout_memory.add_argument("--model", choices=("laya", "sokudan"), required=True)
+    tryout_memory.add_argument("--source-run", help="Layaの固定s256-k8 IR取得元Run")
     return parser
 
 
@@ -302,6 +306,16 @@ def main(argv: list[str] | None = None) -> int:
             result = run_fixed_diagnostic(root)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result["status"] == "COMPLETE" else EXIT_MODEL
+        if args.command == "compare-tryout-questions":
+            from .tryout_comparison import run_comparison
+            result = run_comparison(root)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "COMPLETE" else EXIT_MODEL
+        if args.command == "tryout-memory":
+            from .tryout_memory import run_tryout_memory
+            result = run_tryout_memory(root, args.model, args.source_run)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result.get("status") == "PASS" else EXIT_RESOURCE
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT
