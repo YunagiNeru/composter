@@ -126,6 +126,7 @@ class TryoutFormattingTests(unittest.TestCase):
             },
             "score": {
                 "question_type": "score", "decision_slot": 1,
+                "candidate_ids": [0, 1],
                 "api_returned_value": 0.75,
                 "api_display_probabilities": [0.4, 0.6],
             },
@@ -171,6 +172,37 @@ class TryoutFormattingTests(unittest.TestCase):
         self.assertIn("Noul P(true)（丸め前モデル値）：未取得", rendered)
         self.assertIn("Noul 公式API返却値：0.5", rendered)
         self.assertNotIn("0.5000（丸め前", rendered)
+
+    def test_official_noul_without_candidate_probabilities_displays_as_unavailable(self):
+        results = sample_results()
+        results["noul"] = {
+            "question_type": "noul", "candidate_ids": [False, True],
+            "api_returned_value": 0.5001, "evaluator_boolean": True,
+        }
+        context = {
+            "choice": {"candidate_ids": ["task", "none", "need_info"]},
+            "score": {"candidate_ids": [0, 1, 2]},
+            "noul": {"candidate_ids": [False, True]},
+        }
+
+        rendered = format_results(results, context)
+
+        self.assertIn("通知候補：はい", rendered)
+        self.assertIn("候補確率：未取得", rendered)
+        self.assertIn("P(true)の表示：50.01%", rendered)
+        self.assertIn("Noul 公式API返却値：0.5001", rendered)
+
+    def test_present_but_incomplete_probability_array_is_a_contract_error(self):
+        results = sample_results()
+        results["choice"].pop("candidate_probabilities")
+        results["choice"].update({
+            "candidate_ids": ["task", "none", "need_info"],
+            "api_display_probabilities": [],
+            "decision": "task",
+        })
+
+        with self.assertRaisesRegex(TryoutError, "DISPLAY_PROBABILITY_CONTRACT_INVALID"):
+            format_results(results, {"choice": {"candidate_ids": ["task", "none", "need_info"]}})
 
     def test_boolean_and_returned_probability_mismatch_is_shown_without_replacement(self):
         results = sample_results()

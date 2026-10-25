@@ -740,12 +740,14 @@ def _candidate_rows(result: dict[str, Any]) -> tuple[list[tuple[Any, float]], st
         return rows, "モデル出力値"
     values = result.get("api_display_probabilities")
     candidate_ids = result.get("candidate_ids", [])
-    if isinstance(values, list) and isinstance(candidate_ids, list) and len(values) == len(candidate_ids):
-        try:
-            return list(zip(candidate_ids, (float(value) for value in values))), "公式API返却値（小数4桁）"
-        except (TypeError, ValueError):
-            raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID") from None
-    return [], "未取得"
+    if values is None:
+        return [], "未取得"
+    if not isinstance(values, list) or not isinstance(candidate_ids, list) or len(values) != len(candidate_ids):
+        raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID")
+    try:
+        return list(zip(candidate_ids, (float(value) for value in values))), "公式API返却値（小数4桁）"
+    except (TypeError, ValueError):
+        raise TryoutError("DISPLAY_PROBABILITY_CONTRACT_INVALID") from None
 
 
 def _candidate_id_text(value: Any) -> str:
@@ -774,7 +776,7 @@ def _format_candidate_detail(kind: str, result: dict[str, Any], context: dict[st
                              selected: Any) -> tuple[list[str], list[str]]:
     rows, origin = _candidate_rows(result)
     expected_order = context.get("candidate_ids")
-    if expected_order is not None and [candidate_id for candidate_id, _ in rows] != expected_order:
+    if rows and expected_order is not None and [candidate_id for candidate_id, _ in rows] != expected_order:
         raise TryoutError("DISPLAY_CANDIDATE_ORDER_MISMATCH")
     detail: list[str] = []
     numeric: list[str] = []
