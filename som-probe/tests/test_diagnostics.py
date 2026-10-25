@@ -7,13 +7,16 @@ from unittest.mock import Mock, patch
 
 from som_probe.diagnostics import (
     CONTRAST_FIXTURES,
+    DIAGNOSTIC_CASES,
     DiagnosticError,
     SOURCE_RUN_ID,
     _compare_laya_input,
     _compare_laya_outputs,
     _compare_laya_custom_outputs,
+    _normalise_adapter_answer,
     _normalise_laya_answer,
     _normalise_sokudan_official_answer,
+    _target_mismatches,
     _run_child,
     _sokudan_outputs_match,
     main as diagnostic_main,
@@ -27,6 +30,17 @@ class FixedTryoutDiagnosticTests(unittest.TestCase):
         self.assertTrue(all(fixture["paraphrase"] != fixture["question"]
                             for fixture in CONTRAST_FIXTURES))
         self.assertEqual(SOURCE_RUN_ID, "20261025-041751-58713e9e")
+
+    def test_fixed_targets_read_score_stage_from_score_result_without_using_human_labels(self):
+        records = {}
+        for fixture in DIAGNOSTIC_CASES:
+            predictions = {
+                "choice": {"normalized": {"decision": fixture["provisional_targets"]["choice"]}},
+                "score": {"normalized": {"stage_prediction": fixture["provisional_targets"]["score_stage"]}},
+            }
+            records[fixture["id"]] = {"answers": predictions, "official_api": predictions}
+        self.assertEqual(_target_mismatches({"laya": {"records": records},
+                                             "sokudan": {"records": records}}), [])
 
     def test_laya_direct_trace_accepts_only_the_expected_fixed_shape_padding(self):
         direct = {
@@ -112,6 +126,15 @@ class FixedTryoutDiagnosticTests(unittest.TestCase):
         self.assertTrue(_sokudan_outputs_match("noul", official, adapter))
         adapter["returned_noul"] = 0.5
         self.assertFalse(_sokudan_outputs_match("noul", official, adapter))
+
+    def test_sokudan_noul_adapter_keeps_official_rounding_origin(self):
+        answer = {"api_returned_value": 0.5001, "evaluator_boolean": True,
+                  "api_returned_value_rounding": "official_api_python_round_4"}
+        normalized = _normalise_adapter_answer("noul", answer)
+        self.assertEqual(normalized["returned_noul"], 0.5001)
+        self.assertIsNone(normalized["true_probability"])
+        self.assertTrue(normalized["boolean_result"])
+        self.assertEqual(normalized["probability_origin"], "official_api_python_round_4")
 
     def test_sokudan_direct_normalizer_reads_official_values_without_the_adapter(self):
         choice = _normalise_sokudan_official_answer(

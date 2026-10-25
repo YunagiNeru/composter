@@ -264,11 +264,15 @@ def _prepare_question_inputs(agent: Any, state: str,
             "input_tensor_sha256": input_tensor_sha256,
         }
         if include_tokens:
+            candidate_ids = (list(question.labels) if question.type == "choice"
+                             else list(range(len(question.labels))) if question.type == "score"
+                             else [False, True])
             results[question_id].update({
                 "input_ids": list(encoded.input_ids),
                 "attention_mask": list(encoded.attention_mask),
                 "marker_positions": list(encoded.marker_positions),
-                "candidate_ids": list(question.labels),
+                "candidate_ids": candidate_ids,
+                "candidate_text_order": list(question.labels),
                 "state_token_ids": list(agent.tokenizer(state, add_special_tokens=False)["input_ids"]),
                 "ordered": bool(encoded.ordered),
             })

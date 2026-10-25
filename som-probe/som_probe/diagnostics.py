@@ -139,6 +139,10 @@ def _normalise_adapter_answer(kind: str, answer: dict[str, Any]) -> dict[str, An
     values = answer.get("candidate_probabilities")
     probabilities = ([float(item["probability"]) for item in values]
                      if isinstance(values, list) else answer.get("api_display_probabilities"))
+    probability_origin = answer.get("probability_origin")
+    if (kind == "noul"
+            and answer.get("api_returned_value_rounding") == "official_api_python_round_4"):
+        probability_origin = "official_api_python_round_4"
     return {"decision": answer.get("decision"), "decision_slot": answer.get("decision_slot"),
             "stage_prediction": answer.get("stage_prediction"),
             "stage_prediction_source": answer.get("stage_prediction_source"),
@@ -149,7 +153,7 @@ def _normalise_adapter_answer(kind: str, answer: dict[str, Any]) -> dict[str, An
             "returned_noul": answer.get("returned_noul", answer.get("api_returned_value")) if kind == "noul" else None,
             "boolean_result": answer.get("boolean_result", answer.get("evaluator_boolean")),
             "argmax_boolean_result": answer.get("argmax_boolean_result"),
-            "probability_origin": answer.get("probability_origin")}
+            "probability_origin": probability_origin}
 
 
 def _official_laya_trace(agent: Any, question_id: str, question: dict[str, Any], state: str) -> dict[str, Any]:
@@ -619,10 +623,11 @@ def _target_mismatches(results: dict[str, Any]) -> list[dict[str, Any]]:
         for fixture in DIAGNOSTIC_CASES:
             case = data[fixture["id"]]
             for kind, target in fixture["provisional_targets"].items():
+                result_kind = "score" if kind == "score_stage" else kind
                 if model == "laya":
-                    actual = case["answers"][kind]["normalized"]
+                    actual = case["answers"][result_kind]["normalized"]
                 else:
-                    actual = case["official_api"][kind]["normalized"]
+                    actual = case["official_api"][result_kind]["normalized"]
                 observed = actual.get("decision") if kind == "choice" else actual.get("stage_prediction")
                 if observed != target:
                     mismatches.append({"model": model, "case_id": fixture["id"], "type": kind,
@@ -759,6 +764,7 @@ def _compare_sokudan_input(direct: dict[str, Any], prepared: dict[str, Any]) -> 
         "attention_mask_match": tensors["attention_mask"] == prepared.get("attention_mask"),
         "marker_positions_match": tensors["marker_positions"] == prepared.get("marker_positions"),
         "candidate_ids_order_match": direct["candidate_ids"] == prepared.get("candidate_ids"),
+        "candidate_text_order_match": direct["marker_texts"] == prepared.get("candidate_text_order"),
         "state_token_ids_match": direct["state_token_ids"] == prepared.get("state_token_ids"),
         "direct_input_sha256": direct["input_tensor_sha256"],
         "adapter_input_sha256": prepared.get("input_tensor_sha256"),
@@ -803,8 +809,8 @@ def _build_comparison(root: Path, direct_laya: dict[str, Any], laya_paths: dict[
                 }
             comparison["laya"][case_id][kind]["NPU"]["cpu_to_npu_output"] = (
                 _compare_laya_custom_outputs(
-                    laya_paths["records"]["CPU"][case_id]["results"],
-                    laya_paths["records"]["NPU"][case_id]["results"], kind,
+                    laya_paths["records"]["CPU"][case_id]["results"][kind],
+                    laya_paths["records"]["NPU"][case_id]["results"][kind], kind,
                 )
             )
         sokudan_case = sokudan["records"][case_id]
@@ -864,11 +870,13 @@ def _build_comparison(root: Path, direct_laya: dict[str, Any], laya_paths: dict[
         match_ratio = decision_counts[device]["matches"] / max(1, decision_counts[device]["total"])
         if device == "CPU":
             rules = gates["G2"]
-            checks = {"max_probability_abs_difference": max_difference <= rules["fp32_max_probability_abs_difference"],
+            checks = {"probability_value_denominator_nonzero": len(values) > 0,
+                      "max_probability_abs_difference": max_difference <= rules["fp32_max_probability_abs_difference"],
                       "decision_match_ratio": match_ratio >= rules["transformed_decision_match_ratio"]}
         else:
             rules = gates["G3"]
-            checks = {"max_probability_abs_difference": max_difference <= rules["fp16_max_probability_abs_difference"],
+            checks = {"probability_value_denominator_nonzero": len(values) > 0,
+                      "max_probability_abs_difference": max_difference <= rules["fp16_max_probability_abs_difference"],
                       "mean_probability_abs_difference": mean_difference <= rules["fp16_mean_probability_abs_difference"],
                       "decision_match_ratio": match_ratio >= rules["transformed_decision_match_ratio"]}
         gates_result[device] = {"max_probability_abs_difference": max_difference,
@@ -887,7 +895,7 @@ def _build_comparison(root: Path, direct_laya: dict[str, Any], laya_paths: dict[
     comparison["sokudan_exact_input_and_raw_output_matches"] = all(
         all(item["input"][key] for item in comparison["sokudan"][case_id].values()
             for key in ("input_ids_match", "attention_mask_match", "marker_positions_match",
-                        "candidate_ids_order_match", "state_token_ids_match"))
+                        "candidate_ids_order_match", "candidate_text_order_match", "state_token_ids_match"))
         and all(item["input"]["adapter_truncated"] is False
                 and item["input"]["direct_truncated"] is False
                 for item in comparison["sokudan"][case_id].values())
