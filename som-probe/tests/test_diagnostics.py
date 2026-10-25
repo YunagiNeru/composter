@@ -24,9 +24,23 @@ from som_probe.diagnostics import (
     _sokudan_outputs_match,
     main as diagnostic_main,
 )
+from som_probe.assets import make_execution_checkpoint
 
 
 class FixedTryoutDiagnosticTests(unittest.TestCase):
+    def test_contrast_checkpoint_is_separate_from_the_primary_copy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / ".local" / "models" / "reference"
+            source.mkdir(parents=True)
+            (source / "model.bin").write_bytes(b"fixed weights")
+            primary = make_execution_checkpoint(root, "fixed-run")
+            contrast = make_execution_checkpoint(root, "fixed-run", contrast=True)
+            self.assertEqual(primary.name, "reference-model")
+            self.assertEqual(contrast.name, "reference-model-contrast")
+            self.assertNotEqual(primary, contrast)
+            self.assertEqual((contrast / "model.bin").read_bytes(), b"fixed weights")
+
     def test_reused_reference_checkpoint_must_match_every_locked_file(self):
         with tempfile.TemporaryDirectory() as directory:
             checkpoint = Path(directory)

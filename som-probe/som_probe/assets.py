@@ -217,10 +217,11 @@ def prepare_assets(root: Path, allow_download: bool) -> dict[str, Any]:
             "source_directory": source_dir.relative_to(root).as_posix()}
 
 
-def make_execution_checkpoint(root: Path, run_id: str) -> Path:
+def make_execution_checkpoint(root: Path, run_id: str, *, contrast: bool = False) -> Path:
     """作業用コピーを作る。元の固定ファイルには書き込まない。"""
     source = root / ".local" / "models" / "reference"
-    target = root / ".local" / "runs" / run_id / "reference-model"
+    target_name = "reference-model-contrast" if contrast else "reference-model"
+    target = root / ".local" / "runs" / run_id / target_name
     target.mkdir(parents=True, exist_ok=False)
     for path in source.rglob("*"):
         relative = path.relative_to(source)

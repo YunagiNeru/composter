@@ -195,7 +195,7 @@ def _official_laya_trace(agent: Any, question_id: str, question: dict[str, Any],
     }
 
 
-def _load_official_laya(root: Path, run: Run):
+def _load_official_laya(root: Path, run: Run, *, contrast: bool = False):
     from .assets import load_lock, make_execution_checkpoint, verify_assets
     from .runtime import _checkpoint_hashes
 
@@ -211,13 +211,14 @@ def _load_official_laya(root: Path, run: Run):
         from laya.agent import Agent
     except Exception:
         raise DiagnosticError("PINNED_LAYA_API_IMPORT_FAILED") from None
-    checkpoint = run.path / "reference-model"
+    checkpoint_name = "reference-model-contrast" if contrast else "reference-model"
+    checkpoint = run.path / checkpoint_name
     expected_hashes = _checkpoint_hashes(lock)
     if checkpoint.exists():
         if not _checkpoint_matches(checkpoint, expected_hashes):
             raise DiagnosticError("PINNED_LAYA_CHECKPOINT_MISMATCH")
     else:
-        checkpoint = make_execution_checkpoint(root, run.run_id)
+        checkpoint = make_execution_checkpoint(root, run.run_id, contrast=contrast)
     try:
         agent = Agent(str(checkpoint), device="cpu", compile=False, fast=False,
                       expected_sha256=expected_hashes)
@@ -560,7 +561,7 @@ def _run_laya_contrasts(root: Path, run: Run) -> list[dict[str, Any]]:
 
     results = []
     with _ExclusiveModelLock():
-        agent, _, _ = _load_official_laya(root, run)
+        agent, _, _ = _load_official_laya(root, run, contrast=True)
         try:
             for fixture in CONTRAST_FIXTURES:
                 for variant, prompt in (("base", fixture["question"]), ("paraphrase", fixture["paraphrase"])):
