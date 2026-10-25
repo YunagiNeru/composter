@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "purpose": "dev-v3 CPU preliminary comparison only",
+  "python": {
+    "version": "3.11.14",
+    "architecture": "x64"
+  },
+  "package": {
+    "name": "sokudan",
+    "version": "0.3.0",
+    "repository": "https://github.com/hiroki-abe-58/sokudan",
+    "tag": "v0.3.0",
+    "source_commit": "1391b89ff04c0582eba863ba44efaf3406826235",
+    "source_archive": {
+      "path": ".local/sources/sokudan-v0.3.0/sokudan-source-1391b89ff04c0582eba863ba44efaf3406826235.zip",
+      "url": "https://github.com/hiroki-abe-58/sokudan/archive/1391b89ff04c0582eba863ba44efaf3406826235.zip",
+      "size": 1623794,
+      "sha256": "15450e8ff3c0b2778f5c34931ac5855080dd1bb51e6ff9a51c56c586ae4fd044",
+      "python_package_files_verified": 51
+    },
+    "wheel": {
+      "filename": "sokudan-0.3.0-py3-none-any.whl",
+      "path": ".local/sources/sokudan-v0.3.0/sokudan-0.3.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/7f/cd/06bf1fc5e5db5a0aa104191ea0f50470e0688953168606e85770461293ac/sokudan-0.3.0-py3-none-any.whl",
+      "size": 175076,
+      "sha256": "8873a9f14cf2ad3cd587dafa76ea73bc63a139add955374375d6d7085a70c5b3"
+    },
+    "source_distribution": {
+      "filename": "sokudan-0.3.0.tar.gz",
+      "path": ".local/sources/sokudan-v0.3.0/sokudan-0.3.0.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/e4/88/1a5b5b9aa4ca08a43fde22016f5d179ccc3e0c73f824230f567af3f06a44/sokudan-0.3.0.tar.gz",
+      "size": 249813,
+      "sha256": "15c3e67b56a3aebf3496ecf896a34dfc6df2c98eb1658380f794d3b074f13c0d"
+    }
+  },
+  "model": {
+    "repository": "GeneLab/sokudan-ja-310m",
+    "revision": "3e3409b1ed4f3fec9f881d39800a2e7d1b24b184",
+    "directory": ".local/models/sokudan-ja-310m-3e3409b1ed4f3fec9f881d39800a2e7d1b24b184",
+    "files": {
+      ".gitattributes": {"size": 1519, "git_blob_sha1": "a6344aac8c09253b3b630fb776ae94478aa0275b", "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"},
+      "README.md": {"size": 25046, "git_blob_sha1": "28f26bd8e59d4534d3f3e8b9409a3d97ae2c037e", "sha256": "c88177d9d4cafb6affa41ca2297fa87ab980e1ada2981343aa661cf544ea3db9"},
+      "calibration.json": {"size": 253, "git_blob_sha1": "ec5b47ab0537bb8c43444c6623d97bf71e6bd5e3", "sha256": "02b789759a9c81a4f778607331ce05c53c280f875fda9ab74e3ebe19b71d6e7c"},
+      "config.json": {"size": 1919, "git_blob_sha1": "9b1fda4f40716d8d89bf1cfbe3b5f956939372f8", "sha256": "31774ddcb16f9f2c322e08164fdb868bb49405567092db664d89ade4a08d7709"},
+      "model.safetensors": {"size": 1258474752, "sha256": "8750a833b3faa537a39709b8377b82a096286f040d78bb1915b82d9d101b5965"},
+      "temperatures.json": {"size": 7039, "git_blob_sha1": "bf17d72e6116b5b36f9ba4e128aac38ac4a343bd", "sha256": "624a3f823e51d7c0e67dcfb0df5d1a859ebd30dcb7c67d7c45a7db4e3dd8b438"},
+      "tokenizer.json": {"size": 6718495, "git_blob_sha1": "1b9a8b7e5e8d37174e6b9e9655cdbd0c9b456af7", "sha256": "6a0734cf21c802169defaffe719bc2ef12bb9d0be37e54b61ed27aa89394723d"},
+      "tokenizer_config.json": {"size": 693, "git_blob_sha1": "86cfd036e1b84d3ab684b288c45b74358ccfce64", "sha256": "5eece038f6d7730b1ed9e7ede7cf69ef162d26234aaed247ec9553881814704d"}
+    },
+    "loaded_files": ["config.json", "model.safetensors", "calibration.json"],
+    "downloaded_but_not_selected_by_official_loader": ["temperatures.json", "tokenizer.json", "tokenizer_config.json"]
+  },
+  "backbone": {
+    "repository": "sbintuitions/modernbert-ja-310m",
+    "revision": "77675fc96a7e445e982e2ba90246b816efc74ec6",
+    "directory": ".local/models/modernbert-ja-310m-77675fc96a7e445e982e2ba90246b816efc74ec6",
+    "files": {
+      ".gitattributes": {"size": 1519, "git_blob_sha1": "a6344aac8c09253b3b630fb776ae94478aa0275b", "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"},
+      "LICENSE": {"size": 1070, "git_blob_sha1": "683059167395f2af158e6fe42958ab844180fe27", "sha256": "284353c80e0d52c06e97af62fd40e4dd1d253fa28f5d1e756121ea1d5d441509"},
+      "README.md": {"size": 16302, "git_blob_sha1": "58f5b78afdd3ac7f79f5889fd0a1a78279a11d4b", "sha256": "f46f811dc6b3475df68f0b64be8f787b49802dee519a03f616e64c8cd6141bf0"},
+      "config.json": {"size": 1280, "git_blob_sha1": "d9c6778f2d482ebbc3cd418953d7e6663b7ef924", "sha256": "baea06561ecc07e30f44701d1c9a9241ad8fa6cc936afe2100b44ba2b1479c0c"},
+      "model.safetensors": {"size": 1261235896, "sha256": "96e31693fe9bc8b2900e47ddbf7a389e940bb20b165b44e182a490ff71fb17d3"},
+      "special_tokens_map.json": {"size": 968, "git_blob_sha1": "5b2990c23a7b26649482db1fdd447b0aee8b14d3", "sha256": "30bf8256f9a1eb3287af2a9b7940465e29a38aad4a459a3e773bb3a14bd34c0f"},
+      "tokenizer.json": {"size": 6724873, "git_blob_sha1": "8289cb63738c88756e373156923ca5c6de4518d0", "sha256": "0a94ac9a0a02c067bdef25b72ae9f4ee33f48f552e55988d444f6d25eeb1d062"},
+      "tokenizer.model": {"size": 1831879, "sha256": "008293028e1a9d9a1038d9b63d989a2319797dfeaa03f171093a57b33a3a8277"},
+      "tokenizer_config.json": {"size": 3806, "git_blob_sha1": "32f86520885caacf1c6d1e898f23f6ae80ed59e1", "sha256": "fbab9c962596d0c493da0a6c10e3183d71e3705ea63c2d8e57a2678a65543246"}
+    },
+    "loaded_files": ["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json"],
+    "tokenizer_source": "backbone snapshot"
+  },
+  "execution": {
+    "backend": "torch",
+    "device": "cpu",
+    "dtype": "float32",
+    "encoding": "joint",
+    "input_order": "question_first",
+    "order_marginalize": false,
+    "max_joint_tokens": 1024,
+    "state_truncation_policy": "拒否して記録し、予測に含めない",
+    "calibration_file": "calibration.json",
+    "calibration_sha256": "02b789759a9c81a4f778607331ce05c53c280f875fda9ab74e3ebe19b71d6e7c",
+    "temperature_by_type_and_count": {"bool/2": 2.07006759103101},
+    "official_loader_default": "bool only; choice and score probabilities stay raw before API display rounding"
+  }
+}

@@ -142,6 +142,9 @@ def _parser() -> argparse.ArgumentParser:
     review = commands.add_parser("review-html", help="60件の人手確認資料HTMLを生成")
     review.add_argument("--output", default="QUALITY-REVIEW-JA-60.html")
     review.add_argument("--dataset-version", choices=("dev-v1", "dev-v2", "dev-v3"), default="dev-v1")
+    sokudan = commands.add_parser("sokudan-cpu", help="固定Sokudanモデルをdev-v3でCPU予備比較")
+    sokudan.add_argument("--laya-reference-run", required=True,
+                         help="同じdev-v3を使った保存済みLaya CPU参照Run")
     return parser
 
 
@@ -274,6 +277,11 @@ def main(argv: list[str] | None = None) -> int:
             output = build_review_html(root, destination, args.dataset_version)
             print(json.dumps({"status": "PASS", "output": str(output)}, ensure_ascii=False))
             return EXIT_OK
+        if args.command == "sokudan-cpu":
+            from .sokudan_cpu import run_sokudan_cpu
+            result = run_sokudan_cpu(root, args.laya_reference_run)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result["status"] == "PASS" else EXIT_MODEL
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT

@@ -56,6 +56,13 @@ class StorageTests(unittest.TestCase):
                 self.assertEqual(measurement.read_manifest()["stages"][stage_name]["status"], "PASS")
                 self.assertEqual(measurement.read_manifest()["status"], "COMPLETE")
 
+            cpu_comparison = Run.create(root, "SOKUDAN_CPU", dataset_version="dev-v3",
+                                        profile_applicable=False)
+            self.assertEqual(cpu_comparison.read_manifest()["profile"], "not_applicable")
+            self.assertIsNone(cpu_comparison.read_manifest()["profile_config"])
+            cpu_comparison.stage("SOKUDAN_CPU", "PASS", result_file="comparison.json")
+            self.assertEqual(cpu_comparison.read_manifest()["status"], "COMPLETE")
+
     def test_run_records_revision_worktree_and_configuration_hashes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -23,7 +23,9 @@ _PROVENANCE_FILES = (
     "datasets/manifest.json", "datasets/dev.jsonl",
     "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
 )
-_SUCCESS_TERMINAL_STAGES = frozenset({"G3", "NPU_DIAGNOSTIC", "PERFORMANCE", "MEMORY"})
+_SUCCESS_TERMINAL_STAGES = frozenset({
+    "G3", "NPU_DIAGNOSTIC", "PERFORMANCE", "MEMORY", "SOKUDAN_CPU",
+})
 
 
 def safe_message(message: str) -> str:
@@ -83,8 +85,16 @@ class Run:
     @classmethod
     def create(cls, root: Path, purpose: str, profile: dict[str, Any] | None = None,
                compare_input_run_id: str | None = None,
-               dataset_version: str = "dev-v1") -> "Run":
-        profile = profile_mapping(Profile()) if profile is None else profile_mapping(profile_from_mapping(profile))
+               dataset_version: str = "dev-v1", *,
+               profile_applicable: bool = True) -> "Run":
+        if profile_applicable:
+            profile = profile_mapping(Profile()) if profile is None else profile_mapping(profile_from_mapping(profile))
+            profile_name = profile["name"]
+        else:
+            if profile is not None or compare_input_run_id is not None:
+                raise ValueError("固定Shapeを使わないRunへprofileやShape比較元は設定できません。")
+            profile = None
+            profile_name = "not_applicable"
         identity = dataset_identity(root, dataset_version)
         if compare_input_run_id is not None and not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{8}", compare_input_run_id):
             raise ValueError("入力比較元Run IDの形式が不正です。")
@@ -126,7 +136,7 @@ class Run:
             "dataset": identity,
             "verified_model_artifact_sha256": {},
             "converted_ir_sha256": {},
-            "profile": profile["name"],
+            "profile": profile_name,
             "profile_config": profile,
             "compare_input_run_id": compare_input_run_id,
             "stages": {},
@@ -143,6 +153,8 @@ class Run:
     def profile_config(self) -> dict[str, Any]:
         manifest = self.read_manifest()
         value = manifest.get("profile_config")
+        if manifest.get("profile") == "not_applicable" and value is None:
+            raise ValueError("このRunには固定Shapeプロファイルがありません。")
         if value is None and manifest.get("profile") == "s256-k8":
             value = profile_mapping(Profile())
         profile = profile_mapping(profile_from_mapping(value))
