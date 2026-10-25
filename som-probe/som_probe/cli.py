@@ -145,6 +145,9 @@ def _parser() -> argparse.ArgumentParser:
     sokudan = commands.add_parser("sokudan-cpu", help="固定Sokudanモデルをdev-v3でCPU予備比較")
     sokudan.add_argument("--laya-reference-run", required=True,
                          help="同じdev-v3を使った保存済みLaya CPU参照Run")
+    tryout = commands.add_parser("tryout", help="文章を対話入力してモデル判断を試用")
+    tryout.add_argument("--model", choices=("laya", "sokudan"), required=True)
+    tryout.add_argument("--source-run", help="Layaの固定s256-k8 IR取得元Run。Sokudanでは使用不可")
     return parser
 
 
@@ -282,6 +285,17 @@ def main(argv: list[str] | None = None) -> int:
             result = run_sokudan_cpu(root, args.laya_reference_run)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result["status"] == "PASS" else EXIT_MODEL
+        if args.command == "tryout":
+            from .tryout import TryoutError, run_tryout
+            try:
+                run_tryout(root, args.model, args.source_run)
+            except TryoutError as exc:
+                print(f"対話試用を開始できません（{exc.code}）。", file=sys.stderr)
+                return EXIT_MODEL
+            except KeyboardInterrupt:
+                print("起動を中断しました。", file=sys.stderr)
+                return EXIT_OK
+            return EXIT_OK
     except ContractError as exc:
         print(json.dumps({"status": "FAIL", "code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return EXIT_INPUT

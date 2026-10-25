@@ -726,36 +726,42 @@ def _select_outputs(named_arrays: dict[str, Any]) -> tuple[Any, Any]:
     return logits[0][1][0], actions[0][1][0]
 
 
-def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any]:
-    values = [float(value) for value in logits[:row["candidate_count"]]]
-    probs = softmax(values, float(row["temperature"]))
+def decode_laya_output(question_type: str, candidate_ids: list[Any], temperature: float,
+                       logits: Any, actions: Any) -> dict[str, Any]:
+    values = [float(value) for value in logits[:len(candidate_ids)]]
+    probs = softmax(values, float(temperature))
     decision_index = max(range(len(probs)), key=probs.__getitem__)
-    decision = row["candidate_ids"][decision_index]
-    score_expected, returned_score = _score_value(probs) if row["question_type"] == "score" else (None, None)
+    decision = candidate_ids[decision_index]
+    score_expected, returned_score = _score_value(probs) if question_type == "score" else (None, None)
     noul_returned, noul_boolean = (
-        _noul_return_value(probs[1]) if row["question_type"] == "noul" else (None, None)
+        _noul_return_value(probs[1]) if question_type == "noul" else (None, None)
     )
-    return {"case_id": row["case_id"], "question_id": row["question_id"],
-            "input_sha256": row["input_sha256"], **_output_identity_fields(row),
-            "probabilities": probs,
-            "question_type": row["question_type"], "candidate_ids": row["candidate_ids"],
+    return {"probabilities": probs,
+            "question_type": question_type, "candidate_ids": candidate_ids,
             "candidate_probabilities": [
                 {"candidate_id": candidate_id, "probability": probability}
-                for candidate_id, probability in zip(row["candidate_ids"], probs)
+                for candidate_id, probability in zip(candidate_ids, probs)
             ],
             "decision_slot": decision_index, "decision": decision,
-            "temperature": float(row["temperature"]),
+            "temperature": float(temperature),
             "probability_sum": float(sum(probs)),
-            "score_scale": list(range(row["candidate_count"])) if row["question_type"] == "score" else None,
+            "score_scale": list(range(len(candidate_ids))) if question_type == "score" else None,
             "score_expected_unrounded": score_expected,
             "returned_score": returned_score,
-            "returned_score_rounding": "python_round_4" if row["question_type"] == "score" else None,
+            "returned_score_rounding": "python_round_4" if question_type == "score" else None,
             "boolean_result": noul_boolean,
-            "argmax_boolean_result": bool(decision_index) if row["question_type"] == "noul" else None,
-            "true_probability": probs[1] if row["question_type"] == "noul" else None,
+            "argmax_boolean_result": bool(decision_index) if question_type == "noul" else None,
+            "true_probability": probs[1] if question_type == "noul" else None,
             "returned_noul": noul_returned,
-            "returned_noul_rounding": "python_round_4" if row["question_type"] == "noul" else None,
+            "returned_noul_rounding": "python_round_4" if question_type == "noul" else None,
             "action_probabilities": softmax([float(value) for value in actions])}
+
+
+def _row_output(row: dict[str, Any], logits: Any, actions: Any) -> dict[str, Any]:
+    decoded = decode_laya_output(row["question_type"], row["candidate_ids"], row["temperature"],
+                                 logits, actions)
+    return {"case_id": row["case_id"], "question_id": row["question_id"],
+            "input_sha256": row["input_sha256"], **_output_identity_fields(row), **decoded}
 
 
 def _identity_key(value: Any) -> str:
