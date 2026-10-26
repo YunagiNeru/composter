@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "purpose": "fixed pretrained decision-model CPU evaluation; model adoption is not implied",
+  "runtime_dependencies": {
+    "torch": "2.9.1+cpu",
+    "transformers": "5.17.0",
+    "huggingface-hub": "1.33.0",
+    "gliner2": "2.1.0",
+    "numpy": "2.4.6"
+  },
+  "candidate_laya_typed": {
+    "status": "PINNED_FOR_CPU_EVALUATION",
+    "requested_repository": "Modusnsus/laya-typed-decisions-multilingual",
+    "resolved_repository": "slow-stack/laya-typed-decisions-multilingual",
+    "revision": "8de52d4d7ec96423639882ca6faa93490fb81c90",
+    "card_license": "Apache-2.0",
+    "base_model_card_claim": "convaiinnovations/laya-multilingual (mmBERT-base, 322M)",
+    "artifact_encoder_config": {
+      "model_type": "modernbert",
+      "hidden_size": 1024,
+      "num_hidden_layers": 28,
+      "vocab_size": 50368,
+      "tensor_storage": "FP16",
+      "checkpoint_parameter_count": 421293830,
+      "metadata_conflict": "The card calls the base mmBERT-base/322M; rl_agent_config.json and encoder/config.json identify answerdotai/ModernBERT-large with hidden size 1024 and 28 layers. The locked checkpoint is internally verified separately; the publisher's base-model claim remains inconsistent."
+    },
+    "training_data_card_claim": "LocalLLaMA/typed-decisions train split (~30k items); dataset card displays Apache-2.0 and English",
+    "known_limitations": [
+      "The model card reports per-language held-out evaluation is pending and does not claim Japanese accuracy.",
+      "The model card reports option-name sensitivity; Japanese evaluation must not be inferred from the English benchmark.",
+      "The initial fixed rl_agent_config.json reports encoder answerdotai/ModernBERT-large; this conflicts with the model card base claim and must be resolved against encoder config and tensor shapes before loading."
+    ],
+    "files": {
+      "README.md": "a26eb55cbbb1bb0af2bfb344775d71809999e45e597dde727a3d1ea722601cb4",
+      "encoder/config.json": "5268d24ad3b77c8151de5dcb0762ba4391619aad9ab0bda33e36fb083cfeae6d",
+      "model.safetensors": "8bb8cdd4875313baae2cdea52a4f682a2fbc86fd174c9973165b6b04a1aa2718",
+      "rl_agent_config.json": "88d1e9c4077606b3dc8a9c22e4bcf74c15513a2e8b41cfc4fe3d990b64c13b11",
+      "tokenizer/tokenizer.json": "6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30",
+      "tokenizer/tokenizer_config.json": "08d4cf3ac4dca381759441b85b91a6d40e688471dcd33d15d6649eb0a9a854d1"
+    }
+  },
+  "candidate_gliner25_multi_decide": {
+    "status": "PINNED_FOR_CPU_EVALUATION",
+    "repository": "fastino/GLiNER2.5-multi-Decide",
+    "revision": "e173bca1f0c4217d7a55b3b0c705d5ece8a0218d",
+    "card_license": "Apache-2.0",
+    "base_model": "fastino/gliner2.5-multi-v1",
+    "training_data_statement": "The model card names fast-decisions as the English evaluation suite but does not disclose the full training corpus.",
+    "architecture": "boundary",
+    "known_limitations": [
+      "The model card says this is a specialist for operational decisions, not a general-purpose reasoning model.",
+      "The published benchmark is English and does not establish Japanese accuracy."
+    ],
+    "files": {
+      "README.md": "55531b81804b6c8160d41de57ff9559ca20b2f3779ab6e36e471dcd51127d92b",
+      "config.json": "aa29cd584316b61b0bfed94d03ee1cfdaf28b46a37686293742929c49b8bd2f7",
+      "encoder_config/config.json": "d0ebbcb8b458e285a39e12cc315cbaf3d1c6f631e7281e6b22dd5b4071183f83",
+      "model.safetensors": "9efe0f88c99f2aa794452e9559dc60e98d60d9fa2bf1b60cf2710411b6da5b4e",
+      "tokenizer.json": "c62446df87ae18ec98b133f8f84fc449a07cc89bbf8ef192a4cb5f9c53777a7a",
+      "tokenizer_config.json": "fd4a31dc2f1f17e31638c5f0e783b81cdb2fbe6bddd116a8d9e5d50d78148cf1"
+    }
+  },
+  "gliner2_source": {
+    "package": "gliner2",
+    "version": "2.1.0",
+    "repository": "https://github.com/fastino-ai/GLiNER2",
+    "tag": "v2.1.0",
+    "commit": "b86d35c02f2c1a4d9840ea50197bd1b6d13b031e",
+    "wheel_url": "https://files.pythonhosted.org/packages/6a/b1/cae13092a6ca796dd17493c8129d48e38fc370f23b9cce6f616020ed3654/gliner2-2.1.0-py3-none-any.whl",
+    "wheel_size": 355814,
+    "wheel_sha256": "0c242c5de53f37020df835788fc4eb820e1673b5212c202cd90e9234a7e786bc",
+    "source_review": "AutoExtractor boundary dispatch and classify_text confidence formatting inspected from this wheel before installation.",
+    "remote_code_execution": false
+  },
+  "laya_api_source": {
+    "source_lock": "configs/models.lock.json",
+    "repository": "https://github.com/NandhaKishorM/laya",
+    "commit": "0a05a45052e23ae0b887a490fe8d6d9c8cff2ab5",
+    "archive_sha256": "96c985a33f2015692b5b0965caff7fad7c8c12f89fc4c402e3e9eafdd543ac2e",
+    "entrypoint": "laya.load",
+    "execution": "fixed local checkpoint, device=cpu, compile=false, fast=false, offline"
+  }
+}

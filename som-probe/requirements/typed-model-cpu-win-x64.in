@@ -1,0 +1,9 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+# Python 3.11 x64 CPU-only comparison; all packages are pinned in the adjacent lock.
+torch==2.9.1+cpu
+transformers==5.17.0
+huggingface_hub==1.33.0
+gliner2[local]==2.1.0
+numpy==2.4.6

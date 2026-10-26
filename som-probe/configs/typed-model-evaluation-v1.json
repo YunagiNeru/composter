@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "evaluation_version": "typed-model-evaluation-v1",
+  "dataset_version": "dev-v3",
+  "scoring_contract_version": "evaluation-v2",
+  "label_state": "ai_draft_unverified",
+  "purpose": "development-only comparison of fixed pretrained decision models",
+  "primary_cpu_condition": {
+    "device": "cpu",
+    "torch_dtype": "float32",
+    "torch_threads": 2,
+    "tokenizer_truncation": "forbidden",
+    "model_hub_access_during_evaluation": "offline",
+    "independent_process_trials": 3,
+    "performance_warmups": 2,
+    "performance_repeats_per_workload": 30,
+    "idle_wait_seconds": 60
+  },
+  "laya_typed": {
+    "api": "fixed local laya.load(checkpoint, device=cpu, backend=eager, compile=false).predict(state, unchanged dev-v3 questions)",
+    "question_data": "Original dev-v3 instructions, candidate ids, criteria and order",
+    "input_limits": {"max_len": 256, "head_max_len": 192, "reject_if_official_preflight_truncates": true},
+    "output_handling": "Preserve official answers and probabilities; do not re-round or recalibrate outside the checkpoint API."
+  },
+  "gliner25_multi_decide": {
+    "loader": "gliner2.AutoExtractor.from_pretrained(local_snapshot, map_location=cpu)",
+    "tokenization": "Official checkpoint default processor and word splitter; no character-splitting variant. The official processor punctuation normalization is recorded.",
+    "input": "Pass the unchanged state as text and the unchanged dev-v3 instructions as the task prompt. Preserve exact question, ordered labels, and processor-generated input id hash in each record.",
+    "classification": "One classify_text single-label task per dev-v3 case. Choice uses contract candidate ids and criteria descriptions in source order; Score uses ordered ids 0/1/2 and criteria descriptions; Noul uses fixed ids true/false with descriptions for the deadline-notification-candidate meaning.",
+    "input_limits": {"max_len": null, "truncation": "forbidden", "reject_if_encoded_input_exceeds_encoder_max_positions": true},
+    "confidence": "Record only the selected-label confidence returned by include_confidence=true. It is not a calibrated probability, a full class vector, or P(true).",
+    "score": "Record the selected integer stage. Do not derive a continuous Score or expected value unless the official API returns all class probabilities; this checkpoint's public formatter returns only selected-label confidence.",
+    "abstention": "No result-tuned confidence threshold. Contract errors, length excess and execution failures remain distinct; an ordinary selected label is not described as certainty."
+  },
+  "fixed_controls": "datasets/typed-model-controls-v1.json",
+  "gliner_noul_labels": {
+    "false": "期限通知の候補に該当しない",
+    "true": "期限通知の候補に該当する"
+  },
+  "performance": {
+    "single_judgment_inputs": "First fixed dev-v3 input for each type; repeated unchanged",
+    "bundle_input": "First fixed dev-v3 choice input; three type questions evaluated in one official API call",
+    "timed_workloads": ["choice", "score", "noul_deadline", "three_type_bundle"],
+    "memory_stages": ["before_model_load", "after_model_load", "after_one_fixed_inference", "after_idle_wait", "after_repeated_inference", "before_process_exit"],
+    "memory_metrics": ["WorkingSetSize", "PeakWorkingSetSize", "PrivateUsage", "PagefileUsage", "PeakPagefileUsage"],
+    "idle_cpu_measurement": "process CPU-time delta during the 60-second no-input wait"
+  },
+  "comparisons": {
+    "stored_models": ["Laya saved CPU output", "Sokudan saved CPU output", "Horizon multilingual zero-shot saved output"],
+    "reuse_policy": "Read only when dataset, input, scoring-contract and result fingerprints match dev-v3; do not rerun or rewrite old Runs.",
+    "quality_status": "UNDETERMINED until all labels receive human confirmation",
+    "control_labels": "AI-authored technical controls; report separately from dev-v3 and do not call human-verified"
+  }
+}

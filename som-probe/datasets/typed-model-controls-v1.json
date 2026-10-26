@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "fixture_version": "typed-model-controls-v1",
+  "created_before_candidate_inference": true,
+  "verification_status": "ai_draft_unverified",
+  "purpose": "fixed Japanese boundary and cross-domain controls; not a formal quality set",
+  "cases": [
+    {"case_id":"control-choice-eaten","group":"known-error-controls","dimension":"choice","state":"スコーン食べた","allowed_answers":["none"],"rationale":"完了した出来事で、本人の未完了行動はない。"},
+    {"case_id":"control-choice-delivery","group":"known-error-controls","dimension":"choice","state":"明日ヤマトから荷物届く","allowed_answers":["none"],"rationale":"配送は第三者の行動であり、本人の未完了行動ではない。"},
+    {"case_id":"control-score-delivery-date","group":"known-error-controls","dimension":"score","state":"明日ヤマトから荷物届く","allowed_answers":[1],"expected_components":{"date_info":true,"clock_time":false},"rationale":"相対日付があり、時計時刻はない。"},
+    {"case_id":"control-choice-weekly-submit","group":"known-error-controls","dimension":"choice","state":"今週中に勤怠まとめて提出","allowed_answers":["task"],"rationale":"本人の未完了行動と実行意思が明確である。"},
+    {"case_id":"control-score-weekly-submit","group":"known-error-controls","dimension":"score","state":"今週中に勤怠まとめて提出","allowed_answers":[1],"expected_components":{"date_info":true,"clock_time":false},"rationale":"期間表現があり、時計時刻はない。"},
+    {"case_id":"control-choice-s3-verification","group":"known-error-controls","dimension":"choice","state":"へびさば！S3の検証する","allowed_answers":["task"],"rationale":"未来の検証行動が記載されている。日時は記載されていない。"},
+    {"case_id":"control-score-s3-no-date","group":"known-error-controls","dimension":"score","state":"へびさば！S3の検証する","allowed_answers":[0],"expected_components":{"date_info":false,"clock_time":false},"rationale":"日付・期間・時計時刻が記載されていない。"},
+    {"case_id":"control-choice-completed-no-notify","group":"known-error-controls","dimension":"choice","state":"資料は提出済みなので通知はいらない","allowed_answers":["none"],"rationale":"提出済みで、残る未完了行動はない。"},
+    {"case_id":"control-noul-completed-no-notify","group":"known-error-controls","dimension":"noul","state":"資料は提出済みなので通知はいらない","allowed_answers":[false],"rationale":"完了済みで期限通知の対象となる未完了行動がない。"},
+    {"case_id":"control-choice-cancelled","group":"known-error-controls","dimension":"choice","state":"明日の提出は不要になった","allowed_answers":["none"],"rationale":"提出行動が不要になったと明記されている。"},
+    {"case_id":"control-score-cancelled-date","group":"known-error-controls","dimension":"score","state":"明日の提出は不要になった","allowed_answers":[1],"expected_components":{"date_info":true,"clock_time":false},"rationale":"相対日付はあるが時計時刻はない。"},
+    {"case_id":"control-noul-cancelled","group":"known-error-controls","dimension":"noul","state":"明日の提出は不要になった","allowed_answers":[false],"rationale":"行動が不要となり、未完了の期限通知候補ではない。"},
+    {"case_id":"control-choice-tomorrow-15","group":"known-error-controls","dimension":"choice","state":"明日15時に提出する","allowed_answers":["task"],"rationale":"本人の未完了行動と実行意思が明確である。"},
+    {"case_id":"control-score-tomorrow-15","group":"known-error-controls","dimension":"score","state":"明日15時に提出する","allowed_answers":[2],"expected_components":{"date_info":true,"clock_time":true},"rationale":"相対日付と時計時刻の両方がある。"},
+    {"case_id":"control-noul-tomorrow-15","group":"known-error-controls","dimension":"noul","state":"明日15時に提出する","allowed_answers":[true],"rationale":"期限のある未完了行動が明記されている。"},
+    {"case_id":"domain-choice-devops-need","group":"other-domains","dimension":"choice","state":"CIで失敗したテストを調査し、原因を修正する必要がある。","allowed_answers":["task"],"rationale":"本人が必要と認識する未完了の開発運用行動がある。"},
+    {"case_id":"domain-choice-agent-complete","group":"other-domains","dimension":"choice","state":"エージェントはテストを実行し、すべて成功したと記録した。","allowed_answers":["none"],"rationale":"エージェントの実行は完了済みで、今後の行動を示していない。"},
+    {"case_id":"domain-choice-general-undecided","group":"other-domains","dimension":"choice","state":"その案はよさそう。必要なら手伝うよ。","allowed_answers":["need_info"],"rationale":"支援の可能性は示すが、必要性・引受けが確定していない。"},
+    {"case_id":"domain-score-release-date","group":"other-domains","dimension":"score","state":"リリース候補は金曜日に公開予定だ。","allowed_answers":[1],"expected_components":{"date_info":true,"clock_time":false},"rationale":"曜日があり、時計時刻はない。"},
+    {"case_id":"domain-score-maintenance-time","group":"other-domains","dimension":"score","state":"保守作業は21時に開始する。","allowed_answers":[1],"expected_components":{"date_info":false,"clock_time":true},"rationale":"時計時刻があり、日付・期間はない。"},
+    {"case_id":"domain-noul-devops-deadline","group":"other-domains","dimension":"noul","state":"ログ保管の切替は木曜までに完了する予定だ。","allowed_answers":[true],"rationale":"期限のある未完了行動が示されている。"},
+    {"case_id":"domain-noul-agent-completed","group":"other-domains","dimension":"noul","state":"エージェントは復旧を完了し、再通知は不要だ。","allowed_answers":[false],"rationale":"復旧済みで未完了の期限通知候補がない。"}
+  ]
+}
