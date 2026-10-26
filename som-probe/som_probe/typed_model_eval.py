@@ -614,13 +614,20 @@ def _gliner_infer(model: Any, case: dict[str, Any], evaluation: dict[str, Any],
 
 def _case_row(case: dict[str, Any], inference: dict[str, Any], candidate: str) -> dict[str, Any]:
     prediction = inference.get("prediction")
+    adapter = inference.get("adapter_output") or {}
+    score_value_source = adapter.get("continuous_score_source")
     allowed = case.get("allowed_answers", [])
     errors = []
     if inference.get("status") == "PASS" and prediction not in allowed:
         errors = [str(value) for value in _candidate_output_ids(case) if value not in allowed]
     return {**case, "model_id": candidate, "status": inference.get("status"),
             "common_prediction": prediction,
-            "score_expected_value_not_api_returned_score": inference.get("expected_value"),
+            "score_value_for_metric": inference.get("expected_value"),
+            "score_value_source": score_value_source or "not returned by official API",
+            "score_api_returned_continuous_value": (
+                adapter.get("returned_continuous_score")
+                if score_value_source == "official Laya API" else None
+            ),
             "draft_label_match": prediction in allowed if inference.get("status") == "PASS" else None,
             "human_quality_status": "UNDETERMINED",
             "model_specific_output": inference.get("model_specific_output"),
@@ -816,6 +823,24 @@ def _stage_case_metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "dev-v3 has no per-case component labels."
                 if dataset == "dev-v3" else
                 "Fixed controls have component labels, but this model returns a joint stage only."
+            )
+            score_rows = [row for row in rows
+                          if row.get("dataset") == dataset and row.get("dimension") == "score"
+                          and row.get("status") == "PASS"]
+            sources = sorted({
+                row.get("score_value_source")
+                or (row.get("adapter_output") or {}).get("continuous_score_source")
+                or "not returned by official API"
+                for row in score_rows
+            })
+            score["score_value_source"] = sources[0] if len(sources) == 1 else sources
+            score["score_expectation_is_model_api_score"] = (
+                bool(score_rows) and all(source == "official Laya API" for source in sources)
+            )
+            score["score_api_returned_continuous_value_count"] = sum(
+                (row.get("score_api_returned_continuous_value") is not None
+                 or (row.get("adapter_output") or {}).get("returned_continuous_score") is not None)
+                for row in score_rows
             )
     return result
 
@@ -1031,6 +1056,142 @@ def _load_saved_trial(root: Path, run_id: str) -> tuple[dict[str, Any], list[dic
     return result, rows
 
 
+def analyze_saved_trials(root: Path, laya_run_ids: list[str], gliner_run_ids: list[str]) -> dict[str, Any]:
+    if (len(laya_run_ids) != TRIAL_COUNT or len(gliner_run_ids) != TRIAL_COUNT
+            or len(set(laya_run_ids + gliner_run_ids)) != TRIAL_COUNT * 2):
+        raise TypedModelError("TYPED_MODEL_SAVED_ANALYSIS_RUN_SELECTION_INVALID")
+    lock, _, controls = _read_config(root)
+    cases, case_meta = _load_cases(root, controls)
+    if len(cases) != 82:
+        raise TypedModelError("TYPED_MODEL_CASE_COUNT_INVALID")
+    expected_cases = {case["case_id"]: case for case in cases}
+    dev_cases = [case for case in cases if case["dataset"] == "dev-v3"]
+    baselines, _ = _saved_baselines(root, dev_cases)
+    selected = {"laya-typed": laya_run_ids,
+                "gliner25-multi-decide": gliner_run_ids}
+    source_records: dict[str, list[dict[str, Any]]] = {}
+    for candidate, run_ids in selected.items():
+        spec = _candidate_spec(lock, candidate)
+        expected_model_files = spec.get("files", {})
+        records = []
+        trial_rows = []
+        for expected_trial, run_id in enumerate(run_ids, start=1):
+            result, rows = _load_saved_trial(root, run_id)
+            source_run = open_run(root, run_id)
+            source_manifest = source_run.read_manifest()
+            source_stage = source_manifest.get("stages", {}).get(RUN_STAGE, {})
+            if (result.get("candidate") != candidate or result.get("trial") != expected_trial
+                    or result.get("model", {}).get("revision") != spec["revision"]
+                    or result.get("dataset", {}).get("sha256") != EXPECTED_DATASET_SHA256
+                    or result.get("dataset", {}).get("scoring_contract_sha256") != EXPECTED_CONTRACT_SHA256
+                    or result.get("model", {}).get("file_lock_sha256") != _sha256_file(root / MODEL_LOCK)
+                    or {name: record.get("sha256")
+                        for name, record in result.get("model", {}).get("files", {}).items()}
+                    != expected_model_files
+                    or result.get("dependency_lock_sha256")
+                    != _sha256_file(root / "requirements" / "typed-model-cpu-win-x64.lock")
+                    or result.get("dependency_input_sha256")
+                    != _sha256_file(root / "requirements" / "typed-model-cpu-win-x64.in")
+                    or result.get("dataset", {}).get("control_fixture_sha256") != _sha256_file(root / CONTROL_DATA)
+                    or source_stage.get("evaluation_config_sha256") != _sha256_file(root / EVAL_CONFIG)
+                    or source_stage.get("control_data_sha256") != _sha256_file(root / CONTROL_DATA)
+                    or source_stage.get("dataset_sha256") != EXPECTED_DATASET_SHA256
+                    or source_stage.get("scoring_contract_sha256") != EXPECTED_CONTRACT_SHA256):
+                raise TypedModelError("TYPED_MODEL_SAVED_ANALYSIS_FINGERPRINT_MISMATCH")
+            if {row.get("case_id") for row in rows} != set(expected_cases):
+                raise TypedModelError("TYPED_MODEL_SAVED_ANALYSIS_CASE_SET_MISMATCH")
+            for row in rows:
+                current = expected_cases[row["case_id"]]
+                if (row.get("case_input_sha256") != current.get("input_sha256")
+                        or row.get("dataset") != current.get("dataset")
+                        or row.get("allowed_answers") != current.get("allowed_answers")):
+                    raise TypedModelError("TYPED_MODEL_SAVED_ANALYSIS_INPUT_MISMATCH")
+            records.append({"run_id": run_id, "trial": expected_trial, "status": "COMPLETE"})
+            trial_rows.append(rows)
+        signatures = [_prediction_signature(rows) for rows in trial_rows]
+        if not all(signature == signatures[0] for signature in signatures[1:]):
+            raise TypedModelError("TYPED_MODEL_SAVED_ANALYSIS_TRIAL_OUTPUTS_DIFFER")
+        source_records[candidate] = records
+
+    summary_run = Run.create(root, "saved typed-model CPU output analysis; no model loaded or inference run",
+                             dataset_version="dev-v3", profile_applicable=False)
+    try:
+        candidate_results = {
+            candidate: _summarize_candidate(root, candidate, records, baselines)
+            for candidate, records in source_records.items()
+        }
+        candidate_summaries = {
+            candidate: {key: value for key, value in result.items() if key != "cases_from_trial_1"}
+            for candidate, result in candidate_results.items()
+        }
+        output_rows = [row for result in candidate_results.values()
+                       for row in result["cases_from_trial_1"]]
+        sources = {}
+        for candidate, records in source_records.items():
+            sources[candidate] = []
+            for record in records:
+                run = open_run(root, record["run_id"])
+                manifest = run.read_manifest()
+                stage = manifest["stages"][RUN_STAGE]
+                sources[candidate].append({
+                    "run_id": record["run_id"],
+                    "git_revision": manifest.get("git_revision"),
+                    "source_tree_sha256": manifest.get("source_tree_sha256"),
+                    "result_sha256": stage.get("result_sha256"),
+                    "cases_sha256": stage.get("cases_sha256"),
+                })
+        result = {
+            "analysis_run_id": summary_run.run_id,
+            "analysis_kind": "saved-output reanalysis only; no model loaded and no inference performed",
+            "status": "COMPLETE",
+            "quality_status": "UNDETERMINED",
+            "label_state": "ai_draft_unverified",
+            "model_adoption": "NOT_DECIDED",
+            "dataset": case_meta["identity"],
+            "model_lock_sha256": _sha256_file(root / MODEL_LOCK),
+            "evaluation_config_sha256": _sha256_file(root / EVAL_CONFIG),
+            "control_data_sha256": _sha256_file(root / CONTROL_DATA),
+            "scoring_contract_sha256": EXPECTED_CONTRACT_SHA256,
+            "source_runs": sources,
+            "saved_baselines": {
+                "metrics": baselines["metrics"],
+                "same_dev_v3_draft_majority": baselines["majority"],
+                "identity": {"laya_sokudan": baselines["laya_sokudan_identity"],
+                             "horizon": baselines["horizon_identity"]},
+            },
+            "candidate_trials": candidate_summaries,
+            "comparison_metrics_semantics": {
+                "Score": "stage metrics use the fixed label contract; continuous-value MAE is computed only from the value actually returned by an official API.",
+                "Laya Typed Decisions Score": "official API returned continuous Score; source is recorded per case and metric.",
+                "GLiNER2.5 Score": "official API returns selected label and confidence only; no continuous Score is synthesized.",
+                "confidence": "model-specific confidence is not cross-model calibrated",
+                "quality": "preliminary only; all dev-v3 labels remain unverified human drafts",
+            },
+            "cases_file": "typed-model-saved-analysis-cases.jsonl",
+        }
+        summary_run.write_jsonl("typed-model-saved-analysis-cases.jsonl", output_rows)
+        summary_run.write_json("typed-model-saved-analysis-result.json", result)
+        summary_run.stage(
+            ANALYSIS_STAGE, "PASS",
+            source_run_ids={candidate: [record["run_id"] for record in records]
+                            for candidate, records in source_records.items()},
+            source_result_hashes={candidate: [entry["result_sha256"] for entry in entries]
+                                  for candidate, entries in sources.items()},
+            dataset_sha256=EXPECTED_DATASET_SHA256,
+            scoring_contract_sha256=EXPECTED_CONTRACT_SHA256,
+            result_sha256=_sha256_file(summary_run.path / "typed-model-saved-analysis-result.json"),
+            cases_sha256=_sha256_file(summary_run.path / "typed-model-saved-analysis-cases.jsonl"),
+            official_japanese_quality_status="UNDETERMINED")
+        return {"status": "COMPLETE", "analysis_run_id": summary_run.run_id,
+                "source_run_ids": {candidate: [record["run_id"] for record in records]
+                                   for candidate, records in source_records.items()},
+                "quality_status": "UNDETERMINED"}
+    except Exception as exc:
+        code = exc.code if isinstance(exc, TypedModelError) else "TYPED_MODEL_ANALYSIS_FAILED"
+        summary_run.failure(ANALYSIS_STAGE, code, RuntimeError(safe_message(str(exc))))
+        return {"status": "FAILED", "analysis_run_id": summary_run.run_id, "code": code}
+
+
 def _prediction_signature(rows: list[dict[str, Any]]) -> dict[str, str]:
     return {row["case_id"]: _json_sha256({"prediction": row.get("common_prediction"),
                                          "status": row.get("status"),
@@ -1049,7 +1210,7 @@ def _summarize_candidate(root: Path, candidate: str, runs: list[dict[str, Any]],
                          "result": result, "rows": rows})
     signatures = [_prediction_signature(entry["rows"]) for entry in complete]
     same = len(signatures) == TRIAL_COUNT and all(signature == signatures[0] for signature in signatures[1:])
-    per_trial_metrics = {entry["run_id"]: entry["result"]["metrics_by_dataset"]
+    per_trial_metrics = {entry["run_id"]: _stage_case_metrics(entry["rows"])
                          for entry in complete}
     baseline_metrics = baselines["metrics"]
     comparisons = {}
@@ -1067,6 +1228,10 @@ def _summarize_candidate(root: Path, candidate: str, runs: list[dict[str, Any]],
     if complete:
         reference = complete[0]["rows"]
         for row in reference:
+            adapter = row.get("adapter_output") or {}
+            score_value_source = (row.get("score_value_source")
+                                  or adapter.get("continuous_score_source")
+                                  or "not returned by official API")
             case_rows.append({"candidate": candidate, "reference_run_id": complete[0]["run_id"],
                               "case_id": row["case_id"], "dataset": row["dataset"],
                               "dimension": row["dimension"], "state": row["state"],
@@ -1074,6 +1239,15 @@ def _summarize_candidate(root: Path, candidate: str, runs: list[dict[str, Any]],
                               "verification_status": row["verification_status"],
                               "prediction": row["common_prediction"], "status": row["status"],
                               "model_specific_output": row["model_specific_output"],
+                              "adapter_output": adapter,
+                              "score_value_for_metric": row.get("score_value_for_metric",
+                                                                 row.get("score_expected_value_not_api_returned_score")),
+                              "score_value_source": score_value_source,
+                              "score_api_returned_continuous_value": (
+                                  row.get("score_api_returned_continuous_value")
+                                  if row.get("score_api_returned_continuous_value") is not None
+                                  else adapter.get("returned_continuous_score")
+                              ),
                               "input_trace": row["input_trace"],
                               "draft_label_match": row["draft_label_match"],
                               "human_quality_status": "UNDETERMINED"})

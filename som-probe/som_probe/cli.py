@@ -173,6 +173,12 @@ def _parser() -> argparse.ArgumentParser:
     typed_models.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
     typed_models.add_argument("--run-id", help=argparse.SUPPRESS)
     typed_models.add_argument("--trial", type=int, choices=(1, 2, 3), help=argparse.SUPPRESS)
+    typed_analysis = commands.add_parser(
+        "typed-model-analyze-saved", help="保存済みの固定CPU Runを再集計（モデル推論なし）")
+    typed_analysis.add_argument("--laya-run", action="append", required=True,
+                                help="Laya Typed DecisionsのCOMPLETE試験Run。trial 1〜3を順に指定")
+    typed_analysis.add_argument("--gliner-run", action="append", required=True,
+                                help="GLiNER2.5のCOMPLETE試験Run。trial 1〜3を順に指定")
     return parser
 
 
@@ -367,6 +373,11 @@ def main(argv: list[str] | None = None) -> int:
             if args.run_id or args.trial is not None:
                 raise ContractError("TYPED_MODEL_PUBLIC_ARGUMENTS_INVALID", "Run識別子は内部起動でのみ使います。")
             result = run_all_trials(root, args.candidate, args.trials)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
+        if args.command == "typed-model-analyze-saved":
+            from .typed_model_eval import analyze_saved_trials
+            result = analyze_saved_trials(root, args.laya_run, args.gliner_run)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
     except ContractError as exc:

@@ -202,6 +202,12 @@ def _allowed(case: dict[str, Any]) -> list[Any]:
     return case.get("allowed_answers", [])
 
 
+def _score_metric_value(case: dict[str, Any]) -> Any:
+    if "score_value_for_metric" in case:
+        return case.get("score_value_for_metric")
+    return case.get("score_expected_value_not_api_returned_score")
+
+
 def _metric_summary(cases: list[dict[str, Any]], dimension: str) -> dict[str, Any]:
     typed = [case for case in cases if case.get("dimension") == dimension]
     total = len(typed)
@@ -247,8 +253,8 @@ def _metric_summary(cases: list[dict[str, Any]], dimension: str) -> dict[str, An
     if dimension == "score":
         expected_cases = [case for case in typed if len(_allowed(case)) == 1 and type(_allowed(case)[0]) in (int, float)]
         decided = [case for case in expected_cases if type(case.get("common_prediction")) is int]
-        predicted_values = [case.get("score_expected_value_not_api_returned_score") for case in expected_cases
-                            if type(case.get("score_expected_value_not_api_returned_score")) in (int, float)]
+        predicted_values = [_score_metric_value(case) for case in expected_cases
+                            if type(_score_metric_value(case)) in (int, float)]
         stage_correct = sum(case["common_prediction"] in _allowed(case) for case in decided)
         # Build a serializable stage confusion matrix, counting abstentions explicitly.
         stage_confusions = {str(value): {str(pred): 0 for pred in (0, 1, 2, "HOLD", "ERROR")} for value in range(3)}
@@ -258,9 +264,9 @@ def _metric_summary(cases: list[dict[str, Any]], dimension: str) -> dict[str, An
             key = str(pred) if type(pred) is int else "HOLD" if case.get("status") == "HOLD" else "ERROR"
             stage_confusions[target][key] += 1
         stage_only = [abs(case["common_prediction"] - _allowed(case)[0]) for case in decided]
-        mae = (sum(abs(float(case["score_expected_value_not_api_returned_score"]) - float(_allowed(case)[0]))
+        mae = (sum(abs(float(_score_metric_value(case)) - float(_allowed(case)[0]))
                    for case in expected_cases
-                   if type(case.get("score_expected_value_not_api_returned_score")) in (int, float)) /
+                   if type(_score_metric_value(case)) in (int, float)) /
                len(predicted_values)) if predicted_values else None
         subgroup = {}
         for category, predicate in (

@@ -19,6 +19,7 @@ from som_probe.typed_model_eval import (
     _model_parameters,
     _read_config,
     _ordered_laya_probabilities,
+    _stage_case_metrics,
     _timed_workload,
 )
 
@@ -153,10 +154,71 @@ class TypedModelEvaluationTests(unittest.TestCase):
         self.assertEqual(row["human_quality_status"], "UNDETERMINED")
         self.assertEqual(row["observable_wrong_outputs_derived_from_allowed_answers"], ["none", "need_info"])
 
+    def test_score_metric_records_official_api_value_source_without_relabeling_it(self):
+        case = next(case for case in self.cases
+                    if case["dataset"] == "dev-v3" and case["question"]["type"] == "score")
+        returned_score = 1.234567
+        row = _case_row(case, {
+            "status": "PASS", "prediction": 1, "expected_value": returned_score,
+            "input": {"truncation_performed": False}, "model_specific_output": {"official": True},
+            "adapter_output": {"stage_prediction": 1, "returned_continuous_score": returned_score,
+                               "continuous_score_source": "official Laya API"},
+        }, "laya-typed")
+
+        score_metrics = _stage_case_metrics([row])["dev-v3"]["score"]
+
+        self.assertEqual(row["score_value_for_metric"], returned_score)
+        self.assertEqual(row["score_value_source"], "official Laya API")
+        self.assertEqual(row["score_api_returned_continuous_value"], returned_score)
+        self.assertTrue(score_metrics["score_expectation_is_model_api_score"])
+        self.assertEqual(score_metrics["score_value_source"], "official Laya API")
+        self.assertEqual(score_metrics["score_api_returned_continuous_value_count"], 1)
+
+        # Existing successful trials predate the explicit source fields. Reanalysis
+        # must recover provenance from their already-saved adapter output.
+        saved_row = dict(row)
+        for key in ("score_value_for_metric", "score_value_source",
+                    "score_api_returned_continuous_value"):
+            saved_row.pop(key)
+        saved_row["score_expected_value_not_api_returned_score"] = returned_score
+        saved_metrics = _stage_case_metrics([saved_row])["dev-v3"]["score"]
+        self.assertTrue(saved_metrics["score_expectation_is_model_api_score"])
+        self.assertEqual(saved_metrics["score_value_source"], "official Laya API")
+        self.assertEqual(saved_metrics["score_api_returned_continuous_value_count"], 1)
+
+    def test_gliner_score_does_not_synthesize_continuous_value(self):
+        case = next(case for case in self.cases
+                    if case["dataset"] == "dev-v3" and case["question"]["type"] == "score")
+        row = _case_row(case, {
+            "status": "PASS", "prediction": 2, "expected_value": None,
+            "input": {"truncation_performed": False}, "model_specific_output": {"label": "2"},
+            "adapter_output": {"decision": 2, "continuous_score": "not returned by official API"},
+        }, "gliner25-multi-decide")
+
+        score_metrics = _stage_case_metrics([row])["dev-v3"]["score"]
+
+        self.assertIsNone(row["score_api_returned_continuous_value"])
+        self.assertIsNone(score_metrics["score_expectation_mae_over_available_values"])
+        self.assertFalse(score_metrics["score_expectation_is_model_api_score"])
+        self.assertEqual(score_metrics["score_api_returned_continuous_value_count"], 0)
+
     def test_cpu_command_has_only_fixed_three_run_trial_count(self):
         args = _parser().parse_args(["typed-model-cpu", "--candidate", "both", "--trials", "3"])
         self.assertEqual(args.candidate, "both")
         self.assertEqual(args.trials, 3)
+
+    def test_saved_analysis_command_requires_separate_three_run_lists(self):
+        args = _parser().parse_args([
+            "typed-model-analyze-saved",
+            "--laya-run", "20261026-112603-ead4eaa8",
+            "--laya-run", "20261026-113026-04894c98",
+            "--laya-run", "20261026-113446-e2a88550",
+            "--gliner-run", "20261026-114022-0b061da0",
+            "--gliner-run", "20261026-114231-1bd5b126",
+            "--gliner-run", "20261026-114440-b8ec2411",
+        ])
+        self.assertEqual(len(args.laya_run), 3)
+        self.assertEqual(len(args.gliner_run), 3)
 
     def test_cpu_run_is_a_terminal_stage(self):
         self.assertIn("TYPED_MODEL_CPU", _SUCCESS_TERMINAL_STAGES)
