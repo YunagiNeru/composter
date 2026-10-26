@@ -70,6 +70,10 @@ class StorageTests(unittest.TestCase):
                 "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
                 "datasets/manifest.json", "datasets/dev.jsonl",
                 "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+                "configs/typed-models.lock.json", "configs/typed-model-evaluation-v1.json",
+                "datasets/typed-model-controls-v1.json",
+                "requirements/typed-model-cpu-win-x64.in",
+                "requirements/typed-model-cpu-win-x64.lock",
             ):
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -86,6 +90,10 @@ class StorageTests(unittest.TestCase):
                 "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
                 "datasets/manifest.json", "datasets/dev.jsonl",
                 "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+                "configs/typed-models.lock.json", "configs/typed-model-evaluation-v1.json",
+                "datasets/typed-model-controls-v1.json",
+                "requirements/typed-model-cpu-win-x64.in",
+                "requirements/typed-model-cpu-win-x64.lock",
             })
             self.assertTrue(all(len(value) == 64 for value in manifest["input_sha256"].values()))
 

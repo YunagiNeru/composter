@@ -22,10 +22,14 @@ _PROVENANCE_FILES = (
     "configs/probe.json", "configs/gates.json", "configs/models.lock.json",
     "datasets/manifest.json", "datasets/dev.jsonl",
     "requirements/run-win-x64.lock", "requirements/eval-win-x64.lock",
+    "configs/typed-models.lock.json", "configs/typed-model-evaluation-v1.json",
+    "datasets/typed-model-controls-v1.json", "requirements/typed-model-cpu-win-x64.in",
+    "requirements/typed-model-cpu-win-x64.lock",
 )
 _SUCCESS_TERMINAL_STAGES = frozenset({
     "G3", "NPU_DIAGNOSTIC", "PERFORMANCE", "MEMORY", "SOKUDAN_CPU",
     "TRYOUT_COMPARISON", "TRYOUT_MEMORY", "ZERO_SHOT_CPU", "ZERO_SHOT_ANALYSIS",
+    "TYPED_MODEL_CPU", "TYPED_MODEL_ANALYSIS",
 })
 
 

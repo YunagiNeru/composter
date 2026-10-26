@@ -165,6 +165,14 @@ def _parser() -> argparse.ArgumentParser:
                                     help="候補AのCOMPLETE試験Run ID。英語・日本語各3件を指定")
     zero_shot_analysis.add_argument("--blocked-run", required=True,
                                     help="取得・推論を行わなかった候補BのBLOCKED Run ID")
+    typed_models = commands.add_parser(
+        "typed-model-cpu", help="固定済みLaya Typed Decisions／GLiNER2.5を独立CPU Runで比較")
+    typed_models.add_argument("--candidate", choices=("both", "laya-typed", "gliner25-multi-decide"),
+                              default="both")
+    typed_models.add_argument("--trials", type=int, choices=(3,), default=3)
+    typed_models.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
+    typed_models.add_argument("--run-id", help=argparse.SUPPRESS)
+    typed_models.add_argument("--trial", type=int, choices=(1, 2, 3), help=argparse.SUPPRESS)
     return parser
 
 
@@ -346,6 +354,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "zero-shot-analyze":
             from .zero_shot_analysis import run_analysis
             result = run_analysis(root, args.candidate_run, args.blocked_run)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
+        if args.command == "typed-model-cpu":
+            from .typed_model_eval import run_all_trials, run_child
+            if args.child:
+                if args.candidate == "both" or not args.run_id or args.trial is None:
+                    raise ContractError("TYPED_MODEL_CHILD_ARGUMENTS_INVALID", "内部CPU試験の識別情報が不足しています。")
+                result = run_child(root, args.run_id, args.candidate, args.trial)
+                print(json.dumps(result, ensure_ascii=False))
+                return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
+            if args.run_id or args.trial is not None:
+                raise ContractError("TYPED_MODEL_PUBLIC_ARGUMENTS_INVALID", "Run識別子は内部起動でのみ使います。")
+            result = run_all_trials(root, args.candidate, args.trials)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
     except ContractError as exc:
