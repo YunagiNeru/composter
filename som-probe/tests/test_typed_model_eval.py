@@ -1,6 +1,10 @@
 import unittest
+import json
+import sys
+import tempfile
+from types import SimpleNamespace
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from som_probe.cli import _parser
 from som_probe.storage import _SUCCESS_TERMINAL_STAGES
@@ -10,6 +14,7 @@ from som_probe.typed_model_eval import (
     _gliner_infer,
     _gliner_selected_result,
     _gliner_task,
+    _load_gliner,
     _load_cases,
     _model_parameters,
     _read_config,
@@ -72,6 +77,37 @@ class TypedModelEvaluationTests(unittest.TestCase):
 
         self.assertEqual(sum(value.numel() for value in _model_parameters("laya-typed", LayaAgent())), 3)
         self.assertEqual(sum(value.numel() for value in _model_parameters("gliner25-multi-decide", GLiNERModel())), 7)
+
+    def test_gliner_loader_uses_only_supported_offline_arguments(self):
+        class Parameter:
+            device = "cpu"
+            dtype = "torch.float32"
+
+            def numel(self):
+                return 1
+
+            def is_floating_point(self):
+                return True
+
+        model = Mock()
+        model.architecture = "boundary"
+        model.parameters.return_value = [Parameter()]
+        auto = SimpleNamespace(from_pretrained=Mock(return_value=model))
+        fake_torch = SimpleNamespace(__version__="2.9.1+cpu", float32="torch.float32",
+                                     cuda=SimpleNamespace(is_available=lambda: False))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model_dir = root / "model"
+            (model_dir / "encoder_config").mkdir(parents=True)
+            (model_dir / "encoder_config" / "config.json").write_text(
+                json.dumps({"max_position_embeddings": 512}), encoding="utf-8")
+            with patch.dict(sys.modules, {"gliner2": SimpleNamespace(AutoExtractor=auto)}):
+                loaded, info = _load_gliner(root, model_dir, {}, fake_torch)
+
+        self.assertIs(loaded, model)
+        auto.from_pretrained.assert_called_once_with(
+            str(model_dir), map_location="cpu", local_files_only=True)
+        self.assertFalse(info["remote_code"])
 
     def test_laya_score_stage_uses_candidate_order_not_rounded_expected_value(self):
         labels = {"0": "なし", "1": "日付か時刻", "2": "日付と時刻"}

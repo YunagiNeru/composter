@@ -357,7 +357,6 @@ def _load_gliner(root: Path, model_dir: Path, spec: dict[str, Any], torch: Any) 
     try:
         model = AutoExtractor.from_pretrained(
             str(model_dir), map_location="cpu", local_files_only=True,
-            trust_remote_code=False,
         )
         model.to(device="cpu", dtype=torch.float32)
         model.eval()
