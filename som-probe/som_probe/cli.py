@@ -159,6 +159,12 @@ def _parser() -> argparse.ArgumentParser:
     zero_shot.add_argument("--trial", type=int, choices=(1, 2, 3), help=argparse.SUPPRESS)
     zero_shot.add_argument("--run-id", help=argparse.SUPPRESS)
     zero_shot.add_argument("--child", action="store_true", help=argparse.SUPPRESS)
+    zero_shot_analysis = commands.add_parser(
+        "zero-shot-analyze", help="保存済み候補A出力を再採点し、旧Runと比較（モデル推論なし）")
+    zero_shot_analysis.add_argument("--candidate-run", action="append", required=True,
+                                    help="候補AのCOMPLETE試験Run ID。英語・日本語各3件を指定")
+    zero_shot_analysis.add_argument("--blocked-run", required=True,
+                                    help="取得・推論を行わなかった候補BのBLOCKED Run ID")
     return parser
 
 
@@ -335,6 +341,11 @@ def main(argv: list[str] | None = None) -> int:
                 raise ContractError("PUBLIC_TRIAL_ARGUMENTS_INVALID", "試験ごとのrun識別子は内部起動でのみ使います。")
             conditions = list(LANGUAGE_CONDITIONS) if args.condition == "all" else [args.condition]
             result = run_all_trials(root, conditions, args.trials)
+            print(json.dumps(result, ensure_ascii=False))
+            return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
+        if args.command == "zero-shot-analyze":
+            from .zero_shot_analysis import run_analysis
+            result = run_analysis(root, args.candidate_run, args.blocked_run)
             print(json.dumps(result, ensure_ascii=False))
             return EXIT_OK if result.get("status") == "COMPLETE" else EXIT_MODEL
     except ContractError as exc:
