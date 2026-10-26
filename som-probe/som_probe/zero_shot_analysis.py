@@ -27,6 +27,17 @@ from .zero_shot_eval import (
 ANALYSIS_STAGE = "ZERO_SHOT_ANALYSIS"
 
 
+def _is_candidate_b_blocked(manifest: dict[str, Any]) -> bool:
+    """Validate the persisted BLOCKED schema without rewriting its record."""
+    stage = manifest.get("stages", {}).get("ZERO_SHOT_CPU", {})
+    return (
+        manifest.get("status") == "BLOCKED"
+        and stage.get("status") == "BLOCKED"
+        and stage.get("artifact_acquired") is False
+        and stage.get("inference_performed") is False
+    )
+
+
 def official_pipeline_case(row: dict[str, Any]) -> dict[str, Any]:
     """Expose the official single-label top class separately from the HOLD adapter."""
     result = copy.deepcopy(row)
@@ -176,10 +187,7 @@ def run_analysis(root: Path, source_run_ids: list[str], blocked_run_id: str) -> 
         source_records = [_read_source_run(root, run_id) for run_id in source_run_ids]
         blocked_run = open_run(root, blocked_run_id)
         blocked_manifest = blocked_run.read_manifest()
-        if (blocked_manifest.get("status") != "BLOCKED"
-                or blocked_manifest.get("stages", {}).get("ZERO_SHOT_CPU", {}).get("status") != "BLOCKED"
-                or blocked_manifest.get("stages", {}).get("ZERO_SHOT_CPU", {}).get("artifacts_acquired") is not False
-                or blocked_manifest.get("stages", {}).get("ZERO_SHOT_CPU", {}).get("inference_performed") is not False):
+        if not _is_candidate_b_blocked(blocked_manifest):
             raise ZeroShotError("CANDIDATE_B_BLOCK_RECORD_INVALID")
 
         by_condition: dict[str, list[tuple[Run, dict[str, Any], list[dict[str, Any]]]]] = {

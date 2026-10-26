@@ -1,9 +1,40 @@
 import unittest
 
-from som_probe.zero_shot_analysis import official_pipeline_case
+from som_probe.zero_shot_analysis import _is_candidate_b_blocked, official_pipeline_case
+from som_probe.zero_shot_eval import _sokudan_saved_prediction
 
 
 class ZeroShotAnalysisTests(unittest.TestCase):
+    def test_sokudan_saved_noul_uses_evaluator_boolean(self):
+        adapter = {"evaluator_boolean": True, "decision": None, "api_returned_value": 0.8542}
+        self.assertIs(_sokudan_saved_prediction("noul", adapter), True)
+
+    def test_candidate_b_block_record_uses_persisted_manifest_field_names(self):
+        manifest = {
+            "status": "BLOCKED",
+            "stages": {
+                "ZERO_SHOT_CPU": {
+                    "status": "BLOCKED",
+                    "artifact_acquired": False,
+                    "inference_performed": False,
+                }
+            },
+        }
+        self.assertTrue(_is_candidate_b_blocked(manifest))
+
+    def test_candidate_b_block_record_rejects_acquisition_or_inference(self):
+        for field in ("artifact_acquired", "inference_performed"):
+            with self.subTest(field=field):
+                manifest = {
+                    "status": "BLOCKED",
+                    "stages": {"ZERO_SHOT_CPU": {
+                        "status": "BLOCKED", "artifact_acquired": False,
+                        "inference_performed": False,
+                    }},
+                }
+                manifest["stages"]["ZERO_SHOT_CPU"][field] = True
+                self.assertFalse(_is_candidate_b_blocked(manifest))
+
     def test_official_choice_output_is_separate_from_abstaining_adapter(self):
         row = {
             "case_id": "choice-001",

@@ -372,9 +372,7 @@ def _baseline_rows(root: Path) -> tuple[dict[str, list[dict[str, Any]]], dict[st
         question = row["questions"][0]
         adapter = question["adapter"]
         qtype = question["question_type"]
-        prediction = adapter.get("decision")
-        if qtype == "bool":
-            prediction = adapter.get("evaluator_boolean")
+        prediction = _sokudan_saved_prediction(qtype, adapter)
         sokudan_rows.append({
             "case_id": row["case_id"], "question_type": qtype,
             "common_prediction": prediction,
@@ -393,6 +391,13 @@ def _baseline_rows(root: Path) -> tuple[dict[str, list[dict[str, Any]]], dict[st
         "scoring_contract_sha256": EXPECTED_CONTRACT_SHA256,
     }
     return {"laya": laya_rows, "sokudan": sokudan_rows}, baseline_meta
+
+
+def _sokudan_saved_prediction(question_type: str, adapter: dict[str, Any]) -> Any:
+    """Map persisted official Noul output through its evaluator boolean field."""
+    if question_type == "noul":
+        return adapter.get("evaluator_boolean")
+    return adapter.get("decision")
 
 
 def _baseline_metrics(dev_cases: list[dict[str, Any]], rows: list[dict[str, Any]]) -> dict[str, Any]:
