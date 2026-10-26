@@ -317,6 +317,11 @@ def _set_torch_cpu(threads: int) -> Any:
     return torch
 
 
+def _model_parameters(candidate: str, model: Any) -> Any:
+    wrapped_model = model.model if candidate == "laya-typed" else model
+    return wrapped_model.parameters()
+
+
 def _load_laya(root: Path, model_dir: Path, spec: dict[str, Any],
                source_lock: dict[str, Any], torch: Any) -> tuple[Any, dict[str, Any]]:
     source = _verify_laya_source(root, source_lock)
@@ -897,6 +902,7 @@ def run_child(root: Path, run_id: str, candidate: str, trial: int) -> dict[str, 
                               for dimension in ("choice", "score", "noul_deadline")}
                        for name, values in baseline_bundle["metrics"].items()}
         model_bytes = sum(record["size_bytes"] for record in verified_files.values())
+        phase = "BUILD_RESULT"
         result = {
             "run_id": run.run_id,
             "candidate": candidate,
@@ -919,7 +925,8 @@ def run_child(root: Path, run_id: str, candidate: str, trial: int) -> dict[str, 
                           "torch_threads": torch.get_num_threads(), "interop_threads": torch.get_num_interop_threads(),
                           "torch_cuda_available": torch.cuda.is_available(),
                           "model_hub_access": "offline", "local_only_load": True,
-                          "actual_parameter_count": int(sum(parameter.numel() for parameter in model.parameters()))},
+                          "actual_parameter_count": int(sum(parameter.numel()
+                                                            for parameter in _model_parameters(candidate, model)))},
             "dataset": case_meta["identity"],
             "baseline_identity": {"laya": baseline_bundle["laya_sokudan_identity"],
                                   "horizon": baseline_bundle["horizon_identity"]},

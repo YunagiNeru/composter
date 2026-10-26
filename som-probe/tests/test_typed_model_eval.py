@@ -11,6 +11,7 @@ from som_probe.typed_model_eval import (
     _gliner_selected_result,
     _gliner_task,
     _load_cases,
+    _model_parameters,
     _read_config,
     _ordered_laya_probabilities,
     _timed_workload,
@@ -56,6 +57,21 @@ class TypedModelEvaluationTests(unittest.TestCase):
         self.assertEqual(_gliner_selected_result({"label": "task", "confidence": 0.7}), ("task", 0.7))
         self.assertEqual(_gliner_selected_result({"label": "task", "confidence": "0.7"}), ("task", None))
         self.assertEqual(_gliner_selected_result({"labels": ["task", "none"]}), (None, None))
+
+    def test_parameter_count_uses_laya_agent_model_and_gliner_model(self):
+        class Inner:
+            def parameters(self):
+                return iter([type("Parameter", (), {"numel": lambda self: 3})()])
+
+        class LayaAgent:
+            model = Inner()
+
+        class GLiNERModel:
+            def parameters(self):
+                return iter([type("Parameter", (), {"numel": lambda self: 7})()])
+
+        self.assertEqual(sum(value.numel() for value in _model_parameters("laya-typed", LayaAgent())), 3)
+        self.assertEqual(sum(value.numel() for value in _model_parameters("gliner25-multi-decide", GLiNERModel())), 7)
 
     def test_laya_score_stage_uses_candidate_order_not_rounded_expected_value(self):
         labels = {"0": "なし", "1": "日付か時刻", "2": "日付と時刻"}
