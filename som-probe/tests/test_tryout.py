@@ -3,6 +3,7 @@ import tempfile
 import unittest
 import copy
 from pathlib import Path
+from unittest.mock import patch
 
 from som_probe.tryout import (
     TryoutError,
@@ -12,6 +13,7 @@ from som_probe.tryout import (
     _questions_for_templates,
     _tryout_error_text,
     _load_sokudan_session_without_progress,
+    _LayaSession,
     format_results,
     run_tryout,
 )
@@ -314,6 +316,51 @@ class TryoutLifecycleTests(unittest.TestCase):
         self.assertEqual(result, "ready")
         self.assertEqual(observed, [False])
         self.assertEqual(transformers_logging.is_progress_bar_enabled(), previous)
+
+
+class LayaStructuredChoiceTests(unittest.TestCase):
+    def test_choice_entry_returns_structured_output_without_formatting_or_saving_state(self):
+        state = "cpu_usage: 90\nram_usage: 15\nuser_event: NONE"
+        question = {"type": "choice", "instructions": "Select one fixed action.",
+                    "criteria": {"DROWSY_SHUFFLE": "slow, sleepy gait",
+                                 "BRISK_WALK": "energetic gait"}}
+        expected = {"question_type": "choice", "decision": "DROWSY_SHUFFLE",
+                    "candidate_ids": ["DROWSY_SHUFFLE", "BRISK_WALK"],
+                    "probabilities": [0.8, 0.2]}
+        row = {
+            "question_id": "pet_gait", "question_type": "choice", "question_text": "Select one fixed action.",
+            "question_contract": question, "candidate_ids": expected["candidate_ids"],
+            "candidate_descriptions": ["slow, sleepy gait", "energetic gait"],
+            "required_total_tokens": 25, "input_sha256": "f" * 64, "state_truncated": False,
+            "temperature": 1.0, "candidate_count": 2,
+            "arrays": {"input_ids": [1], "attention_mask": [1], "marker_pos": [1],
+                        "marker_mask": [True], "qtype": [0]},
+        }
+
+        class Port:
+            def get_any_name(self):
+                return "output"
+
+        session = object.__new__(_LayaSession)
+        session._tokenizer = object()
+        session._config = {}
+        session._compiled = lambda inputs: {Port(): inputs["input_ids"]}
+        with patch("som_probe.tryout._laya_input", return_value=row) as build_input, \
+                patch("som_probe.tryout._select_outputs", return_value=([3.0, 1.0], [1.0, 0.0])), \
+                patch("som_probe.tryout.decode_laya_output", return_value=expected) as decode:
+            output, trace = session.predict_choice("pet_gait", question, state)
+
+        self.assertIs(output, expected)
+        self.assertEqual(decode.call_args.args[:3], ("choice", expected["candidate_ids"], 1.0))
+        self.assertEqual(build_input.call_args.args[-1], state)
+        self.assertEqual(trace["input_sha256"], "f" * 64)
+        self.assertNotIn(state, repr(trace))
+        self.assertNotIn("input_tensors", trace)
+
+    def test_choice_entry_rejects_non_choice_contract_before_inference(self):
+        session = object.__new__(_LayaSession)
+        with self.assertRaisesRegex(TryoutError, "PET_CHOICE_REQUEST_CONTRACT_INVALID"):
+            session.predict_choice("pet_gait", {"type": "score"}, "cpu_usage: 90")
 
 
 class TryoutInputWaitTests(unittest.TestCase):

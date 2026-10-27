@@ -448,9 +448,14 @@ def _laya_temperature_bucket(question_type: str, candidate_count: int) -> str:
 class _LayaSession:
     def __init__(self, root: Path, source_run_id: str,
                  templates: dict[str, dict[str, Any]], canaries: dict[str, dict[str, Any]], *,
-                 execution_device: str = "NPU", diagnostic_run_id: str | None = None) -> None:
+                 execution_device: str = "NPU", diagnostic_run_id: str | None = None,
+                 cache_namespace: str | None = None) -> None:
         if execution_device not in {"CPU", "NPU"}:
             raise TryoutError("LAYA_DEVICE_INVALID")
+        if (diagnostic_run_id is not None and cache_namespace is not None
+                or cache_namespace is not None
+                and not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", cache_namespace)):
+            raise TryoutError("DIAGNOSTIC_CACHE_NAMESPACE_INVALID")
         source_run, conversion, _, _ = _validate_laya_source(root, source_run_id)
         lock = load_lock(root)
         source = lock["sources"]["laya_code"]
@@ -504,9 +509,13 @@ class _LayaSession:
             model = core.read_model(str(xml))
             cache_dir = None
             if execution_device == "NPU":
-                cache_dir = (root / ".local" / "tryout-cache" / "laya-s256-k8-plugin"
-                             if diagnostic_run_id is None else
-                             root / ".local" / "tryout-cache" / f"diagnostic-{diagnostic_run_id}-laya-plugin").resolve()
+                if cache_namespace is not None:
+                    cache_name = cache_namespace
+                elif diagnostic_run_id is None:
+                    cache_name = "laya-s256-k8-plugin"
+                else:
+                    cache_name = f"diagnostic-{diagnostic_run_id}-laya-plugin"
+                cache_dir = (root / ".local" / "tryout-cache" / cache_name).resolve()
                 cache_dir.mkdir(parents=True, exist_ok=True)
                 compiled = core.compile_model(
                     model, "NPU", {"CACHE_DIR": str(cache_dir), "NPU_COMPILER_TYPE": "PLUGIN"}
@@ -569,6 +578,27 @@ class _LayaSession:
 
     def predict(self, state: str) -> dict[str, dict[str, Any]]:
         return self.predict_with_trace(state)[0]
+
+    def predict_choice(self, question_id: str, question: dict[str, Any],
+                       state: str) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Run one structured Choice contract without passing through human-facing text."""
+        if (not isinstance(question_id, str) or not question_id
+                or not isinstance(question, dict) or question.get("type") != "choice"
+                or not isinstance(state, str)):
+            raise TryoutError("PET_CHOICE_REQUEST_CONTRACT_INVALID")
+        row = _laya_input(self._tokenizer, self._config, question_id, question, state)
+        result = self._compiled({name: row["arrays"][name] for name in
+                                 ("input_ids", "attention_mask", "marker_pos", "marker_mask", "qtype")})
+        named = {port.get_any_name(): value for port, value in result.items()}
+        logits, actions = _select_outputs(named)
+        output = decode_laya_output("choice", row["candidate_ids"], row["temperature"], logits, actions)
+        trace = {key: row[key] for key in (
+            "question_id", "question_type", "question_text", "question_contract", "candidate_ids",
+            "candidate_descriptions", "required_total_tokens", "input_sha256", "state_truncated",
+        )}
+        trace["temperature"] = row["temperature"]
+        trace["logits"] = [float(value) for value in logits[:row["candidate_count"]]]
+        return output, trace
 
     def display_context(self) -> dict[str, Any]:
         return {kind: {"candidate_ids": _candidate_ids(self._templates[kind]),
