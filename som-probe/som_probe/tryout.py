@@ -548,6 +548,7 @@ class _LayaSession:
         self._core = core
         self._tokenizer = tokenizer
         self._config = config
+        self._ir_path = xml
         self._templates = templates
         self._canaries = canaries
         self.execution_device = execution_device
