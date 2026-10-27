@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPolygon
+from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtGui import QColor, QImage, QPainter, QPen, QPolygon
 
-from .theme import COLORS
+from .theme import SPRITE_COLORS
 
 
 ANIMATION_FRAMES = {
@@ -15,10 +15,12 @@ ANIMATION_FRAMES = {
     "play": 4, "dig": 4, "body_size": 3,
 }
 BODY_LEVELS = (0.12, 0.5, 0.9)
+INK = QColor(SPRITE_COLORS["ink"])
+PAPER = QColor(SPRITE_COLORS["paper"])
 
 
 class SpritePainter:
-    """Draws one consistent 64x64 tabby cat with integer pixel coordinates."""
+    """白黒の短足猫。輪郭・顔の座標を共有し、移動は四足姿勢で描く。"""
 
     @staticmethod
     def render(animation: str, frame: int = 0, fullness: float = 0.5, *,
@@ -26,234 +28,218 @@ class SpritePainter:
                ear_frame: int | None = None) -> QImage:
         if animation not in ANIMATION_FRAMES:
             animation = "normal_idle"
-        count = ANIMATION_FRAMES[animation]
-        frame %= count
+        frame %= ANIMATION_FRAMES[animation]
         if animation == "body_size":
-            fullness = BODY_LEVELS[min(2, frame)]
+            fullness = BODY_LEVELS[frame]
         image = QImage(64, 64, QImage.Format.Format_RGBA8888)
         image.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(image)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, False)
-        painter.setPen(Qt.PenStyle.NoPen)
-        SpritePainter._cat(painter, animation, frame, fullness,
+        p = QPainter(image)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        p.setPen(Qt.PenStyle.NoPen)
+        SpritePainter._cat(p, animation, frame, min(1.0, max(0.0, fullness)),
                            expression, social_response, ear_frame)
-        painter.end()
-        return image
+        p.end()
+
+        # 暗い壁紙でも輪郭が消えない1pxの白縁。半透明色は生成しない。
+        silhouette = image.copy()
+        p = QPainter(silhouette)
+        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        p.fillRect(silhouette.rect(), PAPER)
+        p.end()
+        result = QImage(64, 64, QImage.Format.Format_RGBA8888)
+        result.fill(Qt.GlobalColor.transparent)
+        p = QPainter(result)
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            p.drawImage(dx, dy, silhouette)
+        p.drawImage(0, 0, image)
+        p.end()
+        return result
 
     @staticmethod
-    def _cat(p: QPainter, animation: str, frame: int, fullness: float,
-             expression: str | None, social_response: str | None,
-             ear_frame: int | None) -> None:
-        c = {key: QColor(value) for key, value in COLORS.items()}
-        moving = animation in {"walk", "drowsy_walk", "run", "play"}
-        body_y = 30 + (1 if moving and frame % 2 else 0)
-        body_width = 34 + round(8 * min(1.0, max(0.0, fullness)))
-        body_x = (64 - body_width) // 2 - 1
-        leg_shift = [0, 2, -1, 1][frame % 4] if moving else 0
-        if animation == "sleep_yawn":
-            body_y = 32
+    def _cat(p: QPainter, name: str, frame: int, fullness: float,
+             expression: str | None, social: str | None, ear_frame: int | None) -> None:
+        moving = name in {"walk", "drowsy_walk", "run", "play"}
+        crouching = name in {"eat", "dig"}
+        sleeping = name == "sleep_yawn" and frame < 2
+        width = 22 + round(fullness * 7)
+        bob = (0, 1, 0, -1)[frame % 4] if moving else 0
+        head_x, head_y = (21, 29 + bob) if moving else (28, 29)
+        if name == "run":
+            head_x, head_y = 20, 31 + bob
+        elif crouching:
+            head_x, head_y = 21, 36 + frame % 2
+        elif sleeping:
+            head_x, head_y = 23, 39 + frame % 2
+        elif name == "sleepy_idle":
+            head_y += 2
+        elif name == "pet_happy" or social == "LEAN_IN":
+            head_x -= frame % 2
+        elif name == "pet_dislike" or social == "GENTLE_WITHDRAW":
+            head_x += 2
 
-        # Tail is the same base shape in every pose; only its tip changes by a pixel.
-        tail_points = [QPoint(46, 42), QPoint(53, 38), QPoint(56, 31),
-                       QPoint(58, 26 + frame % 2), QPoint(55, 23 + frame % 2)]
-        SpritePainter._polyline(p, tail_points, c["fur_outline"], 4)
-        SpritePainter._polyline(p, tail_points[1:], c["fur"], 2)
-        p.setBrush(c["fur_light"])
-        p.drawEllipse(QRect(body_x - 1, body_y, body_width + 2, 23))
-        p.setBrush(c["fur"])
-        p.drawEllipse(QRect(body_x, body_y + 1, body_width, 21))
-        p.setBrush(c["cream"])
-        p.drawEllipse(QRect(body_x + body_width // 3, body_y + 10, body_width // 2, 11))
-
-        # Shared legs maintain the same body anchor across idle and interaction poses.
-        leg_y = 47 + (1 if animation in {"sleep_yawn", "sleepy_idle"} else 0)
-        if animation in {"walk", "drowsy_walk", "run", "play"}:
-            offsets = (leg_shift, -leg_shift, -leg_shift, leg_shift)
+        # 尻尾→胴→短い足→頭の順。黒い面をつなげ、関節の箱形を残さない。
+        tail_tip = (0, -1, 1, 0)[frame % 4]
+        if sleeping:
+            SpritePainter._stroke(p, [(39, 48), (47, 49), (50, 46), (50, 40),
+                                      (47, 38)], INK, 5)
+            p.setBrush(INK)
+            p.drawEllipse(QRect(20, 36, width + 6, 18))
+        elif moving or crouching:
+            SpritePainter._stroke(p, [(43, 41 + bob), (51, 39 + bob), (54, 35),
+                                      (54, 28 + tail_tip), (51, 25 + tail_tip)], INK, 5)
+            p.setBrush(INK)
+            p.drawEllipse(QRect(22, 31 + bob, width + 3, 19))
+            stride = (2, -1, -2, 1)[frame % 4] if moving else frame % 2
+            lift = (0, 2, 0, 1)[frame % 4] if moving else 0
+            if name == "run":
+                stride *= 2
+                lift += 2
+            for x, shift, raised in ((19, stride, lift), (26, -stride, 0),
+                                      (39, -stride, 0), (45, stride, lift)):
+                p.fillRect(QRect(x + shift, 44 + bob, 5, 11 - raised - bob), INK)
+                p.fillRect(QRect(x + shift - 2, 52 - raised, 7, 3), INK)
+            if name == "play":
+                SpritePainter._stroke(p, [(21, 44), (16, 49), (9 + frame % 2, 51)], INK, 5)
+            elif name == "dig":
+                SpritePainter._stroke(p, [(23, 45), (17 - frame % 2 * 3, 53)], INK, 5)
         else:
-            offsets = (0, 0, 0, 0)
-        legs = ((body_x + 3, 43, 9, 15), (body_x + 12, 45, 8, 13),
-                (body_x + body_width - 17, 44, 8, 14),
-                (body_x + body_width - 8, 42, 9, 16))
-        for (x, y, w, h), shift in zip(legs, offsets):
-            SpritePainter._outlined_rect(p, QRect(x + shift, y, w, h), c["fur_outline"], c["fur"])
-            p.setBrush(c["cream"])
-            p.drawRect(QRect(x + shift + 2, y + h - 3, max(2, w - 4), 2))
+            SpritePainter._stroke(p, [(40, 51), (50, 50), (55, 46), (56, 39),
+                                      (54, 35 + tail_tip), (51, 35 + tail_tip)], INK, 5)
+            p.setBrush(INK)
+            p.drawEllipse(QRect(18, 33, width, 22))
+            p.fillRect(QRect(22, 44, 7, 11), INK)
+            p.fillRect(QRect(33, 44, 7, 11), INK)
 
-        # Ears are part of one head silhouette; a dislike pose only lowers their tips.
-        head_y = 11
-        ear_drop = (5 if animation == "pet_dislike" or social_response == "GENTLE_WITHDRAW"
-                    else 1 if (animation == "ears" and frame == 1)
-                    or (ear_frame is not None and ear_frame % 3 == 1) else 0)
-        head = QRect(17, head_y + ear_drop, 30, 29)
-        p.setBrush(c["fur_outline"])
-        p.drawPolygon(QPolygon([QPoint(17, 18 + ear_drop), QPoint(19, 3 + ear_drop),
-                                QPoint(31, 15 + ear_drop), QPoint(35, 14 + ear_drop),
-                                QPoint(47, 4 + ear_drop), QPoint(48, 21 + ear_drop)]))
-        p.setBrush(c["pink"])
-        p.drawPolygon(QPolygon([QPoint(21, 14 + ear_drop), QPoint(21, 8 + ear_drop),
-                                QPoint(27, 15 + ear_drop)]))
-        p.drawPolygon(QPolygon([QPoint(39, 15 + ear_drop), QPoint(45, 9 + ear_drop),
-                                QPoint(44, 17 + ear_drop)]))
-        p.setBrush(c["fur"])
-        p.drawEllipse(head)
+        sleepy = (expression == "SLEEPY" or name in {
+            "sleepy_idle", "drowsy_walk", "sleep_yawn", "sleepy_meow"}
+            or social == "SLOW_BLINK" or name == "normal_idle" and frame == 1)
+        happy = expression == "CHEERFUL" or name == "pet_happy"
+        flattened = name == "pet_dislike" or social == "GENTLE_WITHDRAW"
+        twitch = (ear_frame if ear_frame is not None else frame if name == "ears" else 0) % 4
+        SpritePainter._head(p, head_x, head_y, sleepy, happy, flattened, twitch,
+                            sleeping, name, frame)
 
-        # Tabby stripes use the same forehead/cheek locations in every frame.
-        p.fillRect(QRect(28, 15 + ear_drop, 3, 7), c["fur_dark"])
-        p.fillRect(QRect(33, 13 + ear_drop, 3, 8), c["fur_dark"])
-        p.fillRect(QRect(38, 15 + ear_drop, 3, 7), c["fur_dark"])
-        p.fillRect(QRect(20, 28 + ear_drop, 7, 2), c["fur_dark"])
-        p.fillRect(QRect(38, 29 + ear_drop, 7, 2), c["fur_dark"])
-
-        # Eyes and face remain fixed to the head; sleepy poses narrow the eye pixels.
-        sleepy = (expression == "SLEEPY" or animation in {"sleepy_idle", "sleep_yawn", "sleepy_meow"}
-                  or animation == "normal_idle" and frame == 1
-                  or social_response == "SLOW_BLINK")
-        cheerful = expression == "CHEERFUL" or animation == "pet_happy"
-        if cheerful:
-            SpritePainter._eye(p, 25, 23 + ear_drop, c["eye"], happy=True)
-            SpritePainter._eye(p, 38, 23 + ear_drop, c["eye"], happy=True)
-        elif sleepy:
-            p.fillRect(QRect(23, 25 + ear_drop, 7, 2), c["eye"])
-            p.fillRect(QRect(36, 25 + ear_drop, 7, 2), c["eye"])
-        else:
-            eye_h = 7 if animation in {"pet_dislike", "sleep_yawn"} else 8
-            p.setBrush(c["white"])
-            p.drawEllipse(QRect(23, 22 + ear_drop, 8, eye_h))
-            p.drawEllipse(QRect(36, 22 + ear_drop, 8, eye_h))
-            p.setBrush(c["eye"])
-            p.drawEllipse(QRect(26, 24 + ear_drop, 4, 5))
-            p.drawEllipse(QRect(38, 24 + ear_drop, 4, 5))
-            p.fillRect(QRect(27, 24 + ear_drop, 1, 2), c["white"])
-            p.fillRect(QRect(39, 24 + ear_drop, 1, 2), c["white"])
-
-        p.setBrush(c["pink"])
-        p.drawPolygon(QPolygon([QPoint(31, 31 + ear_drop), QPoint(34, 31 + ear_drop),
-                                QPoint(32, 33 + ear_drop)]))
-        p.setPen(c["fur_outline"])
-        p.drawLine(32, 33 + ear_drop, 32, 35 + ear_drop)
-        p.drawLine(32, 35 + ear_drop, 29, 36 + ear_drop)
-        p.drawLine(32, 35 + ear_drop, 35, 36 + ear_drop)
-        p.setPen(Qt.PenStyle.NoPen)
-
-        mouth_open = (animation in {"meow", "sleepy_meow"} and frame % 3 == 1) or (
-            animation == "sleep_yawn" and frame in {2, 3}
-        )
-        if mouth_open:
-            p.setBrush(c["fur_outline"])
-            p.drawEllipse(QRect(29, 35 + ear_drop, 7, 8 if animation == "sleep_yawn" else 6))
-            p.setBrush(c["pink"])
-            p.drawEllipse(QRect(31, 39 + ear_drop, 3, 3))
-        elif animation in {"meow", "sleepy_meow"}:
-            p.fillRect(QRect(31, 36 + ear_drop, 4, 2), c["fur_outline"])
-
-        if animation == "sleep_yawn":
-            SpritePainter._pixel_text(p, 50, 18 - (frame % 2) * 2, "Z", c["accent"])
-            SpritePainter._pixel_text(p, 55, 11, "Z", c["accent"])
-        elif animation == "pet_happy":
-            SpritePainter._heart(p, 49, 13, c["pink"])
-        elif animation == "pet_dislike":
-            p.fillRect(QRect(12, 20, 3, 2), c["danger"])
-        elif animation == "ears":
-            p.fillRect(QRect(15 + (frame % 2), 8, 2, 5), c["accent"])
-            p.fillRect(QRect(49 - (frame % 2), 9, 2, 5), c["accent"])
-        elif animation == "eat":
-            p.setBrush(c["fur_outline"])
-            p.drawRect(QRect(3, 50, 17, 5))
-            p.setBrush(c["pink"])
-            p.drawRect(QRect(6, 48, 11, 4))
-            if frame % 2 == 0:
-                p.fillRect(QRect(24, 41, 3, 2), c["cream"])
-        elif animation == "play":
-            p.setBrush(c["fur_outline"])
-            p.drawEllipse(QRect(49 - frame % 2 * 3, 50, 9, 9))
-            p.setBrush(c["accent"])
-            p.drawEllipse(QRect(51 - frame % 2 * 3, 52, 5, 5))
-        elif animation == "dig":
-            p.fillRect(QRect(3, 56, 58, 2), c["ground"])
-            p.fillRect(QRect(10 + frame % 2 * 4, 52, 4, 3), c["ground"])
-            p.fillRect(QRect(18 + frame % 2 * 3, 54, 3, 2), c["ground"])
-
-        if ear_frame is not None and animation != "ears" and ear_frame % 4 in {1, 2}:
-            p.fillRect(QRect(13, 8 + ear_frame % 2, 2, 4), c["accent"])
-            p.fillRect(QRect(49, 8 + ear_frame % 2, 2, 4), c["accent"])
+        # 前足の境界は短い1px線だけ。胴を縦長に分割しない。
+        if not moving and not crouching and not sleeping:
+            SpritePainter._stroke(p, [(28, 47), (28, 53)], PAPER)
+            SpritePainter._stroke(p, [(33, 47), (33, 53)], PAPER)
+            p.fillRect(QRect(24, 53, 3, 1), PAPER)
+            p.fillRect(QRect(35, 53, 3, 1), PAPER)
+        if sleeping:
+            SpritePainter._stroke(p, [(35, 49), (40, 51), (46, 50)], PAPER)
+            SpritePainter._symbol(p, 47, 20 - frame, ("1111", "0010", "0100", "1111"))
+        elif name == "pet_happy":
+            SpritePainter._symbol(p, 49, 16 - frame % 2,
+                                  ("0110110", "1111111", "1111111", "0111110", "0011100", "0001000"))
+        elif name == "eat":
+            SpritePainter._polygon(p, [(10, 54), (33, 54), (30, 59), (13, 59)], INK)
+            p.fillRect(QRect(12, 54, 19, 1), PAPER)
+            p.fillRect(QRect(15, 52 + frame % 2, 3, 2), INK)
+            p.fillRect(QRect(23, 52, 3, 2), INK)
+        elif name == "play":
+            p.setBrush(INK)
+            p.drawEllipse(QRect(4 + frame % 2 * 2, 53, 7, 7))
+            p.fillRect(QRect(6 + frame % 2 * 2, 55, 2, 2), PAPER)
+        elif name == "dig":
+            for x, y in ((9, 55), (14, 58), (5, 51 - frame % 2 * 3)):
+                p.fillRect(QRect(x + frame % 2, y, 2, 2), INK)
 
     @staticmethod
-    def _eye(p: QPainter, x: int, y: int, color: QColor, happy: bool = False) -> None:
-        p.setPen(color)
-        p.drawLine(x, y + 2, x + 2, y)
-        p.drawLine(x + 2, y, x + 4, y + 2)
+    def _head(p: QPainter, x: int, y: int, sleepy: bool, happy: bool,
+              flattened: bool, twitch: int, resting: bool, name: str, frame: int) -> None:
+        cheek = 9 if resting else 12
+        # 頭頂と頬は全ポーズ共通。耳だけ独立して傾ける。
+        SpritePainter._polygon(p, [(x - 15, y - 7), (x - 11, y - 11),
+            (x + 10, y - 11), (x + 15, y - 7), (x + 17, y - 1),
+            (x + 17, y + 4), (x + 14, y + 8), (x + 8, y + cheek),
+            (x - 8, y + cheek), (x - 14, y + 8), (x - 17, y + 4),
+            (x - 17, y - 1)], INK)
+        left_tip = (x - 18, y - 10) if flattened else (x - 13 - (twitch == 1), y - 19 + (twitch == 1) * 3)
+        right_tip = (x + 18, y - 10) if flattened else (x + 13 + (twitch == 2), y - 19 + (twitch == 2) * 3)
+        SpritePainter._polygon(p, [(x - 15, y - 2), left_tip, (x - 3, y - 9)], INK)
+        SpritePainter._polygon(p, [(x + 3, y - 9), right_tip, (x + 15, y - 2)], INK)
+        if not flattened:
+            SpritePainter._stroke(p, [(left_tip[0] + 2, left_tip[1] + 5), (x - 9, y - 9)], PAPER)
+            SpritePainter._stroke(p, [(right_tip[0] - 2, right_tip[1] + 5), (x + 9, y - 9)], PAPER)
+
+        eye_y = y + (1 if resting else 0)
+        for eye_x in (x - 8, x + 5):
+            if happy:
+                SpritePainter._stroke(p, [(eye_x - 1, eye_y + 2), (eye_x + 1, eye_y),
+                                          (eye_x + 3, eye_y + 2)], PAPER)
+            elif sleepy:
+                SpritePainter._stroke(p, [(eye_x - 1, eye_y + 1), (eye_x + 1, eye_y + 2),
+                                          (eye_x + 4, eye_y + 1)], PAPER)
+            else:
+                p.fillRect(QRect(eye_x, eye_y - 2, 4, 6), PAPER)
+                p.fillRect(QRect(eye_x - 1, eye_y - 1, 6, 4), PAPER)
+                p.fillRect(QRect(eye_x + 1, eye_y - 1, 2, 4), INK)
+        p.fillRect(QRect(x - 1, y + 6, 3, 1), PAPER)
+        mouth_open = name in {"meow", "sleepy_meow"} and frame == 1
+        yawn = name == "sleep_yawn" and frame >= 2
+        if mouth_open or yawn:
+            p.fillRect(QRect(x - 1, y + 8, 3, 3 if mouth_open else 4), PAPER)
+            p.fillRect(QRect(x, y + 9, 1, 1 if mouth_open else 2), INK)
+        elif not resting:
+            SpritePainter._stroke(p, [(x - 3, y + 8), (x - 1, y + 9), (x, y + 8),
+                                      (x + 1, y + 9), (x + 3, y + 8)], PAPER)
+
+    @staticmethod
+    def _polygon(p: QPainter, points: list[tuple[int, int]], color: QColor) -> None:
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(color)
+        p.drawPolygon(QPolygon([QPoint(x, y) for x, y in points]))
+
+    @staticmethod
+    def _stroke(p: QPainter, points: list[tuple[int, int]], color: QColor, width: int = 1) -> None:
+        p.setPen(QPen(color, width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap,
+                      Qt.PenJoinStyle.MiterJoin))
+        p.drawPolyline(QPolygon([QPoint(x, y) for x, y in points]))
         p.setPen(Qt.PenStyle.NoPen)
 
     @staticmethod
-    def _outlined_rect(p: QPainter, rect: QRect, outline: QColor, fill: QColor) -> None:
-        p.setBrush(outline)
-        p.drawRect(rect)
-        p.setBrush(fill)
-        p.drawRect(rect.adjusted(1, 0, -1, -1))
-
-    @staticmethod
-    def _polyline(p: QPainter, points: list[QPoint], color: QColor, width: int) -> None:
-        path = QPainterPath(QPointF(points[0]))
-        for point in points[1:]:
-            path.lineTo(QPointF(point))
-        pen = p.pen()
-        pen.setColor(color)
-        pen.setWidth(width)
-        pen.setCapStyle(Qt.PenCapStyle.SquareCap)
-        p.setPen(pen)
-        p.drawPath(path)
-        p.setPen(Qt.PenStyle.NoPen)
-
-    @staticmethod
-    def _pixel_text(p: QPainter, x: int, y: int, letter: str, color: QColor) -> None:
-        # Tiny block Z, not a system-font glyph, so it stays pixel sharp.
-        p.fillRect(QRect(x, y, 4, 1), color)
-        p.fillRect(QRect(x + 2, y + 1, 1, 1), color)
-        p.fillRect(QRect(x + 1, y + 2, 1, 1), color)
-        p.fillRect(QRect(x, y + 3, 4, 1), color)
-
-    @staticmethod
-    def _heart(p: QPainter, x: int, y: int, color: QColor) -> None:
-        p.fillRect(QRect(x + 1, y, 2, 2), color)
-        p.fillRect(QRect(x + 5, y, 2, 2), color)
-        p.fillRect(QRect(x, y + 1, 8, 2), color)
-        p.fillRect(QRect(x + 1, y + 3, 6, 2), color)
-        p.fillRect(QRect(x + 2, y + 5, 4, 2), color)
-        p.fillRect(QRect(x + 3, y + 7, 2, 1), color)
+    def _symbol(p: QPainter, x: int, y: int, rows: tuple[str, ...]) -> None:
+        for dy, row in enumerate(rows):
+            for dx, bit in enumerate(row):
+                if bit == "1":
+                    p.fillRect(QRect(x + dx, y + dy, 1, 1), INK)
 
 
 def generate_sprites(destination: Path) -> list[Path]:
-    from PySide6.QtGui import QImage
-
     generated: list[Path] = []
     for animation, count in ANIMATION_FRAMES.items():
         target = destination / animation
         target.mkdir(parents=True, exist_ok=True)
         for frame in range(count):
-            image = SpritePainter.render(animation, frame)
             path = target / f"frame-{frame:02d}.png"
-            if not image.save(str(path), "PNG"):
+            if not SpritePainter.render(animation, frame).save(str(path), "PNG"):
                 raise OSError(f"sprite save failed: {path.name}")
             generated.append(path)
 
-    columns = 5
-    rows = (len(ANIMATION_FRAMES) + columns - 1) // columns
-    sheet = QImage(columns * 64, rows * 64, QImage.Format.Format_RGBA8888)
+    sheet = QImage(5 * 64, 3 * 64, QImage.Format.Format_RGBA8888)
     sheet.fill(Qt.GlobalColor.transparent)
     painter = QPainter(sheet)
-    for index, (animation, _) in enumerate(ANIMATION_FRAMES.items()):
-        x, y = index % columns * 64, index // columns * 64
-        painter.drawImage(QPoint(x, y), SpritePainter.render(animation, 0))
+    for index, animation in enumerate(ANIMATION_FRAMES):
+        painter.drawImage(index % 5 * 64, index // 5 * 64, SpritePainter.render(animation))
     painter.end()
-    sheet_path = destination.parent / "sprite-preview-1x.png"
-    sheet.save(str(sheet_path), "PNG")
-    for scale in (2, 4):
-        preview = sheet.scaled(sheet.width() * scale, sheet.height() * scale,
-                               Qt.AspectRatioMode.IgnoreAspectRatio,
-                               Qt.TransformationMode.FastTransformation)
-        preview_path = destination.parent / f"sprite-preview-{scale}x.png"
-        preview.save(str(preview_path), "PNG")
-        generated.append(preview_path)
-    generated.append(sheet_path)
+    for scale in (1, 2, 4):
+        path = destination.parent / f"sprite-preview-{scale}x.png"
+        sheet.scaled(sheet.width() * scale, sheet.height() * scale,
+                     Qt.AspectRatioMode.IgnoreAspectRatio,
+                     Qt.TransformationMode.FastTransformation).save(str(path), "PNG")
+        generated.append(path)
+
+    # 行順はANIMATION_FRAMES、列はフレーム順。全コマをレビューできる一覧。
+    frames = QImage(4 * 64, len(ANIMATION_FRAMES) * 64, QImage.Format.Format_RGBA8888)
+    frames.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(frames)
+    for row, (animation, count) in enumerate(ANIMATION_FRAMES.items()):
+        for frame in range(count):
+            painter.drawImage(frame * 64, row * 64, SpritePainter.render(animation, frame))
+    painter.end()
+    path = destination.parent / "sprite-frames-2x.png"
+    frames.scaled(frames.width() * 2, frames.height() * 2,
+                  Qt.AspectRatioMode.IgnoreAspectRatio,
+                  Qt.TransformationMode.FastTransformation).save(str(path), "PNG")
+    generated.append(path)
     return generated

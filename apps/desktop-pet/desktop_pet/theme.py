@@ -9,16 +9,8 @@ COLORS = {
     "muted": "#b6c0b8",
     "accent": "#e3ad66",
     "danger": "#e17d71",
-    "fur_outline": "#382015",
-    "fur": "#ca7937",
-    "fur_light": "#f4c583",
-    "fur_dark": "#873e24",
-    "cream": "#ffe3bb",
-    "pink": "#e98b82",
-    "eye": "#34251d",
-    "white": "#fff6e8",
-    "ground": "#684432",
 }
+SPRITE_COLORS = {"ink": "#000000", "paper": "#ffffff"}
 FONT_FAMILY = "Segoe UI"
 FONT_SIZE = 10
 CORNER_RADIUS = 7
