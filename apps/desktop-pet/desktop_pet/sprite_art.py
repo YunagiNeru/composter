@@ -161,24 +161,19 @@ class SpritePainter:
             SpritePainter._stroke(p, [(right_tip[0] - 2, right_tip[1] + 5), (x + 9, y - 9)], PAPER)
 
         eye_y = y + (1 if resting else 0)
-        for eye_x in (x - 8, x + 5):
-            if happy:
-                SpritePainter._stroke(p, [(eye_x - 1, eye_y + 2), (eye_x + 1, eye_y),
-                                          (eye_x + 3, eye_y + 2)], PAPER)
-            elif sleepy:
-                SpritePainter._stroke(p, [(eye_x - 1, eye_y + 1), (eye_x + 1, eye_y + 2),
-                                          (eye_x + 4, eye_y + 1)], PAPER)
+        for eye_x in (x - 7, x + 7):
+            if happy or sleepy:
+                p.fillRect(QRect(eye_x - 2, eye_y + 1, 5, 1), PAPER)
             else:
-                p.fillRect(QRect(eye_x, eye_y - 2, 4, 6), PAPER)
-                p.fillRect(QRect(eye_x - 1, eye_y - 1, 6, 4), PAPER)
+                p.fillRect(QRect(eye_x - 1, eye_y - 2, 3, 5), PAPER)
+                p.fillRect(QRect(eye_x - 2, eye_y - 1, 5, 3), PAPER)
         mouth_open = name in {"meow", "sleepy_meow"} and frame == 1
         yawn = name == "sleep_yawn" and frame >= 2
         if mouth_open or yawn:
-            p.fillRect(QRect(x - 1, y + 8, 3, 3 if mouth_open else 4), PAPER)
-            p.fillRect(QRect(x, y + 9, 1, 1 if mouth_open else 2), INK)
+            p.fillRect(QRect(x, y + 6, 1, 1), PAPER)
         elif not resting:
-            SpritePainter._stroke(p, [(x - 3, y + 8), (x - 1, y + 9), (x, y + 8),
-                                      (x + 1, y + 9), (x + 3, y + 8)], PAPER)
+            SpritePainter._stroke(p, [(x - 2, y + 6), (x - 1, y + 7), (x, y + 6),
+                                      (x + 1, y + 7), (x + 2, y + 6)], PAPER)
 
     @staticmethod
     def _paw(p: QPainter, x: int, y: int, width: int, height: int) -> None:
