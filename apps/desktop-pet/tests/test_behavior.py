@@ -47,6 +47,7 @@ class BehaviorTests(unittest.TestCase):
         self.assertIn("cpu_usage_percent: UNAVAILABLE", state)
         self.assertIn("gpu_usage_percent: UNAVAILABLE", state)
         self.assertIn("network_rx_level: UNAVAILABLE", state)
+        self.assertIn("wakefulness: UNAVAILABLE", state)
 
     def test_high_transmit_keeps_the_meow_style_aligned_with_wakefulness(self):
         sleepy = compose_behavior(metrics(cpu=10, ram=15, tx="HIGH"), self.pet,

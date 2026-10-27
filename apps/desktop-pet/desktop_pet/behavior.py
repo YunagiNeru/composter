@@ -75,8 +75,9 @@ class PetMetrics:
             ("network_tx_level", self.network_tx_level or "UNAVAILABLE"),
             ("disk_usage_percent", value(self.disk_used_percent)),
             ("disk_activity_percent", value(self.disk_busy_percent)),
-            ("wakefulness", "SLEEPY" if self.ram_percent is not None and self.ram_percent < 30
-             else "ALERT" if self.ram_percent is not None and self.ram_percent >= 70 else "CALM"),
+            ("wakefulness", "UNAVAILABLE" if self.ram_percent is None
+             else "SLEEPY" if self.ram_percent < 30
+             else "ALERT" if self.ram_percent >= 70 else "CALM"),
             ("personality", str(pet.get("personality", "AFFECTIONATE"))),
             ("pet_mood", str(pet.get("mood", "CALM"))),
             ("bond_level", str(pet.get("bond", 0))),
