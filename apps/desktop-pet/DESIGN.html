@@ -241,6 +241,7 @@ tbody tr:last-child > * { border-block-end: 0; }
         <tr><th scope="row">スプライト</th><td>PASS</td><td>全フレーム64×64 RGBA・透明、最近傍拡大のテスト</td></tr><tr><th scope="row">センサー合成</th><td>PASS</td><td>CPU/RAM/GPU/NIC/ディスク、未取得、固定架空状態のテスト</td></tr><tr><th scope="row">ふれあい・設定</th><td>一部実機確認</td><td>撫で、食事、遊び、設定、PC/AI状態、右クリック、ドラッグ移動とEsc解除、メニュー終了を実機確認。トレイ復帰や複数DPIは未確認</td></tr><tr><th scope="row">SOM / NPU</th><td>実機PASS</td><td>表示PIDが実行中Pythonワーカーと一致。NPU、3720、PLUGIN、FP16、固定IRを確認</td></tr><tr><th scope="row">テスト</th><td>PASS</td><td>desktop-pet 27件（白黒猫への置換後）。som-probe 112件は初回実装時の記録で、今回の描画変更では再実行していない</td></tr>
       </tbody></table></div><h3>白黒猫への置換（2026-10-27）</h3>
 <p>旧茶トラの輪郭・顔・体形を置換した。短い足、大きな頭、巻いた尻尾、座る姿と四足歩行を描き分け、全状態で黒・白・透明の3種類の画素だけを使う。暗い壁紙向けに1ピクセルの白縁を付ける。NPU、センサー、行動ID、設定の契約は変更していない。</p>
+<p>追加の形状指定に合わせ、鼻の白い点と通常目の黒い瞳孔を削除した。通常目は白一色とし、全フレームの足先の横への張り出しを取り除き、縦に伸びてU字に丸く閉じる短い足へ揃えた。通常目・眠気を実アプリで撮影して目視し、全50フレームの一覧と関連27テストで再確認した。追加の画面証拠は <code>som-probe/.local/cat-deformed-20261027/</code> に保存する。</p>
 <div class="table-wrap"><table><caption>参考作品と採用した造形上の観察</caption><thead><tr><th scope="col">作品</th><th scope="col">確認した公開情報</th><th scope="col">参考にした点</th></tr></thead><tbody>
 <tr><th scope="row"><a href="https://elthen.itch.io/2d-pixel-art-cat-sprites">Elthen: 2D Pixel Art Cat Sprites</a></th><td>無料／任意価格、評価4.6/5・48件。商用・非商用利用可の記載を確認。</td><td>低い四足姿勢、短い脚、静止と移動のシルエットの違い。</td></tr>
 <tr><th scope="row"><a href="https://mirquiso.itch.io/evil-black-cat">Mirquiso: Evil Black Cat</a></th><td>無料／任意価格、評価4.8/5・4件。個人・商用利用可、素材単体の再配布禁止の記載を確認。</td><td>少ない色で成立する黒い面、巻いた尻尾と目の対比。</td></tr>

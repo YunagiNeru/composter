@@ -96,8 +96,7 @@ class SpritePainter:
                 lift += 2
             for x, shift, raised in ((19, stride, lift), (26, -stride, 0),
                                       (39, -stride, 0), (45, stride, lift)):
-                p.fillRect(QRect(x + shift, 44 + bob, 5, 11 - raised - bob), INK)
-                p.fillRect(QRect(x + shift - 2, 52 - raised, 7, 3), INK)
+                SpritePainter._paw(p, x + shift, 44 + bob, 5, 11 - raised - bob)
             if name == "play":
                 SpritePainter._stroke(p, [(21, 44), (16, 49), (9 + frame % 2, 51)], INK, 5)
             elif name == "dig":
@@ -107,8 +106,8 @@ class SpritePainter:
                                       (54, 35 + tail_tip), (51, 35 + tail_tip)], INK, 5)
             p.setBrush(INK)
             p.drawEllipse(QRect(18, 33, width, 22))
-            p.fillRect(QRect(22, 44, 7, 11), INK)
-            p.fillRect(QRect(33, 44, 7, 11), INK)
+            SpritePainter._paw(p, 22, 44, 7, 11)
+            SpritePainter._paw(p, 33, 44, 7, 11)
 
         sleepy = (expression == "SLEEPY" or name in {
             "sleepy_idle", "drowsy_walk", "sleep_yawn", "sleepy_meow"}
@@ -119,12 +118,11 @@ class SpritePainter:
         SpritePainter._head(p, head_x, head_y, sleepy, happy, flattened, twitch,
                             sleeping, name, frame)
 
-        # 前足の境界は短い1px線だけ。胴を縦長に分割しない。
+        # 座った前足も横へ張り出さず、真下へ下りてU字に閉じる。
         if not moving and not crouching and not sleeping:
-            SpritePainter._stroke(p, [(28, 47), (28, 53)], PAPER)
-            SpritePainter._stroke(p, [(33, 47), (33, 53)], PAPER)
-            p.fillRect(QRect(24, 53, 3, 1), PAPER)
-            p.fillRect(QRect(35, 53, 3, 1), PAPER)
+            for x in (22, 33):
+                SpritePainter._stroke(p, [(x, 46), (x, 52), (x + 1, 54),
+                                          (x + 5, 54), (x + 6, 52), (x + 6, 46)], PAPER)
         if sleeping:
             SpritePainter._stroke(p, [(35, 49), (40, 51), (46, 50)], PAPER)
             SpritePainter._symbol(p, 47, 20 - frame, ("1111", "0010", "0100", "1111"))
@@ -173,8 +171,6 @@ class SpritePainter:
             else:
                 p.fillRect(QRect(eye_x, eye_y - 2, 4, 6), PAPER)
                 p.fillRect(QRect(eye_x - 1, eye_y - 1, 6, 4), PAPER)
-                p.fillRect(QRect(eye_x + 1, eye_y - 1, 2, 4), INK)
-        p.fillRect(QRect(x - 1, y + 6, 3, 1), PAPER)
         mouth_open = name in {"meow", "sleepy_meow"} and frame == 1
         yawn = name == "sleep_yawn" and frame >= 2
         if mouth_open or yawn:
@@ -183,6 +179,11 @@ class SpritePainter:
         elif not resting:
             SpritePainter._stroke(p, [(x - 3, y + 8), (x - 1, y + 9), (x, y + 8),
                                       (x + 1, y + 9), (x + 3, y + 8)], PAPER)
+
+    @staticmethod
+    def _paw(p: QPainter, x: int, y: int, width: int, height: int) -> None:
+        p.fillRect(QRect(x, y, width, height - 1), INK)
+        p.fillRect(QRect(x + 1, y + height - 1, width - 2, 1), INK)
 
     @staticmethod
     def _polygon(p: QPainter, points: list[tuple[int, int]], color: QColor) -> None:
